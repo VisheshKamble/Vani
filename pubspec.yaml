@@ -13,6 +13,7 @@ dependencies:
 
   camera: ^0.11.0+2
   cupertino_icons: ^1.0.8
+  web_socket_channel: ^3.0.1
 
   # Localization (intl auto-managed by Flutter)
   flutter_localizations:
