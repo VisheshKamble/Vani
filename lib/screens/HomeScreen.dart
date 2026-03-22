@@ -1,4 +1,5 @@
 // lib/screens/HomeScreen.dart
+//fixed Ui for mobile
 // ─────────────────────────────────────────────
 //  ARCHITECTURE
 //  < 700px  → _MobileShell  (native app, completely redesigned)
