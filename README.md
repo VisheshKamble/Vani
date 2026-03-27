@@ -1,133 +1,116 @@
 # VANI
 
-VANI is a Flutter-based accessibility app focused on Indian Sign Language (ISL) communication. It combines a real-time sign recognition backend with multiple user-facing experiences:
+VANI is a Flutter accessibility platform for Indian Sign Language (ISL), built for both:
 
-- Real-time sign-to-text translation
-- Two-way communication bridge between deaf/mute and hearing users
-- Emergency SOS workflows with location-aware alerts
-- ISL signs library
-- Multilingual interface (English, Hindi, Marathi)
+- Mobile app (Android, iOS)
+- Web app (browser-based experience)
 
-The project includes:
+It combines real-time sign-to-text inference, emergency workflows, and multilingual UX.
 
-- A Flutter frontend in this repository root
-- A Python FastAPI + YOLO backend in the folder isl_backend
+## What VANI Includes
 
-## Core Features
+- Real-time ISL translation
+- Two-way communication bridge
+- Emergency SOS with contacts + location context
+- ISL signs reference library
+- Runtime language + theme switching
 
-### 1) Real-time ISL Translation
+## App + Web Architecture
 
-- Camera feed is captured in Flutter
-- Frames are sent over WebSocket to backend
-- Backend runs YOLO inference on each frame
-- Predictions are returned and shown live in UI
-- SentenceBuilder logic helps convert gesture streams into natural text
+Current system has two major runtime parts:
 
-Main files:
+1. Flutter client (single codebase, multiple targets)
+2. Python inference backend (FastAPI + YOLO over WebSocket)
 
-- lib/screens/TranslateScreen.dart
-- isl_backend/app.py
+Both the mobile app and web app use the same inference protocol (`/ws`) and prediction payload shape.
 
-### 2) Two-way Communication Screen
+## Current Runtime Flow
 
-- Deaf/mute side signs to camera
-- Hearing side can type responses
-- Shared conversation thread for both sides
-- Quick phrases support for hearing user
+1. Client captures camera frames.
+2. Frames are sent to backend over WebSocket as base64 payloads.
+3. Backend performs YOLO inference.
+4. Backend sends `{type,label,confidence,frame}` prediction payloads.
+5. Client renders label stream and builds sentence output.
 
-Main file:
+## Future Deployment Plan (Akamai Cloud)
 
-- lib/screens/TwoWayScreen.dart
+You can move inference to Akamai while keeping one shared API contract for both app and web clients.
 
-### 3) Emergency SOS Module
+### Target Topology
 
-- Configurable emergency contacts stored locally with Hive
-- Multi-scenario SOS categories (medical, police, fire, etc.)
-- Mobile shake detection to trigger emergency help
-- Location embedding in outgoing SOS message
-- Platform-aware sending strategy (mobile/web/desktop)
+- `vani-web`: static web hosting (Flutter web build)
+- `vani-api`: FastAPI service behind HTTPS/WSS
+- `vani-ml`: inference worker(s) with model artifact
+- Managed edge/WAF/rate limiting in front of API
 
-Main files:
+### Inference Strategy for Both Clients
 
-- lib/screens/EmergencyScreen.dart
-- lib/screens/EmergencySetupScreen.dart
-- lib/services/EmergencyService.dart
-- lib/services/LocationService.dart
+- Mobile app and web app call the same secured endpoint (`wss://<domain>/ws`)
+- Keep response schema unchanged to avoid client-specific divergence
+- Version inference contract (`v1`, `v2`) before introducing schema changes
 
-### 4) ISL Signs Library
+### Recommended Evolution
 
-- Searchable and filterable signs catalog
-- Includes alphabet, numbers, and common words
-- Uses localization keys for multilingual labels and descriptions
+- Stage 1: containerize current `isl_backend`
+- Stage 2: add env-based runtime config (host, ws URL, model path)
+- Stage 3: add authentication and rate limiting for `/ws`
+- Stage 4: add autoscaling + health-based rollout
+- Stage 5: optional split between API gateway and dedicated model workers
 
-Main file:
-
-- lib/screens/Signspage.dart
-
-### 5) Localization and Theme
-
-- Locales: English (en), Hindi (hi), Marathi (mr)
-- Runtime language switching from navbar
-- Dark and light themes
-
-Main files:
-
-- lib/l10n/AppLocalizations.dart
-- lib/components/GlobalNavbar.dart
-
-## Tech Stack
-
-### Frontend
-
-- Flutter (Dart)
-- Camera package for live camera frames
-- WebSocket channel for backend communication
-- Hive for local persistent emergency contacts
-- Geolocator, url_launcher, vibration, shake, flutter_tts
-
-### Backend
-
-- FastAPI
-- Uvicorn
-- Ultralytics YOLO
-- OpenCV
-- NumPy
-
-## Project Structure
+## Repository Structure
 
 ```text
 vani/
-	lib/
-		components/
-		l10n/
-		models/
-		screens/
-		services/
-		main.dart
-	isl_backend/
-		app.py
-		requirements.txt
-		model/
-			best .pt
-	android/
-	ios/
-	linux/
-	macos/
-	web/
-	windows/
-	pubspec.yaml
+  lib/
+    components/
+    l10n/
+    models/
+    screens/
+    services/
+    main.dart
+  isl_backend/
+    app.py
+    requirements.txt
+    model/
+      best .pt
+  android/
+  ios/
+  linux/
+  macos/
+  web/
+  windows/
+  pubspec.yaml
 ```
 
-## Prerequisites
+## Core Modules
 
-Install the following:
+### Real-time Translation
 
-- Flutter SDK (recommended stable channel)
-- Dart SDK (included with Flutter)
-- Python 3.10 or 3.11
-- Git LFS (required for model files)
+- Client screen: `lib/screens/TranslateScreen.dart`
+- Backend service: `isl_backend/app.py`
 
-Verify tools:
+### Two-way Communication
+
+- `lib/screens/TwoWayScreen.dart`
+
+### Emergency SOS
+
+- `lib/screens/EmergencyScreen.dart`
+- `lib/screens/EmergencySetupScreen.dart`
+- `lib/services/EmergencyService.dart`
+- `lib/services/LocationService.dart`
+
+### Signs Library
+
+- `lib/screens/Signspage.dart`
+
+## Local Development Setup
+
+### Prerequisites
+
+- Flutter SDK (stable)
+- Python 3.10+ (3.11 recommended)
+- Git LFS (for model files)
 
 ```powershell
 flutter --version
@@ -135,20 +118,14 @@ python --version
 git lfs version
 ```
 
-## Setup
-
-### 1) Clone and prepare model files
-
-If using a fresh clone, ensure LFS files are pulled:
+### 1) Pull model artifacts
 
 ```powershell
 git lfs install
 git lfs pull
 ```
 
-### 2) Backend setup (FastAPI + YOLO)
-
-From repository root:
+### 2) Start backend
 
 ```powershell
 cd isl_backend
@@ -158,129 +135,95 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Backend default URL:
+Default backend endpoints:
 
-- HTTP health: http://127.0.0.1:8000/health
-- WebSocket: ws://127.0.0.1:8000/ws
+- Health: `http://127.0.0.1:8000/health`
+- WebSocket: `ws://127.0.0.1:8000/ws`
 
-Important:
+### 3) Start Flutter client
 
-- The backend currently expects model path: isl_backend/model/best .pt
-- Keep the exact filename as used in app.py unless you also update MODEL_PATH
-
-### 3) Flutter setup
-
-Open a new terminal at repository root:
+From repository root:
 
 ```powershell
 flutter pub get
 flutter run -d chrome
 ```
 
-For Android emulator:
+Android emulator example:
 
 ```powershell
 flutter run -d emulator-5554
 ```
 
-## Running the Full System
+## WebSocket Behavior by Platform (Current)
 
-Run both services together:
+- Web: uses current browser host + port 8000
+- Android emulator: uses `10.0.2.2:8000`
+- Desktop: uses `127.0.0.1:8000`
 
-1. Start backend in isl_backend folder
-2. Start Flutter app from repository root
-3. Open Translate or Bridge screen
-4. Confirm backend connection indicator is live
+## API Contract (Current)
 
-WebSocket host behavior in Flutter:
+### `GET /health`
 
-- Web: uses current host with port 8000
-- Android emulator: uses 10.0.2.2:8000
-- Desktop: uses 127.0.0.1:8000
+Returns service status and loaded model path.
 
-## Backend API Summary
-
-### GET /health
-
-Returns backend status and model path.
-
-### WebSocket /ws
+### `WS /ws`
 
 Input:
 
-- Base64-encoded image frames (text payload)
-- Control messages: __PING__, __STOP__
+- base64 frame payloads
+- control messages: `__PING__`, `__STOP__`
 
 Output:
 
-- Prediction payload with label and confidence
-- Keepalive and error payloads when applicable
-
-Backend behavior highlights:
-
-- CPU inference mode
-- Temporal smoothing via prediction window
-- Frame throttling for stability
-- Decode/inference error handling with limits
+- prediction messages
+- ping/pong keepalive
+- error messages when decode/inference fails
 
 ## Emergency Module Notes
 
-- Contacts are stored in Hive box emergency_contacts
-- Max 5 contacts are allowed
-- Phone numbers are normalized with India-centric defaults
-- Mobile supports shake-triggered SOS for quick help
-- Message payload includes location when available
+- Contacts stored in Hive box: `emergency_contacts`
+- Up to 5 contacts
+- Shake-triggered SOS on supported mobile platforms
+- Location added when available
 
 ## Localization
 
-Supported locales are configured in AppLocalizations:
+Supported locales:
 
-- en
-- hi
-- mr
+- `en`
+- `hi`
+- `mr`
 
-Navbar language switch updates app locale at runtime.
+## Build/Codegen Notes
 
-## Development Notes
-
-- Hive model adapter file is generated (EmergencyContact.g.dart)
-- If you modify Hive models, run code generation:
+If Hive model definitions change:
 
 ```powershell
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-- Lint rules are configured via analysis_options.yaml
-
 ## Troubleshooting
 
-### Backend not connecting from Flutter web
+### Web cannot connect to backend
 
 - Ensure backend is running on port 8000
-- Use same host in browser and backend machine
-- Confirm firewall allows local traffic
+- Ensure firewall allows traffic
+- Verify browser host can resolve backend host
 
-### Android emulator cannot reach backend
+### Emulator cannot connect
 
-- Use 10.0.2.2 for localhost mapping (already implemented)
+- Use `10.0.2.2` for Android emulator localhost mapping
 
-### Push rejected due to model size
+### Large model push fails
 
-- Ensure Git LFS is installed
-- Track model files with git lfs track "*.pt"
-- Re-add large model files so they are committed as LFS pointers
+- Ensure model artifacts are tracked with Git LFS
 
-### Camera or permissions issues
+## Entry Points
 
-- Test on supported browser/device
-- Verify camera permissions are granted
-- On mobile, ensure platform permissions are set
+- Flutter app: `lib/main.dart`
+- Backend app: `isl_backend/app.py`
 
-## Current Entry Points
+## Vision
 
-- Frontend app start: lib/main.dart
-- Backend app start: isl_backend/app.py
-
-## Acknowledgement
-
-VANI is designed to reduce communication barriers and improve emergency accessibility for deaf and mute communities through practical, real-time tooling.
+VANI is designed as a shared accessibility platform where a single inference backbone powers both web and mobile experiences at production scale.
