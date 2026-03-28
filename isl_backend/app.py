@@ -10,6 +10,32 @@ import time
 import logging
 from collections import deque
 
+import os
+import urllib.request
+from ultralytics import YOLO
+
+# ─────────────────────────────────────────────
+# MODEL LOAD (CPU FORCED & AUTO-DOWNLOAD)
+# ─────────────────────────────────────────────
+os.makedirs("model", exist_ok=True)
+MODEL_PATH = os.path.join("model", "isl_best.pt")
+
+# Insert the URL you copied from GitHub Releases here:
+DOWNLOAD_URL = "https://github.com/Sankalp-Dawada/ISL/releases/download/v1.0/isl_best.pt"
+
+# If the file doesn't exist OR it's a tiny fake Git LFS file (under 1MB)
+if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 1000000:
+    log.info(f"Downloading model weights from {DOWNLOAD_URL}...")
+    urllib.request.urlretrieve(DOWNLOAD_URL, MODEL_PATH)
+    log.info("✅ Download complete!")
+
+try:
+    model = YOLO(MODEL_PATH)
+    model.to("cpu")  # Force CPU
+    log.info(f"✅ Model loaded successfully from {MODEL_PATH}")
+except Exception as e:
+    log.error(f"❌ Model failed to load: {e}")
+    raise
 # ─────────────────────────────────────────────
 # LOGGING
 # ─────────────────────────────────────────────
