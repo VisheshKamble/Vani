@@ -8,7 +8,7 @@ import os
 import time
 import logging
 from collections import deque
-import urllib.request
+import gdown
 from ultralytics import YOLO
 
 # ─────────────────────────────────────────────
@@ -35,27 +35,37 @@ app.add_middleware(
 )
 
 # ─────────────────────────────────────────────
-# MODEL LOAD (CPU FORCED & AUTO-DOWNLOAD)
+# MODEL LOAD (GOOGLE DRIVE)
 # ─────────────────────────────────────────────
 os.makedirs("model", exist_ok=True)
 MODEL_PATH = os.path.join("model", "isl_best.pt")
 
-# Insert the URL you copied from GitHub Releases here:
-DOWNLOAD_URL = "https://github.com/VisheshKamble/ISL/raw/main/isl_backend/model/isl_best.pt"
+# 🔥 PUT YOUR GOOGLE DRIVE FILE ID HERE
+#FILE_ID = "YOUR_FI"
 
-# If the file doesn't exist OR it's a tiny fake Git LFS file (under 1MB)
-if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 1000000:
-    log.info(f"Downloading model weights from {DOWNLOAD_URL}...")
+# Download if missing or corrupted
+if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 1_000_000:
     try:
-        urllib.request.urlretrieve(DOWNLOAD_URL, MODEL_PATH)
+        log.info("📥 Downloading model from Google Drive...")
+        url = f"https://drive.google.com/file/d/1TcCNyM1MtbixlN3wZgFttOlvuJutTPqB/view?usp=drive_link"
+        gdown.download(url, MODEL_PATH, quiet=False)
         log.info("✅ Download complete!")
     except Exception as e:
         log.error(f"❌ Failed to download model: {e}")
         raise
 
+# Safety checks
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError("❌ Model file not found after download")
+
+if os.path.getsize(MODEL_PATH) < 1_000_000:
+    raise ValueError("❌ Model file is corrupted or too small")
+
+# Load YOLO model
 try:
     model = YOLO(MODEL_PATH)
-    model.to("cpu")  # Force CPU
+    model.to("cpu")
+    model.fuse()  # 🔥 improve speed
     log.info(f"✅ Model loaded successfully from {MODEL_PATH}")
 except Exception as e:
     log.error(f"❌ Model failed to load: {e}")
@@ -118,7 +128,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({"type": "ping"})
                 continue
 
-            # Stop signal
             if raw == "__STOP__":
                 smoother.reset()
                 await websocket.send_json({"type": "stopped"})
@@ -134,7 +143,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await asyncio.sleep(0.005)
                 continue
 
-            # Decode base64 image
+            # Decode frame
             try:
                 b64 = raw.split(",")[-1]
                 img_bytes = base64.b64decode(b64)
@@ -155,7 +164,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     break
                 continue
 
-            # Inference (non-blocking)
+            # Inference
             try:
                 loop = asyncio.get_event_loop()
                 results = await loop.run_in_executor(
@@ -227,7 +236,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=8000,
+        port=int(os.environ.get("PORT", 8000)),
         reload=False,
         log_level="info",
     )
