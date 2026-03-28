@@ -13,20 +13,31 @@ import '../l10n/AppLocalizations.dart';
 // ─────────────────────────────────────────────
 //  WEBSOCKET CONFIG  (mirrors TranslateScreen exactly)
 // ─────────────────────────────────────────────
-const _kDefaultWsPort  = 8000;
-const _kWsPath         = '/ws';
-const _kFrameIntervalMs = 100;
+// const _kDefaultWsPort  = 8000;
+// const _kWsPath         = '/ws';
+// const _kFrameIntervalMs = 100;
+
+// String _getWebSocketUrl() {
+//   if (kIsWeb) {
+//     final scheme = Uri.base.scheme == 'https' ? 'wss' : 'ws';
+//     final host   = Uri.base.host.isNotEmpty ? Uri.base.host : '127.0.0.1';
+//     return '$scheme://$host:$_kDefaultWsPort$_kWsPath';
+//   }
+//   if (defaultTargetPlatform == TargetPlatform.android) {
+//     return 'ws://10.0.2.2:$_kDefaultWsPort$_kWsPath';
+//   }
+//   return 'ws://127.0.0.1:$_kDefaultWsPort$_kWsPath';
+// }
+
+// Change this to your Railway domain
+const String _kRailwayHost = 'isl-production-57d4.up.railway.app';
+const String _kWsPath = '/ws';
+const int _kFrameIntervalMs = 100;
 
 String _getWebSocketUrl() {
-  if (kIsWeb) {
-    final scheme = Uri.base.scheme == 'https' ? 'wss' : 'ws';
-    final host   = Uri.base.host.isNotEmpty ? Uri.base.host : '127.0.0.1';
-    return '$scheme://$host:$_kDefaultWsPort$_kWsPath';
-  }
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    return 'ws://10.0.2.2:$_kDefaultWsPort$_kWsPath';
-  }
-  return 'ws://127.0.0.1:$_kDefaultWsPort$_kWsPath';
+  // Use wss (Secure) for all platforms in production.
+  // Railway handles port mapping automatically, so we don't include :8000
+  return 'wss://$_kRailwayHost$_kWsPath';
 }
 
 // ─────────────────────────────────────────────
