@@ -41,7 +41,7 @@ os.makedirs("model", exist_ok=True)
 MODEL_PATH = os.path.join("model", "isl_best.pt")
 
 # Insert the URL you copied from GitHub Releases here:
-DOWNLOAD_URL = "https://github.com/Sankalp-Dawada/ISL/releases/download/v1.0/isl_best.pt"
+DOWNLOAD_URL = "https://github.com/VisheshKamble/ISL/blob/main/isl_backend/model/isl_best.pt"
 
 # If the file doesn't exist OR it's a tiny fake Git LFS file (under 1MB)
 if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 1000000:
