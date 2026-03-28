@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
 
   # ── existing ──────────────────────────────
+  flutter_dotenv: ^5.2.1
   http: ^1.2.0
   camera: ^0.11.0+2
   cupertino_icons: ^1.0.8
@@ -28,7 +29,7 @@ dependencies:
   hive_flutter: ^1.1.0
 
   # Shake detection — Android/iOS only, safe no-op on web
-  shake: ^3.0.0                     
+  shake: ^3.0.0
   # GPS — geolocator on mobile, dart:html on web (conditional import)
   geolocator: ^13.0.0
 
@@ -38,8 +39,12 @@ dependencies:
   # Haptic vibration — mobile only, safe no-op on web
   vibration: ^2.0.0
 
-# Text-to-speech — EN + regional Indian languages
+  # Text-to-speech — EN + regional Indian languages
   flutter_tts: ^4.0.2
+
+  # ── ISL Assistant ─────────────────────────
+  # Voice input for ISL Assistant
+  speech_to_text: ^6.6.2
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +57,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - .env.local
   fonts:
     - family: Google Sans
       fonts:

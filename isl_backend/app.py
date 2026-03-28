@@ -36,7 +36,7 @@ app.add_middleware(
 # ─────────────────────────────────────────────
 # MODEL LOAD (CPU FORCED)
 # ─────────────────────────────────────────────
-MODEL_PATH = os.path.join("model", "best .pt")
+MODEL_PATH = os.path.join("model", "isl_best.pt")
 
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError("❌ best.pt not found inside /model folder")
