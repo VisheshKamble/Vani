@@ -1,5 +1,5 @@
 # Use a slim Python image for a smaller footprint
-FROM python:3.10-slim
+FROM python:3.10-bullseye
 
 # Install system dependencies for OpenCV and YOLO
 RUN apt-get update && apt-get install -y \
