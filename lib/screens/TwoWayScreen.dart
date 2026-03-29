@@ -40,6 +40,11 @@ String _getWebSocketUrl() {
   return 'wss://$_kRailwayHost$_kWsPath';
 }
 
+const double _kMinPredictionConfidence = 0.30;
+const int _kStableDetectionMs = 450;
+const int _kDetectionCooldownMs = 800;
+const int _kSameLabelCooldownMs = 1800;
+
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────
@@ -155,9 +160,12 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
 
   // ── ISL detection ─────────────────────────
   String _detected  = '';   // current detected sign word
-  String _pending   = '';   // accumulated sentence
+  String _pending   = '';   // latest detected sign waiting for manual send
   bool   _detecting = false;
-  Timer? _confirmTimer;
+  String _candidate = '';
+  DateTime _candidateSince = DateTime.fromMillisecondsSinceEpoch(0);
+  String _lastAccepted = '';
+  DateTime _lastAcceptedAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   // ── Animations ────────────────────────────
   late AnimationController _entryCtrl;
@@ -272,20 +280,96 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
     }
   }
 
+  ({String sign, double confidence})? _parsePrediction(dynamic data) {
+    if (data == null) return null;
+
+    if (data is String) {
+      final raw = data.trim();
+      if (raw.isEmpty) return null;
+
+      // Backend may send JSON payloads like {"type":"prediction","label":"HELLO","confidence":0.91}
+      if (raw.startsWith('{') && raw.endsWith('}')) {
+        try {
+          final obj = jsonDecode(raw);
+          if (obj is Map<String, dynamic>) {
+            final type = (obj['type'] ?? 'prediction').toString();
+            if (type != 'prediction') return null;
+            final label = (obj['label'] ?? '').toString().trim();
+            if (label.isEmpty) return null;
+            final conf = (obj['confidence'] as num?)?.toDouble() ?? 1.0;
+            return (sign: label.toUpperCase(), confidence: conf);
+          }
+        } catch (_) {}
+      }
+
+      // Fallback: plain label string payload.
+      return (sign: raw.toUpperCase(), confidence: 1.0);
+    }
+
+    if (data is Map<String, dynamic>) {
+      final type = (data['type'] ?? 'prediction').toString();
+      if (type != 'prediction') return null;
+      final label = (data['label'] ?? '').toString().trim();
+      if (label.isEmpty) return null;
+      final conf = (data['confidence'] as num?)?.toDouble() ?? 1.0;
+      return (sign: label.toUpperCase(), confidence: conf);
+    }
+
+    return null;
+  }
+
   void _onSignReceived(dynamic data) {
-    if (data is! String || data.trim().isEmpty) return;
-    final sign = data.trim().toUpperCase();
-    if (sign == _detected) return;
+    final parsed = _parsePrediction(data);
+    if (parsed == null) return;
+
+    final sign = parsed.sign;
+    final confidence = parsed.confidence;
+    if (sign.isEmpty || sign == '—' || sign == '-') return;
+
+    if (confidence < _kMinPredictionConfidence) {
+      if (_detecting && mounted) {
+        setState(() => _detecting = false);
+      }
+      return;
+    }
+
+    final now = DateTime.now();
+
+    // Step 1: candidate must stay same for a minimum stability window.
+    if (sign != _candidate) {
+      _candidate = sign;
+      _candidateSince = now;
+      if (!_detecting && mounted) {
+        setState(() => _detecting = true);
+      }
+      return;
+    }
+
+    if (now.difference(_candidateSince).inMilliseconds < _kStableDetectionMs) {
+      return;
+    }
+
+    // Step 2: cooldown to avoid repeated frame-level spam.
+    if (now.difference(_lastAcceptedAt).inMilliseconds < _kDetectionCooldownMs) {
+      return;
+    }
+
+    if (sign == _lastAccepted &&
+        now.difference(_lastAcceptedAt).inMilliseconds < _kSameLabelCooldownMs) {
+      return;
+    }
+
+    if (sign == _pending) {
+      return;
+    }
+
+    _lastAccepted = sign;
+    _lastAcceptedAt = now;
 
     setState(() {
-      _detected  = sign;
-      _detecting = true;
-      _pending   = _pending.isEmpty ? sign : '$_pending $sign';
-    });
-
-    _confirmTimer?.cancel();
-    _confirmTimer = Timer(const Duration(seconds: 2), () {
-      if (_pending.isNotEmpty) _confirmSign();
+      _detected = sign;
+      _pending = sign;
+      _detecting = false;
     });
   }
 
@@ -293,12 +377,12 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
     if (_pending.trim().isEmpty) return;
     _addMessage(_pending.trim(), _Sender.deaf, isSign: true);
     setState(() { _pending = ''; _detected = ''; _detecting = false; });
-    _confirmTimer?.cancel();
+    _candidate = '';
   }
 
   void _clearPending() {
     setState(() { _pending = ''; _detected = ''; _detecting = false; });
-    _confirmTimer?.cancel();
+    _candidate = '';
   }
 
   // ─────────────────────────────────────────
@@ -356,7 +440,6 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
     _cam?.dispose();
     _ws?.sink.close();
     _frameTimer?.cancel();
-    _confirmTimer?.cancel();
     _reconnectTimer?.cancel();
     _entryCtrl.dispose();
     _pulseCtrl.dispose();
