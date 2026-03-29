@@ -20,8 +20,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../components/GlobalNavbar.dart';
+import '../components/SOSFloatingButton.dart';
 import '../l10n/AppLocalizations.dart';
+import '../models/EmergencyContact.dart';
 import 'TranslateScreen.dart';
 import 'TwoWayScreen.dart';
 import 'EmergencyScreen.dart';
@@ -153,7 +157,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: FadeTransition(opacity: _tabFade, child: _mobileBody(ctx, l, isDark)),
         ),
       ]),
-      bottomNavigationBar: _AppleTabBar(isDark: isDark, tab: _tab, onTap: _switchTab, l: l),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 64),
+        child: SOSFloatingButton(
+          toggleTheme: widget.toggleTheme,
+          setLocale: widget.setLocale,
+        ),
+      ),
+      bottomNavigationBar: _AppleTabBar(
+        isDark: isDark,
+        tab: _tab,
+        onTap: _switchTab,
+        l: l,
+        setLocale: widget.setLocale,
+        toggleTheme: widget.toggleTheme,
+      ),
     );
   }
 
@@ -353,11 +371,15 @@ class _AppleTabBar extends StatelessWidget {
   final int  tab;
   final ValueChanged<int> onTap;
   final AppLocalizations l;
+  final Function(Locale) setLocale;
+  final VoidCallback toggleTheme;
   const _AppleTabBar({required this.isDark, required this.tab,
-    required this.onTap, required this.l});
+    required this.onTap, required this.l,
+    required this.setLocale, required this.toggleTheme});
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
     final accent = isDark ? _blue_D : _blue;
     // Tab 4 uses purple to visually distinguish the AI assistant
     final items = [
@@ -380,30 +402,38 @@ class _AppleTabBar extends StatelessWidget {
             top: false,
             child: SizedBox(
               height: 49,
-              child: Row(children: items.asMap().entries.map((e) {
-                final i      = e.key;
-                final item   = e.value;
-                final active = tab == i;
-                final color  = active ? item.$4 : (isDark ? _dLabel2 : _lLabel2);
-                return Expanded(child: GestureDetector(
-                  onTap: () => onTap(i),
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(active ? item.$1 : item.$2,
-                            key: ValueKey(active), size: 24, color: color)),
-                    const SizedBox(height: 3),
-                    AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 180),
-                        style: TextStyle(
-                            fontFamily: 'Google Sans', fontSize: 10,
-                            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                            color: color, letterSpacing: -0.1),
-                        child: Text(item.$3, overflow: TextOverflow.ellipsis)),
-                  ]),
-                ));
-              }).toList()),
+              child: Row(children: [
+                ...items.asMap().entries.map((e) {
+                  final i      = e.key;
+                  final item   = e.value;
+                  final active = tab == i;
+                  final color  = active ? item.$4 : (isDark ? _dLabel2 : _lLabel2);
+                  return Expanded(child: GestureDetector(
+                    onTap: () => onTap(i),
+                    behavior: HitTestBehavior.opaque,
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(active ? item.$1 : item.$2,
+                              key: ValueKey(active), size: 24, color: color)),
+                      const SizedBox(height: 3),
+                      AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 180),
+                          style: TextStyle(
+                              fontFamily: 'Google Sans', fontSize: 10,
+                              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                              color: color, letterSpacing: -0.1),
+                          child: Text(item.$3, overflow: TextOverflow.ellipsis)),
+                    ]),
+                  ));
+                }),
+                _ThreeDotMenu(
+                  isDark: isDark,
+                  locale: locale,
+                  setLocale: setLocale,
+                  toggleTheme: toggleTheme,
+                ),
+              ]),
             ),
           ),
         ),
@@ -493,34 +523,32 @@ class _MobileAssistantCard extends StatefulWidget {
   final bool isDark;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
-  const _MobileAssistantCard(
-      {required this.isDark, required this.toggleTheme, required this.setLocale});
-  @override
-  State<_MobileAssistantCard> createState() => _MobileAssistantCardState();
+  const _MobileAssistantCard({required this.isDark,
+    required this.toggleTheme, required this.setLocale});
+  @override State<_MobileAssistantCard> createState() => _MobileAssistantCardState();
 }
 
 class _MobileAssistantCardState extends State<_MobileAssistantCard>
     with SingleTickerProviderStateMixin {
-  late AnimationController _ac;
-  late Animation<double>   _anim;
   bool _pressed = false;
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulseAnim;
 
-  @override
-  void initState() {
+  @override void initState() {
     super.initState();
-    _ac   = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat(reverse: true);
-    _anim = CurvedAnimation(parent: _ac, curve: Curves.easeInOut);
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+      ..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.3, end: 1.0)
+        .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
   }
-
-  @override
-  void dispose() { _ac.dispose(); super.dispose(); }
+  @override void dispose() { _pulseCtrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
+    final bg     = widget.isDark ? _dSurface : _lSurface;
+    final label  = widget.isDark ? _dLabel   : _lLabel;
+    final label2 = widget.isDark ? _dLabel2  : _lLabel2;
     final accent = widget.isDark ? _purple_D : _purple;
-    final bg     = widget.isDark ? _dSurface  : _lSurface;
-    final label  = widget.isDark ? _dLabel    : _lLabel;
-    final label2 = widget.isDark ? _dLabel2   : _lLabel2;
 
     return GestureDetector(
       onTapDown:   (_) => setState(() => _pressed = true),
@@ -537,110 +565,61 @@ class _MobileAssistantCardState extends State<_MobileAssistantCard>
         scale: _pressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 80),
         curve: Curves.easeOutBack,
-        child: AnimatedBuilder(
-          animation: _anim,
-          builder: (_, child) => Container(
-            decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: accent.withOpacity(0.22), width: 0.5),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(widget.isDark ? 0.40 : 0.09),
-                      blurRadius: 28, offset: const Offset(0, 10)),
-                  BoxShadow(color: accent.withOpacity(0.10), blurRadius: 36, offset: const Offset(0, 6)),
-                ]),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Stack(children: [
-                // Ambient glow top-right
-                Positioned(
-                  top: -30 + _anim.value * 8, right: -30,
-                  child: Container(width: 160, height: 160,
-                      decoration: BoxDecoration(shape: BoxShape.circle,
-                          gradient: RadialGradient(colors: [
-                            accent.withOpacity(widget.isDark ? 0.15 : 0.09), Colors.transparent]))),
-                ),
-                // Ambient glow bottom-left (blue)
-                Positioned(
-                  bottom: -20 - _anim.value * 6, left: -10,
-                  child: Container(width: 120, height: 120,
-                      decoration: BoxDecoration(shape: BoxShape.circle,
-                          gradient: RadialGradient(colors: [
-                            _blue.withOpacity(widget.isDark ? 0.08 : 0.05), Colors.transparent]))),
-                ),
-                Padding(padding: const EdgeInsets.all(20), child: child!),
-              ]),
-            ),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Badge + chevron row
-            Row(children: [
-              Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                      color: accent.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: accent.withOpacity(0.22), width: 0.5)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Container(width: 5, height: 5,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: accent)),
-                    const SizedBox(width: 6),
-                    Text('NEW · Gemini 2.0 Flash',
-                        style: _t(10.5, FontWeight.w600, accent, ls: 0.1)),
-                  ])),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios_rounded, size: 13, color: label2),
-            ]),
-
-            const SizedBox(height: 14),
-
-            // Icon + title
-            Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Container(
+        child: Container(
+          decoration: BoxDecoration(
+              color: bg, borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: accent.withOpacity(0.20), width: 0.5),
+              boxShadow: [BoxShadow(
+                  color: Colors.black.withOpacity(widget.isDark ? 0.28 : 0.07),
+                  blurRadius: 14, offset: const Offset(0, 4))]),
+          child: Column(children: [
+            // Header row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Row(children: [
+                Container(
                   width: 48, height: 48,
                   decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [accent, _blue],
+                      gradient: LinearGradient(
+                          colors: [accent, _blue],
                           begin: Alignment.topLeft, end: Alignment.bottomRight),
                       borderRadius: BorderRadius.circular(14)),
                   child: const Icon(Icons.sign_language_rounded, color: Colors.white, size: 22)),
-              const SizedBox(width: 14),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('ISL Assistant', style: _t(18, FontWeight.w700, label, ls: -0.3)),
-                Text('Vani · Multilingual AI', style: _t(12, FontWeight.w400, label2)),
-              ])),
-            ]),
-
-            const SizedBox(height: 12),
-
-            Text('Ask anything about Indian Sign Language — voice in, voice out, '
-                'step-by-step sign guides in Hindi, Marathi, Tamil & English.',
-                style: _t(13, FontWeight.w400, label2, ls: -0.1, h: 1.55)),
-
-            const SizedBox(height: 14),
-
-            // Feature pills
-            Wrap(spacing: 6, runSpacing: 6, children: [
-              _Pill('🎙 Voice I/O',   accent),
-              _Pill('🌐 8 Languages', accent),
-              _Pill('🤟 Sign Guides', accent),
-              _Pill('🚨 Emergency',   accent),
-            ]),
-
-            const SizedBox(height: 16),
-
-            // CTA button — gradient
-            Container(
-                width: double.infinity, height: 46,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [accent, _blue],
-                        begin: Alignment.centerLeft, end: Alignment.centerRight),
-                    borderRadius: BorderRadius.circular(13)),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text('Open ISL Assistant',
-                      style: _t(14, FontWeight.w600, Colors.white, ls: -0.2)),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 15),
+                const SizedBox(width: 14),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Text('ISL Assistant', style: _t(16, FontWeight.w700, label, ls: -0.2)),
+                    const SizedBox(width: 8),
+                    AnimatedBuilder(
+                      animation: _pulseAnim,
+                      builder: (_, __) => Container(width: 6, height: 6,
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: accent,
+                              boxShadow: [BoxShadow(
+                                  color: accent.withOpacity(_pulseAnim.value * 0.6),
+                                  blurRadius: 5, spreadRadius: 1)]))),
+                  ]),
+                  const SizedBox(height: 3),
+                  Text('Multilingual AI · Voice · Sign Guides',
+                      style: _t(12, FontWeight.w400, label2, ls: -0.1)),
                 ])),
+                Icon(Icons.chevron_right_rounded,
+                    color: widget.isDark ? _dLabel3 : _lLabel3, size: 20),
+              ]),
+            ),
+            // Divider
+            Container(height: 0.5,
+                color: widget.isDark ? _dSep : _lSep.withOpacity(0.4)),
+            // Chips row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(children: [
+                _AssistantChip('Voice I/O',    Icons.mic_rounded,          accent,    widget.isDark),
+                const SizedBox(width: 8),
+                _AssistantChip('Sign Guides',  Icons.front_hand_rounded,   _teal,     widget.isDark),
+                const SizedBox(width: 8),
+                _AssistantChip('3 Languages',  Icons.language_rounded,     _green,    widget.isDark),
+              ]),
+            ),
           ]),
         ),
       ),
@@ -648,19 +627,120 @@ class _MobileAssistantCardState extends State<_MobileAssistantCard>
   }
 }
 
-// Shared small pill widget
-class _Pill extends StatelessWidget {
-  final String label;
-  final Color accent;
-  const _Pill(this.label, this.accent);
+class _AssistantChip extends StatelessWidget {
+  final String label; final IconData icon;
+  final Color color; final bool isDark;
+  const _AssistantChip(this.label, this.icon, this.color, this.isDark);
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-          color: accent.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accent.withOpacity(0.20), width: 0.5)),
-      child: Text(label, style: _t(11, FontWeight.w500, accent)));
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.18), width: 0.5)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 11, color: color), const SizedBox(width: 5),
+      Text(label, style: _t(10.5, FontWeight.w600, color)),
+    ]));
+}
+
+class _ThreeDotMenu extends StatelessWidget {
+  final bool isDark; final Locale locale;
+  final Function(Locale) setLocale; final VoidCallback toggleTheme;
+  const _ThreeDotMenu({required this.isDark, required this.locale,
+    required this.setLocale, required this.toggleTheme});
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      final box = Hive.box<EmergencyContact>('emergency_contacts');
+      await box.clear();
+    } catch (_) {
+      // Continue logout even if local cache cleanup fails.
+    }
+
+    await Supabase.instance.client.auth.signOut();
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Signed out.'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label2 = isDark ? _dLabel2 : _lLabel2;
+    final accent = isDark ? _blue_D  : _blue;
+    final red    = isDark ? _red_D   : _red;
+    final bg     = isDark ? _dSurface2 : _lSurface;
+    final langs  = [
+      {'code':'en','flag':'🇬🇧','name':'English'},
+      {'code':'hi','flag':'🇮🇳','name':'हिन्दी'},
+      {'code':'mr','flag':'🇮🇳','name':'मराठी'},
+    ];
+    return PopupMenuButton<String>(
+      offset: const Offset(0, -190),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: bg, elevation: 16,
+      icon: Padding(padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Icon(Icons.more_horiz_rounded, color: label2, size: 20)),
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(enabled: false, height: 28,
+            child: Text('LANGUAGE', style: _t(9.5, FontWeight.w600, label2, ls: 0.8))),
+        ...langs.map((lang) => PopupMenuItem<String>(
+            value: 'lang_${lang['code']}', height: 42,
+            child: Row(children: [
+              Text(lang['flag']!, style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 10),
+              Text(lang['name']!, style: _t(13.5, FontWeight.w500,
+                  lang['code'] == locale.languageCode ? accent
+                      : (isDark ? _dLabel : _lLabel))),
+              if (lang['code'] == locale.languageCode) ...[
+                const Spacer(), Icon(Icons.check_rounded, color: accent, size: 14)],
+            ]))),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(value: 'theme', height: 42,
+            child: Row(children: [
+              Icon(isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                  color: label2, size: 17),
+              const SizedBox(width: 10),
+              Text(isDark ? 'Light Mode' : 'Dark Mode',
+                  style: _t(13.5, FontWeight.w500, isDark ? _dLabel : _lLabel)),
+            ])),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(value: 'logout', height: 42,
+            child: Row(children: [
+              Icon(Icons.logout_rounded, color: red, size: 17),
+              const SizedBox(width: 10),
+              Text('Sign Out', style: _t(13.5, FontWeight.w500, red)),
+            ])),
+      ],
+      onSelected: (value) {
+        if (value.startsWith('lang_')) {
+          setLocale(Locale(value.replaceFirst('lang_', '')));
+        } else if (value == 'theme') {
+          toggleTheme();
+        } else if (value == 'logout') {
+          showDialog(context: context, builder: (_) => AlertDialog(
+            backgroundColor: bg, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text('Sign Out', style: _t(17, FontWeight.w600, isDark ? _dLabel : _lLabel)),
+            content: Text('Are you sure?', style: _t(14, FontWeight.w400, label2)),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: _t(15, FontWeight.w500, accent))),
+              TextButton(onPressed: () async {
+                    Navigator.pop(context);
+                    await _logout(context);
+                  },
+                  child: Text('Sign Out', style: _t(15, FontWeight.w600, red))),
+            ]));
+        }
+      },
+    );
+  }
 }
 
 // ─────────────────────────────────────────────
