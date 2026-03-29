@@ -894,11 +894,11 @@ class _QuickAccessRow extends StatelessWidget {
   @override
   Widget build(BuildContext ctx) {
     // accent colours: light / dark
-    const cards = [
+    final cards = [
       // (accentLight, accentDark, icon, label, sub)
-      (_teal,   _teal_D,  Icons.compare_arrows_rounded, 'Bridge',  'Two-Way'),
-      (_red,    _red_D,   Icons.emergency_share_rounded, 'SOS',    'Emergency'),
-      (_green,  _green_D, Icons.back_hand_rounded,       'Signs',  'Library'),
+      (_teal,   _teal_D,  Icons.compare_arrows_rounded, l.t('nav_bridge'),    l.t('home_open_bridge')),
+      (_red,    _red_D,   Icons.emergency_share_rounded, l.t('nav_emergency'), l.t('sos_screen_title')),
+      (_green,  _green_D, Icons.back_hand_rounded,       l.t('nav_signs'),     l.t('home_browse_signs')),
     ];
  
     return Padding(
