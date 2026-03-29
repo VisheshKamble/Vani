@@ -55,20 +55,35 @@ class GoogleFonts {
 // ─────────────────────────────────────────────
 //  WEBSOCKET CONFIG  (unchanged)
 // ─────────────────────────────────────────────
-const _kDefaultWsPort  = 8000;
-const _kWsPath         = '/ws';
-const _kFrameIntervalMs = 100;
+// const _kDefaultWsPort  = 8000;
+// const _kWsPath         = '/ws';
+// const _kFrameIntervalMs = 100;
+
+// String _getWebSocketUrl() {
+//   if (kIsWeb) {
+//     final scheme = Uri.base.scheme == 'https' ? 'wss' : 'ws';
+//     final host   = Uri.base.host.isNotEmpty ? Uri.base.host : '';
+//     return '$scheme://$host:$_kDefaultWsPort$_kWsPath';
+//   }
+//   if (defaultTargetPlatform == TargetPlatform.android) {
+//     return 'ws://10.0.2.2:$_kDefaultWsPort$_kWsPath';
+//   }
+//   return 'ws://127.0.0.1:$_kDefaultWsPort$_kWsPath';
+// }
+
+// ─────────────────────────────────────────────
+//  WEBSOCKET CONFIG (Railway Production)
+// ─────────────────────────────────────────────
+
+// Change this to your actual Railway domain without the 'https://'
+const String _kRailwayHost = 'isl-production-57d4.up.railway.app';
+const String _kWsPath = '/ws';
+const int _kFrameIntervalMs = 100;
 
 String _getWebSocketUrl() {
-  if (kIsWeb) {
-    final scheme = Uri.base.scheme == 'https' ? 'wss' : 'ws';
-    final host   = Uri.base.host.isNotEmpty ? Uri.base.host : '127.0.0.1';
-    return '$scheme://$host:$_kDefaultWsPort$_kWsPath';
-  }
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    return 'ws://10.0.2.2:$_kDefaultWsPort$_kWsPath';
-  }
-  return 'ws://127.0.0.1:$_kDefaultWsPort$_kWsPath';
+  // For Production on Railway, we always use 'wss' (Secure WebSocket)
+  // regardless of the platform.
+  return 'wss://$_kRailwayHost$_kWsPath';
 }
 
 // ─────────────────────────────────────────────

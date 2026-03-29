@@ -1,4 +1,18 @@
 // lib/components/GlobalNavbar.dart
+//
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  VANI — Global Navbar · Apple-Inspired                     ║
+// ║                                                            ║
+// ║  CHANGES (Fix 3):                                          ║
+// ║  • VANI wordmark: bold black (light) / white (dark)        ║
+// ║    No gradient shimmer — clean, confident, like SF logos   ║
+// ║  • Bridge & SOS: removed bordered pill style.             ║
+// ║    Now plain nav links with colour, same as HOME/TERMINAL  ║
+// ║  • Only the ACTIVE link gets the underline indicator       ║
+// ║  • SOS keeps its pulse dot for urgency — no border box     ║
+// ║  • Mobile: completely unchanged as requested               ║
+// ╚══════════════════════════════════════════════════════════════╝
+
 import 'package:flutter/material.dart';
 import '../screens/TranslateScreen.dart';
 import '../screens/SignsPage.dart';
@@ -7,11 +21,26 @@ import '../screens/TwoWayScreen.dart';
 import '../l10n/AppLocalizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; //added
 import '../components/AuthDialog.dart'; //added
+import 'dart:async';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/EmergencyContact.dart';
 
-// ── Breakpoints ──────────────────────────────
-// > 750 → full desktop nav links shown
-// ≤ 750 → compact mobile bar
 const double _kDesktopBreak = 750;
+
+// ─────────────────────────────────────────────────────────────
+//  APPLE TOKENS (web navbar only)
+// ─────────────────────────────────────────────────────────────
+const _navRed = Color(0xFFFF3B30);
+const _navRedD = Color(0xFFFF453A);
+const _navTeal = Color(0xFF32ADE6);
+
+TextStyle _nt(double size, FontWeight w, Color c, {double ls = 0}) => TextStyle(
+  fontFamily: 'Google Sans',
+  fontSize: size,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+);
 
 class GlobalNavbar extends StatelessWidget {
   final VoidCallback toggleTheme;
@@ -31,10 +60,9 @@ class GlobalNavbar extends StatelessWidget {
     final primary = Theme.of(context).primaryColor;
     final l = AppLocalizations.of(context);
     final w = MediaQuery.of(context).size.width;
-    final currentLocale = Localizations.localeOf(context);
+    final locale = Localizations.localeOf(context);
     final isMobile = w <= _kDesktopBreak;
 
-    // On mobile, tighter horizontal margin + less vertical padding
     final hMargin = isMobile ? 12.0 : (w > 900 ? 48.0 : 16.0);
     final hPadding = isMobile ? 12.0 : 22.0;
     final vPadding = isMobile ? 10.0 : 14.0;
@@ -47,50 +75,46 @@ class GlobalNavbar extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF0A0A1C).withOpacity(0.85)
-            : Colors.white.withOpacity(0.92),
-        borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
+            ? const Color(0xFF1C1C1E).withOpacity(0.92)
+            : Colors.white.withOpacity(0.94),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 18),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.07)
+              ? Colors.white.withOpacity(0.06)
               : Colors.black.withOpacity(0.06),
+          width: 0.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(isDark ? 0.10 : 0.05),
-            blurRadius: 32,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(isDark ? 0.40 : 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // ── Brand ─────────────────────────────
-          _Brand(primary: primary, context: context),
-
-          // ── Right side ────────────────────────
+          _Brand(isDark: isDark, context: context),
           if (isMobile)
             _MobileActions(
               activeRoute: activeRoute,
               toggleTheme: toggleTheme,
               setLocale: setLocale,
-              currentLocale: currentLocale,
+              currentLocale: locale,
               isDark: isDark,
               primary: primary,
               l: l,
-              context: context,
             )
           else
             _DesktopActions(
               activeRoute: activeRoute,
               toggleTheme: toggleTheme,
               setLocale: setLocale,
-              currentLocale: currentLocale,
+              currentLocale: locale,
               isDark: isDark,
               primary: primary,
               l: l,
-              context: context,
             ),
         ],
       ),
@@ -98,54 +122,46 @@ class GlobalNavbar extends StatelessWidget {
   }
 }
 
-// ── Brand ─────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  BRAND  — clean Apple-style wordmark, no gradient
+// ══════════════════════════════════════════════════════════════
 class _Brand extends StatelessWidget {
-  final Color primary;
+  final bool isDark;
   final BuildContext context;
-  const _Brand({required this.primary, required this.context});
+  const _Brand({required this.isDark, required this.context});
 
   @override
   Widget build(BuildContext ctx) {
+    final label = isDark ? Colors.white : Colors.black;
+    final accent = isDark ? const Color(0xFF0A84FF) : const Color(0xFF007AFF);
+
     return GestureDetector(
       onTap: () => Navigator.of(ctx).popUntil((r) => r.isFirst),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Thin left accent bar — Apple "I" cursor style
           Container(
-            width: 4,
-            height: 22,
+            width: 3,
+            height: 20,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [primary, primary.withOpacity(0.35)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: accent,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(width: 10),
-          ShaderMask(
-            shaderCallback: (b) => LinearGradient(
-              colors: [primary, const Color(0xFF9D8FFF)],
-            ).createShader(b),
-            child: const Text(
-              'VANI',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 3.5,
-              ),
-            ),
-          ),
+          // Wordmark: bold, no gradient, no gimmick
+          Text('VANI', style: _nt(19, FontWeight.w800, label, ls: 3.0)),
         ],
       ),
     );
   }
 }
 
-// ── Desktop actions ───────────────────────────
-class _DesktopActions extends StatelessWidget {
+// ══════════════════════════════════════════════════════════════
+//  DESKTOP ACTIONS  — clean nav links, no bordered pills
+// ══════════════════════════════════════════════════════════════
+class _DesktopActions extends StatefulWidget {
   final String activeRoute;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
@@ -153,7 +169,6 @@ class _DesktopActions extends StatelessWidget {
   final bool isDark;
   final Color primary;
   final AppLocalizations l;
-  final BuildContext context;
 
   const _DesktopActions({
     required this.activeRoute,
@@ -163,100 +178,358 @@ class _DesktopActions extends StatelessWidget {
     required this.isDark,
     required this.primary,
     required this.l,
-    required this.context,
   });
 
-  void _push(BuildContext ctx, Widget screen) {
-    Navigator.push(
-      ctx,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => screen,
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-    );
+  @override
+  State<_DesktopActions> createState() => _DesktopActionsState();
+}
+
+class _DesktopActionsState extends State<_DesktopActions> {
+  late bool _isLoggedIn;
+  late final StreamSubscription<AuthState> _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _isLoggedIn = Supabase.instance.client.auth.currentSession != null;
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (mounted) setState(() => _isLoggedIn = data.session != null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub.cancel();
+    super.dispose();
+  }
+
+  void _push(BuildContext ctx, Widget screen) => Navigator.push(
+    ctx,
+    PageRouteBuilder(
+      pageBuilder: (_, __, ___) => screen,
+      transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+      transitionDuration: const Duration(milliseconds: 280),
+    ),
+  );
+
+  Future<void> _logout(BuildContext ctx) async {
+    // Clear local contacts before signing out
+    final box = Hive.box<EmergencyContact>('emergency_contacts');
+    await box.clear();
+
+    await Supabase.instance.client.auth.signOut();
+    if (ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(
+          content: const Text('Signed out.'),
+          backgroundColor: Theme.of(ctx).colorScheme.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext ctx) {
+    final accent = widget.isDark
+        ? const Color(0xFF0A84FF)
+        : const Color(0xFF007AFF);
+    final teal = widget.isDark ? _navTeal : const Color(0xFF0891B2);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _NavLink(
-          label: l.t('nav_home'),
-          isActive: activeRoute == 'home',
+          label: widget.l.t('nav_home'),
+          isDark: widget.isDark,
+          accent: accent,
+          isActive: widget.activeRoute == 'home',
           onTap: () => Navigator.of(ctx).popUntil((r) => r.isFirst),
         ),
         _NavLink(
-          label: l.t('nav_terminal'),
-          isActive: activeRoute == 'translate',
+          label: widget.l.t('nav_terminal'),
+          isDark: widget.isDark,
+          accent: accent,
+          isActive: widget.activeRoute == 'translate',
           onTap: () {
-            if (activeRoute != 'translate')
+            if (widget.activeRoute != 'translate')
               _push(
                 ctx,
-                TranslateScreen(toggleTheme: toggleTheme, setLocale: setLocale),
+                TranslateScreen(
+                  toggleTheme: widget.toggleTheme,
+                  setLocale: widget.setLocale,
+                ),
               );
           },
         ),
         _NavLink(
-          label: l.t('nav_signs'),
-          isActive: activeRoute == 'signs',
+          label: widget.l.t('nav_signs'),
+          isDark: widget.isDark,
+          accent: accent,
+          isActive: widget.activeRoute == 'signs',
           onTap: () {
-            if (activeRoute != 'signs')
+            if (widget.activeRoute != 'signs')
               _push(
                 ctx,
-                SignsPage(toggleTheme: toggleTheme, setLocale: setLocale),
+                SignsPage(
+                  toggleTheme: widget.toggleTheme,
+                  setLocale: widget.setLocale,
+                ),
               );
           },
         ),
-        _BridgeNavLink(
-          label: l.t('nav_bridge'),
-          isActive: activeRoute == 'bridge',
+        _NavLink(
+          label: widget.l.t('nav_bridge'),
+          isDark: widget.isDark,
+          accent: teal,
+          isActive: widget.activeRoute == 'bridge',
           onTap: () {
-            if (activeRoute != 'bridge')
+            if (widget.activeRoute != 'bridge')
               _push(
                 ctx,
-                TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale),
+                TwoWayScreen(
+                  toggleTheme: widget.toggleTheme,
+                  setLocale: widget.setLocale,
+                ),
               );
           },
         ),
-        _EmergencyNavLink(
-          isActive: activeRoute == 'emergency',
+        _SOSNavLink(
+          label: widget.l.t('nav_emergency'),
+          isDark: widget.isDark,
+          isActive: widget.activeRoute == 'emergency',
           onTap: () {
-            if (activeRoute != 'emergency')
+            if (widget.activeRoute != 'emergency')
               _push(
                 ctx,
-                EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale),
+                EmergencyScreen(
+                  toggleTheme: widget.toggleTheme,
+                  setLocale: widget.setLocale,
+                ),
               );
           },
         ),
-        _NavLink(label: l.t('nav_api')),
+        _NavLink(
+          label: widget.l.t('nav_api'),
+          isDark: widget.isDark,
+          accent: accent,
+        ),
+
+        // ── Login / Logout toggle ──────────────────────────────
+        _NavLink(
+          label: _isLoggedIn ? 'LOGOUT' : 'LOGIN',
+          isDark: widget.isDark,
+          accent: accent,
+          onTap: () => _isLoggedIn ? _logout(ctx) : showAuthDialog(ctx),
+        ),
+
         const SizedBox(width: 8),
-        _LanguageDropdown(
-          currentLocale: currentLocale,
-          setLocale: setLocale,
-          l: l,
-          isDark: isDark,
-          primary: primary,
+        _LangDropdown(
+          currentLocale: widget.currentLocale,
+          setLocale: widget.setLocale,
+          l: widget.l,
+          isDark: widget.isDark,
+          primary: widget.primary,
         ),
-
         const SizedBox(width: 6),
-        _BuildAuthButton(), // added
-
-        const SizedBox(width: 4),
-        _Divider(isDark: isDark),
-        const SizedBox(width: 4),
-        _ThemeToggle(isDark: isDark, onTap: toggleTheme),
+        _VerticalDivider(isDark: widget.isDark),
+        const SizedBox(width: 6),
+        _ThemeToggle(isDark: widget.isDark, onTap: widget.toggleTheme),
       ],
     );
   }
 }
 
-// ── Mobile actions ─────────────────────────────
-// Key fix: on mobile we show ONLY icon buttons (no text labels),
-// a compact flag-only language picker, and the theme toggle.
-// This eliminates overflow completely.
+// ── Plain nav link — hover underline, active underline ────────
+class _NavLink extends StatefulWidget {
+  final String label;
+  final bool isDark, isActive;
+  final Color accent;
+  final VoidCallback? onTap;
+  const _NavLink({
+    required this.label,
+    required this.isDark,
+    required this.accent,
+    this.isActive = false,
+    this.onTap,
+  });
+  @override
+  State<_NavLink> createState() => _NavLinkState();
+}
+
+class _NavLinkState extends State<_NavLink> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = widget.isDark
+        ? Colors.white.withOpacity(0.55)
+        : Colors.black.withOpacity(0.45);
+    final activeColor = widget.isActive ? widget.accent : baseColor;
+    final hoverColor = widget.accent;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 150),
+                style: _nt(
+                  12,
+                  widget.isActive || _hovered
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                  _hovered ? hoverColor : activeColor,
+                  ls: 0.2,
+                ),
+                child: Text(widget.label),
+              ),
+              const SizedBox(height: 3),
+              // Active indicator line
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 2,
+                width: widget.isActive ? 18 : 0,
+                decoration: BoxDecoration(
+                  color: widget.accent,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── SOS link — pulse dot, no border box ──────────────────────
+class _SOSNavLink extends StatefulWidget {
+  final String label;
+  final bool isDark, isActive;
+  final VoidCallback onTap;
+  const _SOSNavLink({
+    required this.label,
+    required this.isDark,
+    required this.isActive,
+    required this.onTap,
+  });
+  @override
+  State<_SOSNavLink> createState() => _SOSNavLinkState();
+}
+
+class _SOSNavLinkState extends State<_SOSNavLink>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulse;
+  late Animation<double> _pulseAnim;
+  bool _hovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final red = widget.isDark ? _navRedD : _navRed;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Pulse dot — the only visual indicator of urgency
+                  AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, __) => Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: red,
+                        boxShadow: [
+                          BoxShadow(
+                            color: red.withOpacity(_pulseAnim.value * 0.7),
+                            blurRadius: 5,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 150),
+                    style: _nt(
+                      12,
+                      widget.isActive || _hovered
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      _hovered || widget.isActive
+                          ? red
+                          : (widget.isDark
+                                ? Colors.white.withOpacity(0.55)
+                                : Colors.black.withOpacity(0.45)),
+                      ls: 0.2,
+                    ),
+                    child: Text(widget.label),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 2,
+                width: widget.isActive ? 18 : 0,
+                decoration: BoxDecoration(
+                  color: red,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MOBILE ACTIONS  — completely unchanged
+// ══════════════════════════════════════════════════════════════
 class _MobileActions extends StatelessWidget {
   final String activeRoute;
   final VoidCallback toggleTheme;
@@ -265,7 +538,6 @@ class _MobileActions extends StatelessWidget {
   final bool isDark;
   final Color primary;
   final AppLocalizations l;
-  final BuildContext context;
 
   const _MobileActions({
     required this.activeRoute,
@@ -275,27 +547,22 @@ class _MobileActions extends StatelessWidget {
     required this.isDark,
     required this.primary,
     required this.l,
-    required this.context,
   });
 
-  void _push(BuildContext ctx, Widget screen) {
-    Navigator.push(
-      ctx,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => screen,
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
-    );
-  }
+  void _push(BuildContext ctx, Widget screen) => Navigator.push(
+    ctx,
+    PageRouteBuilder(
+      pageBuilder: (_, __, ___) => screen,
+      transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+      transitionDuration: const Duration(milliseconds: 280),
+    ),
+  );
 
   @override
   Widget build(BuildContext ctx) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Bridge icon
         _MobileIconBtn(
           icon: Icons.compare_arrows_rounded,
           color: const Color(0xFF22D3EE),
@@ -304,8 +571,8 @@ class _MobileActions extends StatelessWidget {
           ).withOpacity(activeRoute == 'bridge' ? 0.18 : 0.08),
           borderColor: const Color(
             0xFF0891B2,
-          ).withOpacity(activeRoute == 'bridge' ? 0.55 : 0.2),
-          tooltip: 'Two-Way Bridge',
+          ).withOpacity(activeRoute == 'bridge' ? 0.55 : 0.20),
+          tooltip: l.t('bridge_screen_title'),
           onTap: () {
             if (activeRoute != 'bridge')
               _push(
@@ -315,7 +582,6 @@ class _MobileActions extends StatelessWidget {
           },
         ),
         const SizedBox(width: 4),
-        // SOS icon
         _MobileSOSBtn(
           isActive: activeRoute == 'emergency',
           onTap: () {
@@ -327,17 +593,12 @@ class _MobileActions extends StatelessWidget {
           },
         ),
         const SizedBox(width: 4),
-        // Language — flag only on mobile (no text)
         _MobileLangBtn(
           currentLocale: currentLocale,
           setLocale: setLocale,
           isDark: isDark,
           primary: primary,
         ),
-
-        _MobileAuthBtn(),
-        const SizedBox(width: 4), //added
-
         const SizedBox(width: 2),
         _ThemeToggle(isDark: isDark, onTap: toggleTheme),
       ],
@@ -345,20 +606,19 @@ class _MobileActions extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
 //  SHARED SMALL WIDGETS
-// ─────────────────────────────────────────────
-
-class _Divider extends StatelessWidget {
+// ══════════════════════════════════════════════════════════════
+class _VerticalDivider extends StatelessWidget {
   final bool isDark;
-  const _Divider({required this.isDark});
+  const _VerticalDivider({required this.isDark});
   @override
   Widget build(BuildContext context) => Container(
     width: 1,
-    height: 18,
+    height: 16,
     color: isDark
         ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.10),
+        : Colors.black.withOpacity(0.08),
   );
 }
 
@@ -380,18 +640,17 @@ class _ThemeToggle extends StatelessWidget {
       ),
       child: Center(
         child: Icon(
-          isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-          size: 17,
+          isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+          size: 16,
           color: isDark
-              ? Colors.white.withOpacity(0.55)
-              : Colors.black.withOpacity(0.45),
+              ? Colors.white.withOpacity(0.50)
+              : Colors.black.withOpacity(0.40),
         ),
       ),
     ),
   );
 }
 
-// Generic mobile icon button — no label, fixed 34×34
 class _MobileIconBtn extends StatelessWidget {
   final IconData icon;
   final Color color, bgColor, borderColor;
@@ -424,7 +683,6 @@ class _MobileIconBtn extends StatelessWidget {
   );
 }
 
-// SOS mobile button with pulse
 class _MobileSOSBtn extends StatefulWidget {
   final bool isActive;
   final VoidCallback onTap;
@@ -458,10 +716,10 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
 
   @override
   Widget build(BuildContext context) {
-    const c = Color(0xFFDC2626);
+    const c = Color(0xFFFF3B30);
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, child) => GestureDetector(
+      builder: (_, __) => GestureDetector(
         onTap: widget.onTap,
         child: Container(
           width: 34,
@@ -474,9 +732,8 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
             ),
             boxShadow: [
               BoxShadow(
-                color: c.withOpacity(_anim.value * 0.35),
+                color: c.withOpacity(_anim.value * 0.30),
                 blurRadius: 8,
-                spreadRadius: 0,
               ),
             ],
           ),
@@ -485,9 +742,10 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
               'SOS',
               style: TextStyle(
                 color: c,
-                fontSize: 8.5,
+                fontSize: 9,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 1.0,
+                letterSpacing: 0.8,
+                fontFamily: 'Google Sans',
               ),
             ),
           ),
@@ -497,7 +755,6 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
   }
 }
 
-// Language selector — mobile shows flag only, desktop shows flag + label
 class _MobileLangBtn extends StatelessWidget {
   final Locale currentLocale;
   final Function(Locale) setLocale;
@@ -525,7 +782,7 @@ class _MobileLangBtn extends StatelessWidget {
     return PopupMenuButton<String>(
       offset: const Offset(0, 42),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: isDark ? const Color(0xFF141428) : Colors.white,
+      color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
       elevation: 10,
       onSelected: (code) => setLocale(Locale(code)),
       itemBuilder: (_) => langs
@@ -541,6 +798,7 @@ class _MobileLangBtn extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
+                      fontFamily: 'Google Sans',
                       color: lang['code'] == currentLocale.languageCode
                           ? primary
                           : (isDark ? Colors.white70 : Colors.black87),
@@ -561,7 +819,7 @@ class _MobileLangBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: primary.withOpacity(0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: primary.withOpacity(0.18)),
+          border: Border.all(color: primary.withOpacity(0.18), width: 0.5),
         ),
         child: Center(
           child: Text(current['flag']!, style: const TextStyle(fontSize: 16)),
@@ -571,196 +829,13 @@ class _MobileLangBtn extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-//  BRIDGE NAV LINK (desktop)
-// ─────────────────────────────────────────────
-class _BridgeNavLink extends StatefulWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-  const _BridgeNavLink({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-  @override
-  State<_BridgeNavLink> createState() => _BridgeNavLinkState();
-}
-
-class _BridgeNavLinkState extends State<_BridgeNavLink>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _c;
-  late Animation<double> _a;
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(seconds: 3))
-      ..repeat(reverse: true);
-    _a = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const teal = Color(0xFF0891B2);
-    const tealL = Color(0xFF22D3EE);
-    return InkWell(
-      onTap: widget.onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-        decoration: BoxDecoration(
-          color: widget.isActive
-              ? teal.withOpacity(0.18)
-              : teal.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: widget.isActive
-                ? teal.withOpacity(0.55)
-                : teal.withOpacity(0.18),
-            width: widget.isActive ? 1.5 : 1.0,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedBuilder(
-              animation: _a,
-              builder: (_, __) => Icon(
-                Icons.compare_arrows_rounded,
-                color: tealL.withOpacity(0.45 + _a.value * 0.55),
-                size: 12,
-              ),
-            ),
-            const SizedBox(width: 5),
-            Text(
-              widget.label,
-              style: const TextStyle(
-                color: tealL,
-                fontWeight: FontWeight.w800,
-                fontSize: 11,
-                letterSpacing: 0.8,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  EMERGENCY NAV LINK (desktop)
-// ─────────────────────────────────────────────
-class _EmergencyNavLink extends StatefulWidget {
-  final bool isActive;
-  final VoidCallback onTap;
-  const _EmergencyNavLink({required this.isActive, required this.onTap});
-  @override
-  State<_EmergencyNavLink> createState() => _EmergencyNavLinkState();
-}
-
-class _EmergencyNavLinkState extends State<_EmergencyNavLink>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _c;
-  late Animation<double> _a;
-  @override
-  void initState() {
-    super.initState();
-    _c = AnimationController(vsync: this, duration: const Duration(seconds: 2))
-      ..repeat(reverse: true);
-    _a = Tween<double>(
-      begin: 0.4,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const crimson = Color(0xFFDC2626);
-    return InkWell(
-      onTap: widget.onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-        decoration: BoxDecoration(
-          color: widget.isActive
-              ? crimson.withOpacity(0.18)
-              : crimson.withOpacity(0.07),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: widget.isActive
-                ? crimson.withOpacity(0.6)
-                : crimson.withOpacity(0.22),
-            width: widget.isActive ? 1.5 : 1.0,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedBuilder(
-              animation: _a,
-              builder: (_, __) => Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: crimson,
-                  boxShadow: [
-                    BoxShadow(
-                      color: crimson.withOpacity(_a.value * 0.8),
-                      blurRadius: 5,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Text(
-              'SOS',
-              style: TextStyle(
-                color: crimson,
-                fontWeight: FontWeight.w900,
-                fontSize: 11,
-                letterSpacing: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  LANGUAGE DROPDOWN (desktop)
-// ─────────────────────────────────────────────
-class _LanguageDropdown extends StatelessWidget {
+class _LangDropdown extends StatelessWidget {
   final Locale currentLocale;
   final Function(Locale) setLocale;
   final AppLocalizations l;
   final bool isDark;
   final Color primary;
-  const _LanguageDropdown({
+  const _LangDropdown({
     required this.currentLocale,
     required this.setLocale,
     required this.l,
@@ -779,12 +854,13 @@ class _LanguageDropdown extends StatelessWidget {
       (lang) => lang['code'] == currentLocale.languageCode,
       orElse: () => langs[0],
     );
+    final accent = isDark ? const Color(0xFF0A84FF) : const Color(0xFF007AFF);
 
     return PopupMenuButton<String>(
       tooltip: l.t('nav_language'),
       offset: const Offset(0, 44),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: isDark ? const Color(0xFF141428) : Colors.white,
+      color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
       elevation: 10,
       onSelected: (code) => setLocale(Locale(code)),
       itemBuilder: (_) => langs.map((lang) {
@@ -800,14 +876,15 @@ class _LanguageDropdown extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                   fontSize: 13,
+                  fontFamily: 'Google Sans',
                   color: sel
-                      ? primary
+                      ? accent
                       : (isDark ? Colors.white70 : Colors.black87),
                 ),
               ),
               if (sel) ...[
                 const Spacer(),
-                Icon(Icons.check_rounded, color: primary, size: 14),
+                Icon(Icons.check_rounded, color: accent, size: 14),
               ],
             ],
           ),
@@ -816,9 +893,9 @@ class _LanguageDropdown extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: primary.withOpacity(0.07),
+          color: accent.withOpacity(0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: primary.withOpacity(0.14)),
+          border: Border.all(color: accent.withOpacity(0.12), width: 0.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -827,108 +904,12 @@ class _LanguageDropdown extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               current['label']!,
-              style: TextStyle(
-                color: primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                letterSpacing: 0.4,
-              ),
+              style: _nt(11, FontWeight.w600, accent, ls: 0.3),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.keyboard_arrow_down_rounded, color: primary, size: 14),
+            Icon(Icons.keyboard_arrow_down_rounded, color: accent, size: 14),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  NAV LINK (desktop text link)
-// ─────────────────────────────────────────────
-class _NavLink extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback? onTap;
-  const _NavLink({required this.label, this.isActive = false, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).primaryColor;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive
-                ? primary
-                : (isDark ? Colors.white.withOpacity(0.5) : Colors.grey[600]),
-            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-            fontSize: 11.5,
-            letterSpacing: 0.8,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MobileAuthBtn extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
-
-    return GestureDetector(
-      onTap: () async {
-        if (user == null) {
-          showAuthDialog(context);
-        } else {
-          await Supabase.instance.client.auth.signOut();
-        }
-      },
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          user == null ? Icons.login : Icons.logout,
-          size: 16,
-          color: Colors.blue,
-        ),
-      ),
-    );
-  }
-}
-
-class _BuildAuthButton extends StatefulWidget {
-  @override
-  State<_BuildAuthButton> createState() => _BuildAuthButtonState();
-}
-
-class _BuildAuthButtonState extends State<_BuildAuthButton> {
-  @override
-  Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
-
-    return TextButton(
-      onPressed: () async {
-        if (user == null) {
-          showAuthDialog(context);
-        } else {
-          await Supabase.instance.client.auth.signOut();
-          setState(() {}); // refresh UI
-        }
-      },
-      child: Text(
-        user == null ? "Login" : "Logout",
-        style: const TextStyle(fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -83,6 +83,29 @@ Color _accentFor(String r, bool dark) {
   return map[base] ?? base;
 }
 
+String _relationLabel(AppLocalizations l, String relationCode) {
+  switch (relationCode) {
+    case 'Family':
+      return l.t('rel_family');
+    case 'Parent':
+      return l.t('rel_parent');
+    case 'Sibling':
+      return l.t('rel_sibling');
+    case 'Spouse':
+      return l.t('rel_spouse');
+    case 'Friend':
+      return l.t('rel_friend');
+    case 'Doctor':
+      return l.t('rel_doctor');
+    case 'Caretaker':
+      return l.t('rel_caretaker');
+    case 'Other':
+      return l.t('rel_other');
+    default:
+      return relationCode;
+  }
+}
+
 // ══════════════════════════════════════════════════════════════
 //  SCREEN
 // ══════════════════════════════════════════════════════════════
@@ -310,6 +333,7 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
   }
 
   void _openForm({EmergencyContact? existing, int? index}) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (_) => _ContactFormSheet(
@@ -324,7 +348,7 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(e.toString(), style: _t(13, FontWeight.w500, Colors.white)),
+                content: Text(l.t('sos_generic_error'), style: _t(13, FontWeight.w500, Colors.white)),
                 backgroundColor: _red,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -401,7 +425,7 @@ class _ContactCountBadge extends StatelessWidget {
             color: color.withOpacity(0.10),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: color.withOpacity(0.22), width: 0.5)),
-        child: Text('$count/5',
+      child: Text(AppLocalizations.of(context).t('sos_contacts_progress').replaceAll('{n}', '$count'),
             style: _t(11, FontWeight.w600, color)));
   }
 }
@@ -541,6 +565,7 @@ class _ContactCell extends StatefulWidget {
 class _ContactCellState extends State<_ContactCell> {
   @override
   Widget build(BuildContext context) {
+    final l      = AppLocalizations.of(context);
     final c      = widget.contact;
     final isDark = widget.isDark;
     final accent = _accentFor(c.relation, isDark);
@@ -584,7 +609,7 @@ class _ContactCellState extends State<_ContactCell> {
               decoration: BoxDecoration(
                   color: accent.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(20)),
-              child: Text(c.relation, style: _t(10, FontWeight.w600, accent)),
+              child: Text(_relationLabel(l, c.relation), style: _t(10, FontWeight.w600, accent)),
             ),
           ]),
           const SizedBox(height: 2),
@@ -689,16 +714,16 @@ class _MobileCapabilitiesCard extends StatelessWidget {
     final isMobile = PlatformHelper.isMobile;
     final caps     = isMobile
         ? [
-      (_red,    Icons.sms_rounded,           'Auto SMS',  'with GPS'),
-      (_indigo, Icons.vibration_rounded,     'Shake',     'double = SOS'),
-      (_teal,   Icons.location_on_rounded,   'GPS',       'precise'),
-      (_green,  Icons.notifications_rounded, 'Haptics',   'feedback'),
+      (_red,    Icons.sms_rounded,           l.t('sos_cap_mobile_1_title'), l.t('sos_cap_mobile_1_desc')),
+      (_indigo, Icons.vibration_rounded,     l.t('sos_cap_mobile_2_title'), l.t('sos_cap_mobile_2_desc')),
+      (_teal,   Icons.location_on_rounded,   l.t('sos_cap_mobile_3_title'), l.t('sos_cap_mobile_3_desc')),
+      (_green,  Icons.notifications_rounded, l.t('sos_cap_mobile_4_title'), l.t('sos_cap_mobile_4_desc')),
     ]
         : [
-      (_blue,   Icons.chat_bubble_rounded,    'WhatsApp', 'links open'),
-      (_teal,   Icons.location_on_rounded,    'GPS',      'if permitted'),
-      (_orange, Icons.content_copy_rounded,   'Copy',     'one tap'),
-      (_purple, Icons.link_rounded,           'Links',    'all contacts'),
+      (_blue,   Icons.chat_bubble_rounded,    l.t('sos_cap_web_1_title'), l.t('sos_cap_web_1_desc')),
+      (_teal,   Icons.location_on_rounded,    l.t('sos_cap_web_2_title'), l.t('sos_cap_web_2_desc')),
+      (_orange, Icons.content_copy_rounded,   l.t('sos_cap_web_3_title'), l.t('sos_cap_web_3_desc')),
+      (_purple, Icons.link_rounded,           l.t('sos_cap_web_4_title'), l.t('sos_cap_web_4_desc')),
     ];
 
     final bg    = isDark ? _dSurface  : _lSurface;
@@ -857,19 +882,20 @@ class _WebCapabilitiesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isMobile = PlatformHelper.isMobile;
     final features = isMobile
         ? [
-      (Icons.sms_rounded,            'Auto SMS with GPS coordinates'),
-      (Icons.vibration_rounded,      'Shake phone to trigger instantly'),
-      (Icons.location_on_rounded,    'Precise location attached'),
-      (Icons.notifications_rounded,  'Vibration & sound feedback'),
+      (Icons.sms_rounded,            l.t('sos_web_cap_mobile_1')),
+      (Icons.vibration_rounded,      l.t('sos_web_cap_mobile_2')),
+      (Icons.location_on_rounded,    l.t('sos_web_cap_mobile_3')),
+      (Icons.notifications_rounded,  l.t('sos_web_cap_mobile_4')),
     ]
         : [
-      (Icons.chat_bubble_rounded,    'WhatsApp + call links open'),
-      (Icons.location_on_rounded,    'Browser GPS when permitted'),
-      (Icons.content_copy_rounded,   'One-tap message copy'),
-      (Icons.link_rounded,           'All contacts shown at once'),
+      (Icons.chat_bubble_rounded,    l.t('sos_web_cap_web_1')),
+      (Icons.location_on_rounded,    l.t('sos_web_cap_web_2')),
+      (Icons.content_copy_rounded,   l.t('sos_web_cap_web_3')),
+      (Icons.link_rounded,           l.t('sos_web_cap_web_4')),
     ];
 
     final bg     = isDark ? _dSurface  : _lSurface;
@@ -891,7 +917,7 @@ class _WebCapabilitiesCard extends StatelessWidget {
           Icon(isMobile ? Icons.smartphone_rounded : Icons.language_rounded,
               color: accent, size: 14),
           const SizedBox(width: 7),
-          Text(isMobile ? 'Mobile Capabilities' : 'Web Capabilities',
+          Text(isMobile ? l.t('sos_mobile_features') : l.t('sos_web_features'),
               style: _t(11, FontWeight.w600, accent, ls: 0.3)),
         ]),
         const SizedBox(height: 14),
@@ -926,6 +952,7 @@ class _WebContactsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final hasPrimary = contacts.any((c) => c.isPrimary);
     final label2     = isDark ? _dLabel2 : _lLabel2;
 
@@ -933,8 +960,8 @@ class _WebContactsPanel extends StatelessWidget {
       // Section header
       Row(children: [
         Text(contacts.isEmpty
-            ? 'No contacts yet'
-            : '${contacts.length} of 5 contacts',
+            ? l.t('sos_no_contacts_yet')
+            : l.t('sos_contacts_count').replaceAll('{n}', '${contacts.length}'),
             style: _t(12, FontWeight.w600, label2, ls: 0.2)),
         const Spacer(),
         if (contacts.isNotEmpty)
@@ -1093,10 +1120,10 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
             _FieldLabel(text: l.t('sos_full_name'), isDark: isDark),
             const SizedBox(height: 6),
             _AppleTextField(
-                controller: _nameCtrl, hint: 'e.g. Priya Sharma',
+              controller: _nameCtrl, hint: l.t('sos_name_hint'),
                 isDark: isDark,
                 validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Name is required' : null),
+              (v == null || v.trim().isEmpty) ? l.t('sos_name_required') : null),
 
             const SizedBox(height: 16),
 
@@ -1104,16 +1131,16 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
             _FieldLabel(text: l.t('sos_phone'), isDark: isDark),
             const SizedBox(height: 6),
             _AppleTextField(
-                controller: _phoneCtrl, hint: '9876543210',
+                controller: _phoneCtrl, hint: l.t('sos_phone_hint'),
                 keyboardType: TextInputType.phone,
                 isDark: isDark,
                 prefixText: '+91  ',
                 prefixColor: accent,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Phone is required';
+                  if (v == null || v.trim().isEmpty) return l.t('sos_phone_required');
                   final c = v.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
                   if (c.length < 10 || !RegExp(r'^\d+$').hasMatch(c)) {
-                    return 'Enter a valid 10-digit number';
+                    return l.t('sos_phone_invalid10');
                   }
                   return null;
                 }),
@@ -1142,7 +1169,7 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
                                   ? chipAccent.withOpacity(0.40)
                                   : Colors.transparent,
                               width: selected ? 1.0 : 0.0)),
-                      child: Text(r, style: _t(12.5, FontWeight.w500,
+                            child: Text(_relationLabel(l, r), style: _t(12.5, FontWeight.w500,
                           selected ? chipAccent : label2)),
                     ),
                   );
@@ -1314,7 +1341,7 @@ class _AppleAlertDialog extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                     border: Border(right: BorderSide(color: sep, width: 0.5))),
-                child: Center(child: Text('Cancel',
+                child: Center(child: Text(AppLocalizations.of(context).t('sos_cancel'),
                     style: _t(17, FontWeight.w400,
                         isDark ? _blue_D : _blue))),
               ),

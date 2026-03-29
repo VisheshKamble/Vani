@@ -62,8 +62,7 @@ class SupabaseService {
     final res = await _sb
         .from('emergency_contacts')
         .select()
-        .eq('user_id', uid)
-        .order('created_at', ascending: true);
+        .eq('user_id', uid);
 
     return List<Map<String, dynamic>>.from(res as List);
   }
@@ -75,17 +74,21 @@ class SupabaseService {
     final uid = userId;
     if (uid == null) throw Exception('addContactToSupabase: not logged in.');
 
+    print('[ADD] Adding contact for user: $uid');
+    print('[ADD] Contact: ${contact.name}, ${contact.phone}');
+
     final res = await _sb
-        .from('emergency_contacts') // capital E — matches your table name
+        .from('emergency_contacts')
         .insert({
           'user_id': uid,
-          'contact_name': contact.name, // was 'name'
-          'contact_number': contact.phone, // was 'phone'
+          'contact_name': contact.name,
+          'contact_number': contact.phone,
           'relation': contact.relation,
         })
         .select()
         .single();
 
+    print('[ADD] Supabase response: $res');
     return res as Map<String, dynamic>;
   }
 
@@ -95,7 +98,7 @@ class SupabaseService {
     EmergencyContact contact,
   ) async {
     await _sb
-        .from('e mergency_contacts')
+        .from('emergency_contacts')
         .update({
           'contact_name': contact.name,
           'contact_number': contact.phone,
@@ -122,26 +125,32 @@ class SupabaseService {
     if (!isLoggedIn) return;
 
     try {
+      print('[SYNC] Starting sync for user: $userId');
       final remoteRows = await fetchContactsFromSupabase();
+      print('[SYNC] Fetched ${remoteRows.length} contacts from Supabase');
+      print('[SYNC] Rows: $remoteRows');
+
       final box = _openBox();
       await box.clear();
+      print('[SYNC] Hive box cleared');
 
       for (int i = 0; i < remoteRows.length; i++) {
         final row = remoteRows[i];
         final contact = EmergencyContact(
-          name: row['contact_name'] ?? '', // was row['name']
-          phone: row['contact_number'] ?? '', // was row['phone']
+          name: row['contact_name'] ?? '',
+          phone: row['contact_number'] ?? '',
           relation: row['relation'] ?? '',
           isPrimary: i == 0,
         )..supabaseId = row['id'] as String?;
 
         await box.add(contact);
+        print('[SYNC] Added contact: ${contact.name} ${contact.phone}');
       }
+      print('[SYNC] Sync complete. Box now has ${box.length} contacts');
     } catch (e) {
-      print('[SupabaseService] syncContactsToHive error: $e');
+      print('[SYNC] ERROR: $e');
     }
   }
-
   // ── Helpers ────────────────────────────────
 
   Box<EmergencyContact> _openBox() {

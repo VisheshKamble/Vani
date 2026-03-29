@@ -1,6 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from ultralytics import YOLO
 import cv2
 import numpy as np
 import base64
@@ -9,9 +8,11 @@ import os
 import time
 import logging
 from collections import deque
+import gdown
+from ultralytics import YOLO
 
 # ─────────────────────────────────────────────
-# LOGGING
+# LOGGING SETUP
 # ─────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
@@ -21,9 +22,9 @@ logging.basicConfig(
 log = logging.getLogger("vani")
 
 # ─────────────────────────────────────────────
-# APP & CORS
+# FASTAPI CONFIG
 # ─────────────────────────────────────────────
-app = FastAPI(title="VANI ISL Backend", version="2.1.0")
+app = FastAPI(title="VANI ISL Backend", version="2.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,48 +35,62 @@ app.add_middleware(
 )
 
 # ─────────────────────────────────────────────
-# MODEL LOAD (CPU FORCED)
+# MODEL MANAGEMENT (YOLOv11 + G-DRIVE)
 # ─────────────────────────────────────────────
+os.makedirs("model", exist_ok=True)
 MODEL_PATH = os.path.join("model", "isl_best.pt")
+# Direct ID from your link
+FILE_ID = "1TcCNyM1MtbixlN3wZgFttOlvuJutTPqB"
 
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError("❌ best.pt not found inside /model folder")
+def initialize_model():
+    """Downloads model if missing/corrupt and loads into memory."""
+    # 1. Clean up old/failed downloads (HTML error pages are usually < 1MB)
+    if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) < 1_000_000:
+        log.info("🗑️ Deleting corrupted model file (size too small)...")
+        os.remove(MODEL_PATH)
 
-try:
-    model = YOLO(MODEL_PATH)
-    model.to("cpu")  # Force CPU
-    log.info(f"✅ Model loaded successfully from {MODEL_PATH}")
-except Exception as e:
-    log.error(f"❌ Model failed to load: {e}")
-    raise
+    # 2. Download from Google Drive
+    if not os.path.exists(MODEL_PATH):
+        try:
+            log.info(f"📥 Downloading model ID: {FILE_ID}")
+            url = f"https://drive.google.com/uc?id={FILE_ID}"
+            gdown.download(url, MODEL_PATH, quiet=False)
+            log.info("✅ Download complete!")
+        except Exception as e:
+            log.error(f"❌ Download failed: {e}")
+            return None
+
+    # 3. Load YOLO model
+    try:
+        # Note: 'ultralytics>=8.3.0' is required for YOLOv11 (C3k2 layer)
+        loaded_model = YOLO(MODEL_PATH)
+        loaded_model.to("cpu")
+        loaded_model.fuse() 
+        log.info(f"✅ YOLO Model loaded successfully from {MODEL_PATH}")
+        return loaded_model
+    except Exception as e:
+        log.error(f"❌ Model failed to load: {e}")
+        return None
+
+# Global model instance
+model = initialize_model()
 
 # ─────────────────────────────────────────────
-# INFERENCE CONFIG
+# INFERENCE LOGIC
 # ─────────────────────────────────────────────
 CONF_THRESHOLD = 0.30
 MAX_DET = 1
-SMOOTH_WINDOW = 5
-FRAME_SKIP_MS = 80  # ~12 FPS
+FRAME_SKIP_MS = 80  # Max ~12 FPS for CPU stability
 
-# ─────────────────────────────────────────────
-# TEMPORAL SMOOTHER
-# ─────────────────────────────────────────────
 class PredictionSmoother:
-    def __init__(self, window: int = SMOOTH_WINDOW):
-        self._window = window
+    def __init__(self, window: int = 5):
         self._buf = deque(maxlen=window)
 
     def push(self, label: str, conf: float):
         self._buf.append((label, conf))
-        if len(self._buf) < self._window:
-            return label, conf
-
         labels = [l for l, _ in self._buf]
         dominant = max(set(labels), key=labels.count)
-        avg_conf = sum(
-            c for l, c in self._buf if l == dominant
-        ) / labels.count(dominant)
-
+        avg_conf = sum(c for l, c in self._buf if l == dominant) / labels.count(dominant)
         return dominant, round(avg_conf, 2)
 
     def reset(self):
@@ -87,135 +102,102 @@ class PredictionSmoother:
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    client = websocket.client
-    log.info(f"🔌 Connected {client}")
+    log.info(f"🔌 WebSocket Connected: {websocket.client}")
+    
+    if model is None:
+        await websocket.send_json({"type": "error", "message": "Model not available on server"})
+        await websocket.close()
+        return
 
     smoother = PredictionSmoother()
-    last_infer = 0.0
+    last_infer_time = 0.0
     frame_count = 0
-    err_count = 0
-    MAX_ERRORS = 10
 
     try:
         while True:
+            # Receive data (Base64 string)
             try:
-                raw = await asyncio.wait_for(
-                    websocket.receive_text(), timeout=15.0
-                )
+                raw_data = await asyncio.wait_for(websocket.receive_text(), timeout=20.0)
             except asyncio.TimeoutError:
                 await websocket.send_json({"type": "ping"})
                 continue
 
-            # Stop signal
-            if raw == "__STOP__":
-                smoother.reset()
-                await websocket.send_json({"type": "stopped"})
-                continue
-
-            if raw == "__PING__":
+            # Handling Protocol Commands
+            if raw_data == "__PING__":
                 await websocket.send_json({"type": "pong"})
                 continue
-
-            # Frame throttle
-            now_ms = time.monotonic() * 1000
-            if (now_ms - last_infer) < FRAME_SKIP_MS:
-                await asyncio.sleep(0.005)
+            if raw_data == "__STOP__":
+                smoother.reset()
                 continue
 
-            # Decode base64 image
+            # Frame Throttling
+            current_time = time.monotonic() * 1000
+            if (current_time - last_infer_time) < FRAME_SKIP_MS:
+                continue
+
             try:
-                b64 = raw.split(",")[-1]
-                img_bytes = base64.b64decode(b64)
+                # Decode Base64 to OpenCV Image
+                header, encoded = raw_data.split(",", 1) if "," in raw_data else (None, raw_data)
+                img_bytes = base64.b64decode(encoded)
                 np_img = np.frombuffer(img_bytes, dtype=np.uint8)
                 frame = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
                 if frame is None:
-                    raise ValueError("Invalid frame")
+                    continue
 
-                err_count = 0
-            except Exception as e:
-                err_count += 1
-                log.warning(f"Decode error ({err_count}/{MAX_ERRORS}): {e}")
-                if err_count >= MAX_ERRORS:
-                    await websocket.send_json(
-                        {"type": "error", "message": "Too many bad frames"}
-                    )
-                    break
-                continue
-
-            # Inference (non-blocking)
-            try:
+                # Run Inference in thread pool to keep loop responsive
                 loop = asyncio.get_event_loop()
-                results = await loop.run_in_executor(
-                    None,
-                    lambda: model.predict(
-                        frame,
-                        device="cpu",
-                        verbose=False,
-                        conf=CONF_THRESHOLD,
-                        max_det=MAX_DET,
-                    )[0],
-                )
-            except Exception as e:
-                log.error(f"Inference error: {e}")
-                await websocket.send_json(
-                    {"type": "error", "message": "Inference failed"}
-                )
-                continue
+                results = await loop.run_in_executor(None, lambda: model.predict(
+                    frame, 
+                    device="cpu", 
+                    verbose=False, 
+                    conf=CONF_THRESHOLD, 
+                    max_det=MAX_DET
+                )[0])
 
-            last_infer = time.monotonic() * 1000
-            frame_count += 1
+                last_infer_time = time.monotonic() * 1000
+                frame_count += 1
 
-            # Build response
-            if len(results.boxes) > 0:
-                box = results.boxes[0]
-                raw_label = model.names[int(box.cls[0])]
-                raw_conf = float(box.conf[0])
-                label, conf = smoother.push(raw_label, raw_conf)
+                # Process Results
+                if len(results.boxes) > 0:
+                    box = results.boxes[0]
+                    cls_id = int(box.cls[0])
+                    raw_label = model.names[cls_id]
+                    raw_conf = float(box.conf[0])
+                    label, conf = smoother.push(raw_label, raw_conf)
+                else:
+                    label, conf = smoother.push("No Sign", 0.0)
 
-                payload = {
+                # Send Response
+                await websocket.send_json({
                     "type": "prediction",
                     "label": label,
                     "confidence": conf,
-                    "frame": frame_count,
-                }
-            else:
-                smoother.push("No Sign", 0.0)
-                payload = {
-                    "type": "prediction",
-                    "label": "No Sign",
-                    "confidence": 0.0,
-                    "frame": frame_count,
-                }
+                    "frame": frame_count
+                })
 
-            await websocket.send_json(payload)
-            await asyncio.sleep(0.001)
+            except Exception as e:
+                log.debug(f"Frame processing error: {e}")
+                continue
 
     except WebSocketDisconnect:
-        log.info(f"Disconnected {client}")
-    except Exception as e:
-        log.error(f"Unexpected error: {e}")
+        log.info(f"🔌 WebSocket Disconnected: {websocket.client}")
     finally:
         smoother.reset()
-        log.info(f"Session cleaned for {client}")
 
 # ─────────────────────────────────────────────
-# HEALTH CHECK
+# SYSTEM ENDPOINTS
 # ─────────────────────────────────────────────
 @app.get("/health")
-def health():
-    return {"status": "ok", "model": MODEL_PATH}
+def health_check():
+    return {
+        "status": "online",
+        "model_loaded": model is not None,
+        "engine": "YOLOv11-CPU"
+    }
 
-# ─────────────────────────────────────────────
-# ENTRY POINT
-# ─────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=False,
-        log_level="info",
-    )
+    # Railway sets the PORT environment variable automatically
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, log_level="info")

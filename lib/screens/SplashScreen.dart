@@ -21,6 +21,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'HomeScreen.dart';
+import '../l10n/AppLocalizations.dart';
 import '../components/SOSFloatingButton.dart';
 import '../services/EmergencyService.dart';
 
@@ -172,6 +173,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: _white,
       body: AnimatedBuilder(
@@ -212,7 +214,7 @@ class _SplashScreenState extends State<SplashScreen>
                     position: _nameSlide,
                     child: FadeTransition(
                       opacity: _nameFade,
-                      child: Text('VANI',
+                      child: Text(l.t('app_title_short'),
                           style: _t(44, FontWeight.w700, _label, ls: 8.0)),
                     ),
                   ),
@@ -222,7 +224,7 @@ class _SplashScreenState extends State<SplashScreen>
                   // ── Tagline ───────────────────────────
                   FadeTransition(
                     opacity: _tagFade,
-                    child: Text('Indian Sign Language · AI',
+                    child: Text(l.t('tagline_main'),
                         style: _t(13, FontWeight.w400, _label2, ls: 0.5)),
                   ),
                 ],

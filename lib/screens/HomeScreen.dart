@@ -15,7 +15,7 @@ import '../l10n/AppLocalizations.dart';
 import 'TranslateScreen.dart';
 import 'TwoWayScreen.dart';
 import 'EmergencyScreen.dart';
-import 'SignsPage.dart';
+import 'Signspage.dart';
 import 'objectives/AccessibilityPage.dart';
 import 'objectives/BridgingGapsPage.dart';
 import 'objectives/InclusivityPage.dart';
@@ -184,27 +184,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             launchLabel: l.t('get_started'),
             onLaunch: () => _push(ctx, TranslateScreen(
                 toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)),
-            bullets: const [
-              (Icons.crop_free_rounded,        'Live detection',      'Point at signing hands — works instantly'),
-              (Icons.lock_rounded,             'Private & on-device', 'Zero data leaves your phone, ever'),
-              (Icons.translate_rounded,        'Multi-language',      'Hindi, Marathi, Tamil, English output'),
-              (Icons.receipt_long_rounded,     'Saved transcript',    'Full session log stored locally'),
+            bullets: [
+              (Icons.crop_free_rounded,        l.t('home_terminal_b1_title'), l.t('home_terminal_b1_desc')),
+              (Icons.lock_rounded,             l.t('home_terminal_b2_title'), l.t('home_terminal_b2_desc')),
+              (Icons.translate_rounded,        l.t('home_terminal_b3_title'), l.t('home_terminal_b3_desc')),
+              (Icons.receipt_long_rounded,     l.t('home_terminal_b4_title'), l.t('home_terminal_b4_desc')),
             ]);
       case 2:
         return _FeatureDetail(
             isDark: isDark, l: l,
             icon: Icons.back_hand_rounded,
             title: l.t('nav_signs'),
-            subtitle: '64 ISL signs — browse, learn, flip cards',
+            subtitle: l.t('home_signs_sub'),
             accentLight: _teal,   accentDark: _teal_D,
             launchLabel: l.t('home_browse_signs'),
             onLaunch: () => _push(ctx, SignsPage(
                 toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)),
-            bullets: const [
-              (Icons.grid_view_rounded,        '64 signs',         'Complete ISL vocabulary library'),
-              (Icons.flip_to_front_rounded,    'Flip cards',       'Hand shape & meaning on each card'),
-              (Icons.search_rounded,           'Instant search',   'Filter by name, meaning or category'),
-              (Icons.sort_rounded,             'Smart filters',    'Alphabet, numbers, common words'),
+            bullets: [
+              (Icons.grid_view_rounded,        l.t('home_signs_b1_title'), l.t('home_signs_b1_desc')),
+              (Icons.flip_to_front_rounded,    l.t('home_signs_b2_title'), l.t('home_signs_b2_desc')),
+              (Icons.search_rounded,           l.t('home_signs_b3_title'), l.t('home_signs_b3_desc')),
+              (Icons.sort_rounded,             l.t('home_signs_b4_title'), l.t('home_signs_b4_desc')),
             ]);
       case 3:
         return _FeatureDetail(
@@ -216,11 +216,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             launchLabel: l.t('home_open_bridge'),
             onLaunch: () => _push(ctx, TwoWayScreen(
                 toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)),
-            bullets: const [
-              (Icons.sign_language_rounded,    'Signs → text',     'Deaf person signs, app translates live'),
-              (Icons.keyboard_alt_rounded,     'Text → speech',    'Hearing person types or speaks back'),
-              (Icons.chat_bubble_outline_rounded,'Chat thread',    'Messenger-style conversation history'),
-              (Icons.flash_on_rounded,         'Quick phrases',    '12 ready-made professional phrases'),
+            bullets: [
+              (Icons.sign_language_rounded,      l.t('home_bridge_b1_title'), l.t('home_bridge_b1_desc')),
+              (Icons.keyboard_alt_rounded,       l.t('home_bridge_b2_title'), l.t('home_bridge_b2_desc')),
+              (Icons.chat_bubble_outline_rounded,l.t('home_bridge_b3_title'), l.t('home_bridge_b3_desc')),
+              (Icons.flash_on_rounded,           l.t('home_bridge_b4_title'), l.t('home_bridge_b4_desc')),
             ]);
       default: return const SizedBox.shrink();
     }
@@ -517,7 +517,7 @@ class _MobileNavBar extends StatelessWidget {
         // Logotype
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Text('VANI', style: _t(26, FontWeight.w700, isDark ? _dLabel : _lLabel,
+            Text(l.t('app_title_short'), style: _t(26, FontWeight.w700, isDark ? _dLabel : _lLabel,
                 ls: 4.0)),
             const SizedBox(width: 8),
             AnimatedBuilder(
@@ -536,7 +536,7 @@ class _MobileNavBar extends StatelessWidget {
         const Spacer(),
         // Lang selector
         _LangButton(locale: locale, setLocale: setLocale,
-            isDark: isDark, accent: accent),
+          isDark: isDark, accent: accent, l: l),
         const SizedBox(width: 8),
         // Theme toggle — iOS-style filled circle button
         _IconPill(
@@ -574,15 +574,16 @@ class _LangButton extends StatelessWidget {
   final Function(Locale) setLocale;
   final bool isDark;
   final Color accent;
+  final AppLocalizations l;
   const _LangButton({required this.locale, required this.setLocale,
-    required this.isDark, required this.accent});
+    required this.isDark, required this.accent, required this.l});
 
   @override
   Widget build(BuildContext context) {
     final langs = [
-      {'code': 'en', 'flag': '🇬🇧', 'name': 'English'},
-      {'code': 'hi', 'flag': '🇮🇳', 'name': 'हिन्दी'},
-      {'code': 'mr', 'flag': '🇮🇳', 'name': 'मराठी'},
+      {'code': 'en', 'flag': '🇬🇧', 'name': l.t('lang_en')},
+      {'code': 'hi', 'flag': '🇮🇳', 'name': l.t('lang_hi')},
+      {'code': 'mr', 'flag': '🇮🇳', 'name': l.t('lang_mr')},
     ];
     final cur = langs.firstWhere(
             (l) => l['code'] == locale.languageCode, orElse: () => langs[0]);
@@ -718,22 +719,21 @@ class _MobileHeroCardState extends State<_MobileHeroCard>
           children: [
             // Badge
             _AppleBadge(
-                label: 'ISL · On-Device AI · Offline',
+              label: widget.l.t('home_mobile_badge'),
                 accent: widget.isDark ? _blue_D : _blue,
                 isDark: widget.isDark),
             const SizedBox(height: 16),
 
             // Headline — SF Display style
-            Text('Sign Language\nTo Text,', style: _t(
+            Text(widget.l.t('hero_title_line1'), style: _t(
                 34, FontWeight.w700, label, ls: -0.5, h: 1.08)),
             // Accent word in system blue
-            Text('Instantly.', style: _t(34, FontWeight.w700, accent, ls: -0.5, h: 1.08)),
+            Text(widget.l.t('hero_title_line2'), style: _t(34, FontWeight.w700, accent, ls: -0.5, h: 1.08)),
 
             const SizedBox(height: 12),
 
-            Text(
-                "Empowering India's 63M+ deaf & mute community —\nprivate, accurate, always offline.",
-                style: _t(14, FontWeight.w400, label2, ls: -0.2, h: 1.55)),
+            Text(widget.l.t('hero_sub'),
+              style: _t(14, FontWeight.w400, label2, ls: -0.2, h: 1.55)),
 
             const SizedBox(height: 22),
 
@@ -839,6 +839,50 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
 // ─────────────────────────────────────────────
 //  QUICK ACCESS ROW  — iOS app-icon grid style
 // ─────────────────────────────────────────────
+// class _QuickAccessRow extends StatelessWidget {
+//   final bool isDark;
+//   final AppLocalizations l;
+//   final VoidCallback toggleTheme;
+//   final Function(Locale) setLocale;
+//   const _QuickAccessRow({required this.isDark, required this.l,
+//     required this.toggleTheme, required this.setLocale});
+
+//   @override
+//   Widget build(BuildContext ctx) {
+//     final cards = [
+//       (_teal,   _teal_D,   Icons.compare_arrows_rounded, l.t('nav_bridge'),    l.t('home_open_bridge'),
+//       TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale)),
+//       (_red,    _red_D,    Icons.emergency_share_rounded, l.t('nav_emergency'),      l.t('sos_screen_title'),
+//       EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale)),
+//       (_green,  _green_D,  Icons.back_hand_rounded,       l.t('nav_signs'),    l.t('home_browse_signs'),
+//       SignsPage(toggleTheme: toggleTheme, setLocale: setLocale)),
+//     ];
+
+//     return SizedBox(
+//       height: 108,
+//       child: ListView.builder(
+//           scrollDirection: Axis.horizontal,
+//           padding: const EdgeInsets.symmetric(horizontal: 16),
+//           physics: const BouncingScrollPhysics(),
+//           itemCount: cards.length,
+//           itemBuilder: (_, i) {
+//             final c = cards[i];
+//             return Padding(
+//                 padding: EdgeInsets.only(right: i < cards.length - 1 ? 12 : 0),
+//                 child: _QuickTile(
+//                     colorLight: c.$1, colorDark: c.$2,
+//                     icon: c.$3, label: c.$4, sub: c.$5,
+//                     isDark: isDark,
+//                     onTap: () => Navigator.push(ctx, PageRouteBuilder(
+//                         pageBuilder: (_, __, ___) => c.$6,
+//                         transitionsBuilder: (_, a, __, ch) =>
+//                             FadeTransition(opacity: a, child: ch),
+//                         transitionDuration: const Duration(milliseconds: 260)))));
+//           }),
+//     );
+//   }
+// }
+
 class _QuickAccessRow extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l;
@@ -846,66 +890,80 @@ class _QuickAccessRow extends StatelessWidget {
   final Function(Locale) setLocale;
   const _QuickAccessRow({required this.isDark, required this.l,
     required this.toggleTheme, required this.setLocale});
-
+ 
   @override
   Widget build(BuildContext ctx) {
+    // accent colours: light / dark
     final cards = [
-      (_teal,   _teal_D,   Icons.compare_arrows_rounded, l.t('nav_bridge'),    l.t('home_open_bridge'),
-      TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale)),
-      (_red,    _red_D,    Icons.emergency_share_rounded, l.t('nav_emergency'),      l.t('sos_screen_title'),
-      EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale)),
-      (_green,  _green_D,  Icons.back_hand_rounded,       l.t('nav_signs'),    l.t('home_browse_signs'),
-      SignsPage(toggleTheme: toggleTheme, setLocale: setLocale)),
+      // (accentLight, accentDark, icon, label, sub)
+      (_teal,   _teal_D,  Icons.compare_arrows_rounded, l.t('nav_bridge'),    l.t('home_open_bridge')),
+      (_red,    _red_D,   Icons.emergency_share_rounded, l.t('nav_emergency'), l.t('sos_screen_title')),
+      (_green,  _green_D, Icons.back_hand_rounded,       l.t('nav_signs'),     l.t('home_browse_signs')),
     ];
-
-    return SizedBox(
-      height: 108,
-      child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          physics: const BouncingScrollPhysics(),
-          itemCount: cards.length,
-          itemBuilder: (_, i) {
-            final c = cards[i];
-            return Padding(
-                padding: EdgeInsets.only(right: i < cards.length - 1 ? 12 : 0),
-                child: _QuickTile(
-                    colorLight: c.$1, colorDark: c.$2,
-                    icon: c.$3, label: c.$4, sub: c.$5,
-                    isDark: isDark,
-                    onTap: () => Navigator.push(ctx, PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => c.$6,
-                        transitionsBuilder: (_, a, __, ch) =>
-                            FadeTransition(opacity: a, child: ch),
-                        transitionDuration: const Duration(milliseconds: 260)))));
-          }),
+ 
+    return Padding(
+      // same 16px horizontal padding as the rest of the feed
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: cards.asMap().entries.map((e) {
+          final i = e.key; final c = e.value;
+          final accent = isDark ? c.$2 : c.$1;
+ 
+          // destination widget
+          Widget dest() {
+            switch (i) {
+              case 0: return TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale);
+              case 1: return EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale);
+              default: return SignsPage(toggleTheme: toggleTheme, setLocale: setLocale);
+            }
+          }
+ 
+          return Expanded(
+            child: Padding(
+              // small gap between tiles; last tile has no trailing gap
+              padding: EdgeInsets.only(right: i < cards.length - 1 ? 10 : 0),
+              child: _QuickTile(
+                accent: accent, icon: c.$3,
+                label: c.$4, sub: c.$5,
+                isDark: isDark,
+                onTap: () => Navigator.push(ctx, PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => dest(),
+                    transitionsBuilder: (_, a, __, ch) =>
+                        FadeTransition(opacity: a, child: ch),
+                    transitionDuration: const Duration(milliseconds: 260))),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
-
+ 
+// ── REPLACE your existing _QuickTile + _QuickTileState with this ──
+ 
 class _QuickTile extends StatefulWidget {
-  final Color colorLight, colorDark;
+  final Color accent;
   final IconData icon;
   final String label, sub;
   final bool isDark;
   final VoidCallback onTap;
-  const _QuickTile({required this.colorLight, required this.colorDark,
-    required this.icon, required this.label, required this.sub,
+  const _QuickTile({required this.accent, required this.icon,
+    required this.label, required this.sub,
     required this.isDark, required this.onTap});
   @override
   State<_QuickTile> createState() => _QuickTileState();
 }
-
+ 
 class _QuickTileState extends State<_QuickTile> {
   bool _pressed = false;
-  Color get _accent => widget.isDark ? widget.colorDark : widget.colorLight;
-
+ 
   @override
   Widget build(BuildContext context) {
-    final bg     = widget.isDark ? _dSurface  : _lSurface;
-    final label  = widget.isDark ? _dLabel    : _lLabel;
-    final label2 = widget.isDark ? _dLabel2   : _lLabel2;
-
+    final bg    = widget.isDark ? _dSurface : _lSurface;
+    final label = widget.isDark ? _dLabel   : _lLabel;
+    final sub   = widget.isDark ? _dLabel2  : _lLabel2;
+ 
     return GestureDetector(
       onTapDown:   (_) => setState(() => _pressed = true),
       onTapUp:     (_) { setState(() => _pressed = false); widget.onTap(); },
@@ -915,31 +973,104 @@ class _QuickTileState extends State<_QuickTile> {
         duration: const Duration(milliseconds: 80),
         curve: Curves.easeOutBack,
         child: Container(
-          width: 108,
-          decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: _accent.withOpacity(0.18), width: 0.5),
-              boxShadow: [BoxShadow(
-                  color: Colors.black.withOpacity(widget.isDark ? 0.30 : 0.07),
-                  blurRadius: 14, offset: const Offset(0, 5))]),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                    color: _accent.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(13)),
-                child: Icon(widget.icon, color: _accent, size: 20)),
-            const SizedBox(height: 8),
-            Text(widget.label, style: _t(11.5, FontWeight.w600, label)),
-            Text(widget.sub,   style: _t(10,   FontWeight.w400, label2)),
-          ]),
+          // aspect ratio drives height — tile is always square-ish
+          // regardless of screen width. Using AspectRatio here so
+          // the tile height adapts to whatever width Expanded gives it.
+          child: AspectRatio(
+            aspectRatio: 0.95,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: bg,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                      color: widget.accent.withOpacity(0.18), width: 0.5),
+                  boxShadow: [BoxShadow(
+                      color: Colors.black.withOpacity(widget.isDark ? 0.28 : 0.07),
+                      blurRadius: 12, offset: const Offset(0, 4))]),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                      width: 42, height: 42,
+                      decoration: BoxDecoration(
+                          color: widget.accent.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(13)),
+                      child: Icon(widget.icon, color: widget.accent, size: 20)),
+                  const SizedBox(height: 8),
+                  Text(widget.label,
+                      style: _t(11.5, FontWeight.w700, label),
+                      textAlign: TextAlign.center),
+                  Text(widget.sub,
+                      style: _t(9.5, FontWeight.w400, sub),
+                      textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
+ 
+
+// class _QuickTile extends StatefulWidget {
+//   final Color colorLight, colorDark;
+//   final IconData icon;
+//   final String label, sub;
+//   final bool isDark;
+//   final VoidCallback onTap;
+//   const _QuickTile({required this.colorLight, required this.colorDark,
+//     required this.icon, required this.label, required this.sub,
+//     required this.isDark, required this.onTap});
+//   @override
+//   State<_QuickTile> createState() => _QuickTileState();
+// }
+
+// class _QuickTileState extends State<_QuickTile> {
+//   bool _pressed = false;
+//   Color get _accent => widget.isDark ? widget.colorDark : widget.colorLight;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final bg     = widget.isDark ? _dSurface  : _lSurface;
+//     final label  = widget.isDark ? _dLabel    : _lLabel;
+//     final label2 = widget.isDark ? _dLabel2   : _lLabel2;
+
+//     return GestureDetector(
+//       onTapDown:   (_) => setState(() => _pressed = true),
+//       onTapUp:     (_) { setState(() => _pressed = false); widget.onTap(); },
+//       onTapCancel: ()  => setState(() => _pressed = false),
+//       child: AnimatedScale(
+//         scale: _pressed ? 0.93 : 1.0,
+//         duration: const Duration(milliseconds: 80),
+//         curve: Curves.easeOutBack,
+//         child: Container(
+//           width: 108,
+//           decoration: BoxDecoration(
+//               color: bg,
+//               borderRadius: BorderRadius.circular(20),
+//               border: Border.all(
+//                   color: _accent.withOpacity(0.18), width: 0.5),
+//               boxShadow: [BoxShadow(
+//                   color: Colors.black.withOpacity(widget.isDark ? 0.30 : 0.07),
+//                   blurRadius: 14, offset: const Offset(0, 5))]),
+//           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+//             Container(
+//                 width: 44, height: 44,
+//                 decoration: BoxDecoration(
+//                     color: _accent.withOpacity(0.12),
+//                     borderRadius: BorderRadius.circular(13)),
+//                 child: Icon(widget.icon, color: _accent, size: 20)),
+//             const SizedBox(height: 8),
+//             Text(widget.label, style: _t(11.5, FontWeight.w600, label)),
+//             Text(widget.sub,   style: _t(10,   FontWeight.w400, label2)),
+//           ]),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // ─────────────────────────────────────────────
 //  OBJECTIVES HORIZONTAL SCROLL
@@ -1106,10 +1237,7 @@ class _MobileMissionCard extends StatelessWidget {
         Text(l.t('vision_title'),
             style: _t(17, FontWeight.w700, label, ls: -0.3, h: 1.2)),
         const SizedBox(height: 8),
-        Text(
-            "With only 1 certified translator for every 33,000+ deaf individuals "
-                "in India, VANI bridges the gap — delivering real-time sign language "
-                "translation on your device, privately.",
+        Text(l.t('home_mission_body'),
             style: _t(13, FontWeight.w400, sub, ls: -0.1, h: 1.6)),
         const SizedBox(height: 14),
         Container(
@@ -1205,7 +1333,7 @@ class _FeatureDetail extends StatelessWidget {
               // "Inside" label — iOS grouped list header style
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: Text("WHAT'S INSIDE",
+                child: Text(l.t('page_section_header'),
                     style: _t(11, FontWeight.w600,
                         isDark ? _dLabel3 : _lLabel3, ls: 0.6)),
               ),
@@ -1814,7 +1942,7 @@ class _WebVisionCard extends StatelessWidget {
                 Container(width: 6, height: 6,
                     decoration: const BoxDecoration(color: _red, shape: BoxShape.circle)),
                 const SizedBox(width: 8),
-                Text('1 translator : 33,000+ people',
+                Text(l.t('obj_crisis_stat'),
                     style: _t(12.5, FontWeight.w600, _red)),
               ])),
         ]));
@@ -1837,7 +1965,7 @@ class _WebFooter extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 16, runSpacing: 6,
           children: [
-            Text('VANI', style: _t(12, FontWeight.w700,
+            Text(AppLocalizations.of(context).t('app_title_short'), style: _t(12, FontWeight.w700,
                 isDark ? _blue_D : _blue, ls: 4.0)),
             Container(width: 1, height: 11,
                 color: isDark ? _dSep : _lSep.withOpacity(0.5)),

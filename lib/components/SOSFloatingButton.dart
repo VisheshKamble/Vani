@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/EmergencyService.dart';
 import '../screens/EmergencyScreen.dart';
+import '../l10n/AppLocalizations.dart';
 
 class SOSFloatingButton extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -92,6 +93,7 @@ class _SOSFloatingButtonState extends State<SOSFloatingButton>
             curve: Curves.easeOutCubic,
             child: _expanded
                 ? _QuickMenu(
+                l: AppLocalizations.of(context),
                     onGeneralHelp: () => _quickSend(SOSMessageType.generalHelp),
                     onMedical:     () => _quickSend(SOSMessageType.medical),
                     onPolice:      () => _quickSend(SOSMessageType.police),
@@ -147,12 +149,12 @@ class _SOSFloatingButtonState extends State<SOSFloatingButton>
                               : Column(
                                   key: const ValueKey('sos'),
                                   mainAxisSize: MainAxisSize.min,
-                                  children: const [
+                                  children: [
                                     Icon(Icons.emergency_rounded,
                                         color: Colors.white, size: 16),
-                                    SizedBox(height: 1),
-                                    Text('SOS',
-                                      style: TextStyle(
+                                    const SizedBox(height: 1),
+                                    Text(AppLocalizations.of(context).t('nav_emergency'),
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w900,
                                         fontSize: 9.5,
@@ -177,11 +179,13 @@ class _SOSFloatingButtonState extends State<SOSFloatingButton>
 // ─────────────────────────────────────────────
 
 class _QuickMenu extends StatelessWidget {
+  final AppLocalizations l;
   final VoidCallback onGeneralHelp;
   final VoidCallback onMedical;
   final VoidCallback onPolice;
   final VoidCallback onFullScreen;
   const _QuickMenu({
+    required this.l,
     required this.onGeneralHelp,
     required this.onMedical,
     required this.onPolice,
@@ -196,7 +200,7 @@ class _QuickMenu extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _QuickBtn(
-          label:   'General Help',
+          label:   l.t('sos_general_title'),
           icon:    Icons.emergency_rounded,
           color:   const Color(0xFFDC2626),
           isDark:  isDark,
@@ -204,7 +208,7 @@ class _QuickMenu extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _QuickBtn(
-          label:   'Medical Emergency',
+          label:   l.t('sos_medical_title'),
           icon:    Icons.medical_services_rounded,
           color:   const Color(0xFFEA580C),
           isDark:  isDark,
@@ -212,7 +216,7 @@ class _QuickMenu extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _QuickBtn(
-          label:   'Safety Emergency',
+          label:   l.t('sos_police_title'),
           icon:    Icons.shield_rounded,
           color:   const Color(0xFF0284C7),
           isDark:  isDark,
@@ -220,7 +224,7 @@ class _QuickMenu extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _QuickBtn(
-          label:   'All SOS Options',
+          label:   l.t('sos_full_screen'),
           icon:    Icons.open_in_full_rounded,
           color:   const Color(0xFF7C3AED),
           isDark:  isDark,

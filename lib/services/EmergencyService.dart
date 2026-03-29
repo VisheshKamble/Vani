@@ -165,7 +165,22 @@ class EmergencyService {
   /// Push local Hive contacts that have no supabaseId up to Supabase.
   /// Useful when a user adds contacts offline then later logs in.
   Future<void> pushLocalContactsToSupabase() async {
-    await SupabaseService.instance.syncContactsToHive();
+    // Push each local contact that has no supabaseId up to Supabase
+    final box = Hive.box<EmergencyContact>('emergency_contacts');
+    for (int i = 0; i < box.length; i++) {
+      final contact = box.getAt(i);
+      if (contact == null) continue;
+      if (contact.supabaseId != null) continue; // already synced
+      try {
+        final row = await SupabaseService.instance.addContactToSupabase(
+          contact,
+        );
+        contact.supabaseId = row['id'] as String?;
+        await contact.save();
+      } catch (e) {
+        debugPrint('[EmergencyService] pushLocalContactsToSupabase error: $e');
+      }
+    }
   }
 
   // ── Shake detection (unchanged) ─────────────

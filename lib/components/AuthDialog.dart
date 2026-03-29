@@ -1,17 +1,20 @@
 // lib/components/AuthDialog.dart
 //
-// After successful login or signup:
-//   1. Upserts the user row in the `users` Supabase table
-//   2. Syncs emergency contacts from Supabase → local Hive
-// Email authentication is disabled — users log in with username + password.
+// Colour scheme aligned to main.dart:
+//   - All hardcoded purple/dark hex values replaced with Theme.of(context) tokens
+//   - Uses colorScheme.primary (Apple Blue) as the accent instead of custom #7C3AED
+//   - Surfaces, borders, and text pull from the same ColorScheme defined in VaniApp
+//   - Dark/light mode handled automatically via ThemeData — no manual isDark branching
+//     for colours
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/SupabaseService.dart';
 import '../services/EmergencyService.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/EmergencyContact.dart';
 
-// ── Public entry-point (called from GlobalNavbar) ─────────────────────────────
 void showAuthDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -19,29 +22,6 @@ void showAuthDialog(BuildContext context) {
     builder: (_) => const _VaniAuthDialog(),
   );
 }
-
-// ── VANI colour palette ────────────────────────────────────────────────────────
-const _purple = Color(0xFF7C3AED);
-const _purpleL = Color(0xFF9D5CF6);
-const _purpleGlow = Color(0x337C3AED);
-
-// dark
-const _dkCard = Color(0xFF1A1430);
-const _dkSurface = Color(0xFF0F0B1A);
-const _dkBorder = Color(0xFF2A2050);
-const _dkText = Color(0xFFEFEAFF);
-const _dkMuted = Color(0xFF7B6FA0);
-
-// light
-const _ltCard = Color(0xFFFFFFFF);
-const _ltSurface = Color(0xFFF0EAFF);
-const _ltBorder = Color(0xFFD8C8F0);
-const _ltText = Color(0xFF1A0F3A);
-const _ltMuted = Color(0xFF7060A0);
-
-// ─────────────────────────────────────────────
-//  Dialog widget
-// ─────────────────────────────────────────────
 
 class _VaniAuthDialog extends StatefulWidget {
   const _VaniAuthDialog();
@@ -96,9 +76,6 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
       ..forward();
   }
 
-  // ── Auth + Supabase sync ──────────────────────────────────────────────────
-
-  /// Converts a username to the deterministic fake-email used in Supabase auth.
   String _fakeEmail(String username) =>
       '${username.toLowerCase().replaceAll(' ', '_')}@vani.app';
 
@@ -115,12 +92,12 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
           email: fakeEmail,
           password: _passwordCtrl.text.trim(),
         );
-
         if (response.session == null) {
           _showError('Login failed — no session returned.');
           return;
         }
-
+        final box = Hive.box<EmergencyContact>('emergency_contacts');
+        await box.clear();
         await SupabaseService.instance.upsertUserProfile();
         await EmergencyService.instance.syncFromSupabase();
       } else {
@@ -128,12 +105,10 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
           email: fakeEmail,
           password: _passwordCtrl.text.trim(),
         );
-
         if (response.session == null) {
           _showError('Signup failed. Try a different username.');
           return;
         }
-
         await SupabaseService.instance.upsertUserProfile(
           fullName: _nameCtrl.text.trim(),
           phone: _phoneCtrl.text.trim(),
@@ -146,7 +121,7 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_isLogin ? 'Welcome back!' : 'Account created!'),
-            backgroundColor: _purple,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -169,25 +144,24 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
-  // ─────────────────────────────────────────────
-  //  Build
-  // ─────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final card = isDark ? _dkCard : _ltCard;
-    final surface = isDark ? _dkSurface : _ltSurface;
-    final border = isDark ? _dkBorder : _ltBorder;
-    final textPrimary = isDark ? _dkText : _ltText;
-    final textMuted = isDark ? _dkMuted : _ltMuted;
+    // ── Pull every colour from the same ThemeData defined in main.dart ──────
+    final cs = Theme.of(context).colorScheme;
+    final accent = cs.primary; // _kAppleBlue / _kAppleBlueDark
+    final accentLight = cs.secondary; // _kAppleIndigo — used for glow
+    final card = Theme.of(context).cardColor; // _lSurface / _dSurface
+    final surface = cs.surfaceContainer; // _lSurface2 / _dSurface2
+    final border = cs.outline; // _lSeparator / _dSeparator
+    final textPrimary = cs.onSurface; // _lLabel / _dLabel
+    final textMuted = cs.onSurface.withOpacity(0.55);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -206,9 +180,7 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                 border: Border.all(color: border),
                 boxShadow: [
                   BoxShadow(
-                    color: isDark
-                        ? _purpleGlow
-                        : Colors.black.withOpacity(0.10),
+                    color: accentLight.withOpacity(0.14),
                     blurRadius: 48,
                     spreadRadius: -4,
                   ),
@@ -220,7 +192,7 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Header ───────────────────────────────────────────
+                    // ── Header ────────────────────────────────────────────
                     Row(
                       children: [
                         Row(
@@ -229,27 +201,20 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                               width: 3,
                               height: 20,
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [_purple, _purpleL],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
+                                // Single solid accent — no gradient, matches
+                                // main.dart's flat Apple colour usage
+                                color: accent,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            ShaderMask(
-                              shaderCallback: (b) => const LinearGradient(
-                                colors: [_purple, _purpleL],
-                              ).createShader(b),
-                              child: const Text(
-                                'VANI',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  letterSpacing: 3,
-                                ),
+                            Text(
+                              'VANI',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: accent,
+                                letterSpacing: 3,
                               ),
                             ),
                           ],
@@ -261,9 +226,7 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                             width: 30,
                             height: 30,
                             decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.06)
-                                  : Colors.black.withOpacity(0.05),
+                              color: border.withOpacity(0.28),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -278,7 +241,7 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
 
                     const SizedBox(height: 20),
 
-                    // ── Tab switcher ─────────────────────────────────────
+                    // ── Tab switcher ──────────────────────────────────────
                     Container(
                       height: 40,
                       decoration: BoxDecoration(
@@ -291,12 +254,14 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                           _Tab(
                             label: 'Login',
                             selected: _isLogin,
+                            accent: accent,
                             onTap: _isLogin ? null : _switchMode,
                             textMuted: textMuted,
                           ),
                           _Tab(
                             label: 'Sign Up',
                             selected: !_isLogin,
+                            accent: accent,
                             onTap: _isLogin ? _switchMode : null,
                             textMuted: textMuted,
                           ),
@@ -306,13 +271,13 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
 
                     const SizedBox(height: 18),
 
-                    // ── Username (both modes) ─────────────────────────────
+                    // ── Username ──────────────────────────────────────────
                     _Field(
                       controller: _usernameCtrl,
                       label: 'Username',
                       hint: 'e.g. rahul123',
                       prefixIcon: Icons.alternate_email_rounded,
-                      isDark: isDark,
+                      accent: accent,
                       surface: surface,
                       border: border,
                       textPrimary: textPrimary,
@@ -327,14 +292,14 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
 
                     const SizedBox(height: 12),
 
-                    // ── Full name + Phone (sign-up only) ──────────────────
+                    // ── Sign-up only fields ───────────────────────────────
                     if (!_isLogin) ...[
                       _Field(
                         controller: _nameCtrl,
                         label: 'Full Name',
                         hint: 'Your name',
                         prefixIcon: Icons.person_outline_rounded,
-                        isDark: isDark,
+                        accent: accent,
                         surface: surface,
                         border: border,
                         textPrimary: textPrimary,
@@ -345,16 +310,14 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 12),
-
                       _Field(
                         controller: _phoneCtrl,
                         label: 'Phone Number',
                         hint: '+91 98765 43210',
                         prefixIcon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
-                        isDark: isDark,
+                        accent: accent,
                         surface: surface,
                         border: border,
                         textPrimary: textPrimary,
@@ -367,7 +330,6 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 12),
                     ],
 
@@ -378,7 +340,7 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                       hint: '••••••••',
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: _obscurePassword,
-                      isDark: isDark,
+                      accent: accent,
                       surface: surface,
                       border: border,
                       textPrimary: textPrimary,
@@ -410,11 +372,11 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                           onTap: () {
                             /* TODO: forgot password */
                           },
-                          child: const Text(
+                          child: Text(
                             'Forgot password?',
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: _purpleL,
+                              color: accent,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -429,47 +391,33 @@ class _VaniAuthDialogState extends State<_VaniAuthDialog>
                       width: double.infinity,
                       height: 46,
                       child: _loading
-                          ? const Center(
+                          ? Center(
                               child: SizedBox(
                                 width: 22,
                                 height: 22,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: _purpleL,
+                                  color: accent,
                                 ),
                               ),
                             )
-                          : DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [_purple, _purpleL],
+                          : ElevatedButton(
+                              onPressed: _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _purple.withOpacity(0.40),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
                               ),
-                              child: ElevatedButton(
-                                onPressed: _submit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  _isLogin ? 'Sign In' : 'Create Account',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                    letterSpacing: 0.3,
-                                  ),
+                              child: Text(
+                                _isLogin ? 'Sign In' : 'Create Account',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ),
@@ -507,11 +455,13 @@ class _Tab extends StatelessWidget {
   const _Tab({
     required this.label,
     required this.selected,
+    required this.accent,
     required this.onTap,
     required this.textMuted,
   });
   final String label;
   final bool selected;
+  final Color accent;
   final VoidCallback? onTap;
   final Color textMuted;
 
@@ -523,9 +473,8 @@ class _Tab extends StatelessWidget {
         duration: const Duration(milliseconds: 220),
         margin: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          gradient: selected
-              ? const LinearGradient(colors: [_purple, _purpleL])
-              : null,
+          // Selected tab uses the same Apple Blue from main.dart
+          color: selected ? accent : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         alignment: Alignment.center,
@@ -553,7 +502,7 @@ class _Field extends StatelessWidget {
     required this.label,
     required this.hint,
     required this.prefixIcon,
-    required this.isDark,
+    required this.accent,
     required this.surface,
     required this.border,
     required this.textPrimary,
@@ -567,8 +516,7 @@ class _Field extends StatelessWidget {
   final TextEditingController controller;
   final String label, hint;
   final IconData prefixIcon;
-  final bool isDark;
-  final Color surface, border, textPrimary, textMuted;
+  final Color accent, surface, border, textPrimary, textMuted;
   final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffixIcon;
@@ -619,15 +567,23 @@ class _Field extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _purple, width: 1.5),
+            // Focus ring uses the same Apple Blue from main.dart
+            borderSide: BorderSide(color: accent, width: 1.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.2),
+            // Error uses colorScheme.error → _kAppleRed from main.dart
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.error,
+              width: 1.2,
+            ),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.error,
+              width: 1.5,
+            ),
           ),
         ),
       ),
