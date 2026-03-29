@@ -95,7 +95,7 @@ class SupabaseService {
     EmergencyContact contact,
   ) async {
     await _sb
-        .from('emergency_contacts')
+        .from('e mergency_contacts')
         .update({
           'contact_name': contact.name,
           'contact_number': contact.phone,
