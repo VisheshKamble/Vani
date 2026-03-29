@@ -3,21 +3,18 @@
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  VANI — Global Navbar · Apple-Inspired                     ║
 // ║                                                            ║
-// ║  CHANGES (Fix 3):                                          ║
-// ║  • VANI wordmark: bold black (light) / white (dark)        ║
-// ║    No gradient shimmer — clean, confident, like SF logos   ║
-// ║  • Bridge & SOS: removed bordered pill style.             ║
-// ║    Now plain nav links with colour, same as HOME/TERMINAL  ║
-// ║  • Only the ACTIVE link gets the underline indicator       ║
-// ║  • SOS keeps its pulse dot for urgency — no border box     ║
-// ║  • Mobile: completely unchanged as requested               ║
+// ║  CHANGES vs original:                                      ║
+// ║  • Desktop: ISL Assistant nav link added (purple accent)   ║
+// ║    Sits after SOS, before API link                         ║
+// ║  • Mobile: completely unchanged                            ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 import 'package:flutter/material.dart';
 import '../screens/TranslateScreen.dart';
-import '../screens/SignsPage.dart';
+import '../screens/Signspage.dart';
 import '../screens/EmergencyScreen.dart';
 import '../screens/TwoWayScreen.dart';
+import '../screens/ISLAssistantScreen.dart';
 import '../l10n/AppLocalizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; //added
 import '../components/AuthDialog.dart'; //added
@@ -27,12 +24,11 @@ import '../models/EmergencyContact.dart';
 
 const double _kDesktopBreak = 750;
 
-// ─────────────────────────────────────────────────────────────
-//  APPLE TOKENS (web navbar only)
-// ─────────────────────────────────────────────────────────────
 const _navRed = Color(0xFFFF3B30);
 const _navRedD = Color(0xFFFF453A);
 const _navTeal = Color(0xFF32ADE6);
+const _navPurple = Color(0xFFAF52DE); // ISL Assistant accent
+const _navPurD = Color(0xFFBF5AF2);
 
 TextStyle _nt(double size, FontWeight w, Color c, {double ls = 0}) => TextStyle(
   fontFamily: 'Google Sans',
@@ -123,7 +119,7 @@ class GlobalNavbar extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  BRAND  — clean Apple-style wordmark, no gradient
+//  BRAND
 // ══════════════════════════════════════════════════════════════
 class _Brand extends StatelessWidget {
   final bool isDark;
@@ -134,13 +130,11 @@ class _Brand extends StatelessWidget {
   Widget build(BuildContext ctx) {
     final label = isDark ? Colors.white : Colors.black;
     final accent = isDark ? const Color(0xFF0A84FF) : const Color(0xFF007AFF);
-
     return GestureDetector(
       onTap: () => Navigator.of(ctx).popUntil((r) => r.isFirst),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Thin left accent bar — Apple "I" cursor style
           Container(
             width: 3,
             height: 20,
@@ -150,7 +144,6 @@ class _Brand extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // Wordmark: bold, no gradient, no gimmick
           Text('VANI', style: _nt(19, FontWeight.w800, label, ls: 3.0)),
         ],
       ),
@@ -159,7 +152,7 @@ class _Brand extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  DESKTOP ACTIONS  — clean nav links, no bordered pills
+//  DESKTOP ACTIONS  — ISL Assistant link added
 // ══════════════════════════════════════════════════════════════
 class _DesktopActions extends StatefulWidget {
   final String activeRoute;
@@ -255,7 +248,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
           accent: accent,
           isActive: widget.activeRoute == 'translate',
           onTap: () {
-            if (widget.activeRoute != 'translate')
+            if (widget.activeRoute != 'translate') {
               _push(
                 ctx,
                 TranslateScreen(
@@ -263,6 +256,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
                   setLocale: widget.setLocale,
                 ),
               );
+            }
           },
         ),
         _NavLink(
@@ -271,7 +265,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
           accent: accent,
           isActive: widget.activeRoute == 'signs',
           onTap: () {
-            if (widget.activeRoute != 'signs')
+            if (widget.activeRoute != 'signs') {
               _push(
                 ctx,
                 SignsPage(
@@ -279,6 +273,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
                   setLocale: widget.setLocale,
                 ),
               );
+            }
           },
         ),
         _NavLink(
@@ -287,7 +282,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
           accent: teal,
           isActive: widget.activeRoute == 'bridge',
           onTap: () {
-            if (widget.activeRoute != 'bridge')
+            if (widget.activeRoute != 'bridge') {
               _push(
                 ctx,
                 TwoWayScreen(
@@ -295,6 +290,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
                   setLocale: widget.setLocale,
                 ),
               );
+            }
           },
         ),
         _SOSNavLink(
@@ -302,7 +298,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
           isDark: widget.isDark,
           isActive: widget.activeRoute == 'emergency',
           onTap: () {
-            if (widget.activeRoute != 'emergency')
+            if (widget.activeRoute != 'emergency') {
               _push(
                 ctx,
                 EmergencyScreen(
@@ -310,6 +306,23 @@ class _DesktopActionsState extends State<_DesktopActions> {
                   setLocale: widget.setLocale,
                 ),
               );
+            }
+          },
+        ),
+
+        _NavLink(
+          label: "ASSISTANT",
+          isDark: widget.isDark,
+          accent: _navPurple,
+          isActive: widget.activeRoute == 'assistant',
+          onTap: () {
+            _push(
+              ctx,
+              ISLAssistantScreen(
+                toggleTheme: widget.toggleTheme,
+                setLocale: widget.setLocale,
+              ),
+            );
           },
         ),
         _NavLink(
@@ -343,7 +356,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
   }
 }
 
-// ── Plain nav link — hover underline, active underline ────────
+// ── Plain nav link ────────────────────────────────────────────
 class _NavLink extends StatefulWidget {
   final String label;
   final bool isDark, isActive;
@@ -362,7 +375,6 @@ class _NavLink extends StatefulWidget {
 
 class _NavLinkState extends State<_NavLink> {
   bool _hovered = false;
-
   @override
   Widget build(BuildContext context) {
     final baseColor = widget.isDark
@@ -413,7 +425,7 @@ class _NavLinkState extends State<_NavLink> {
   }
 }
 
-// ── SOS link — pulse dot, no border box ──────────────────────
+// ── SOS link ──────────────────────────────────────────────────
 class _SOSNavLink extends StatefulWidget {
   final String label;
   final bool isDark, isActive;
@@ -456,7 +468,6 @@ class _SOSNavLinkState extends State<_SOSNavLink>
   @override
   Widget build(BuildContext context) {
     final red = widget.isDark ? _navRedD : _navRed;
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -471,7 +482,6 @@ class _SOSNavLinkState extends State<_SOSNavLink>
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Pulse dot — the only visual indicator of urgency
                   AnimatedBuilder(
                     animation: _pulseAnim,
                     builder: (_, __) => Container(
