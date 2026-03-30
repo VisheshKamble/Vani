@@ -5,7 +5,10 @@
 // Solution: initialize only in main(), remove AppInitializer entirely,
 // and go straight to VaniApp.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -17,6 +20,7 @@ import 'services/EmergencyService.dart';
 import 'screens/HomeScreen.dart';
 import 'screens/SplashScreen.dart';
 import 'components/SOSFloatingButton.dart';
+import 'components/AuthDialog.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
@@ -25,7 +29,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
+    SystemUiMode.immersiveSticky,
   );
 
   // Apple-style: transparent status bar, light icons on dark, dark icons on light
@@ -40,25 +44,38 @@ void main() async {
     ),
   );
 
-  // ── Hive ──────────────────────────────────────────────────────────────────
-  await Hive.initFlutter();
-  Hive.registerAdapter(EmergencyContactAdapter());
-  await Hive.openBox<EmergencyContact>('emergency_contacts');
+  runApp(const VaniApp());
+}
 
-  // ── Supabase (single call — do NOT call again anywhere else) ─────────────
-  if (_supabaseUrl.isEmpty || _supabaseAnonKey.isEmpty) {
-    throw StateError(
-      'Missing Supabase config. Run with --dart-define=SUPABASE_URL=... '
-      'and --dart-define=SUPABASE_ANON_KEY=...',
-    );
+class AppBootstrap {
+  static Future<void>? _initFuture;
+
+  static Future<void> ensureInitialized() {
+    _initFuture ??= _initialize();
+    return _initFuture!;
   }
 
-  await Supabase.initialize(
-    url: _supabaseUrl,
-    anonKey: _supabaseAnonKey,
-  );
+  static Future<void> _initialize() async {
+    await Hive.initFlutter();
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(EmergencyContactAdapter());
+    }
+    if (!Hive.isBoxOpen('emergency_contacts')) {
+      await Hive.openBox<EmergencyContact>('emergency_contacts');
+    }
 
-  runApp(const VaniApp());
+    if (_supabaseUrl.isEmpty || _supabaseAnonKey.isEmpty) {
+      throw StateError(
+        'Missing Supabase config. Run with --dart-define=SUPABASE_URL=... '
+        'and --dart-define=SUPABASE_ANON_KEY=...',
+      );
+    }
+
+    await Supabase.initialize(
+      url: _supabaseUrl,
+      anonKey: _supabaseAnonKey,
+    );
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -261,7 +278,9 @@ class _VaniAppState extends State<VaniApp> {
           },
         ),
       ),
-      home: SplashScreen(toggleTheme: toggleTheme, setLocale: setLocale),
+      home: kIsWeb
+          ? _WebEntryGate(toggleTheme: toggleTheme, setLocale: setLocale)
+          : SplashScreen(toggleTheme: toggleTheme, setLocale: setLocale),
     );
   }
 
@@ -377,6 +396,95 @@ class RootShell extends StatefulWidget {
   });
   @override
   State<RootShell> createState() => _RootShellState();
+}
+
+class _WebEntryGate extends StatefulWidget {
+  final VoidCallback toggleTheme;
+  final Function(Locale) setLocale;
+  const _WebEntryGate({
+    required this.toggleTheme,
+    required this.setLocale,
+  });
+
+  @override
+  State<_WebEntryGate> createState() => _WebEntryGateState();
+}
+
+class _WebEntryGateState extends State<_WebEntryGate> {
+  bool _ready = false;
+  bool _isLoggedIn = false;
+  Object? _error;
+  StreamSubscription<AuthState>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try {
+      await AppBootstrap.ensureInitialized();
+      if (!mounted) return;
+      _isLoggedIn = Supabase.instance.client.auth.currentSession != null;
+      _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        if (!mounted) return;
+        setState(() => _isLoggedIn = data.session != null);
+      });
+      setState(() => _ready = true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _ready = true;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: SizedBox.expand(),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'Startup failed: $_error',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_isLoggedIn) {
+      return RootShell(
+        toggleTheme: widget.toggleTheme,
+        setLocale: widget.setLocale,
+      );
+    }
+
+    return AuthScreen(
+      onAuthenticated: () {
+        if (!mounted) return;
+        setState(() => _isLoggedIn = true);
+      },
+    );
+  }
 }
 
 class _RootShellState extends State<RootShell> {

@@ -27,6 +27,7 @@ import '../l10n/AppLocalizations.dart';
 import '../components/SOSFloatingButton.dart';
 import '../components/AuthDialog.dart';
 import '../services/EmergencyService.dart';
+import '../main.dart' show AppBootstrap;
 
 // ─────────────────────────────────────────────
 //  APPLE PALETTE  (splash is always light)
@@ -59,6 +60,8 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
 
+  late final Future<void> _bootstrapFuture;
+
   // ── Controllers ────────────────────────────
   late final AnimationController _iconCtrl;   // app icon entrance
   late final AnimationController _textCtrl;   // wordmark + tagline
@@ -82,6 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    _bootstrapFuture = AppBootstrap.ensureInitialized();
 
     // Force light status bar throughout splash
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -158,12 +162,31 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
-  void _navigate() {
-    Navigator.of(context).pushReplacement(PageRouteBuilder(
-      transitionDuration: Duration.zero,
-      pageBuilder: (_, __, ___) => _PostSplashGate(
-          toggleTheme: widget.toggleTheme, setLocale: widget.setLocale),
-    ));
+  Future<void> _navigate() async {
+    try {
+      await _bootstrapFuture;
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+        transitionDuration: Duration.zero,
+        pageBuilder: (_, __, ___) => _PostSplashGate(
+            toggleTheme: widget.toggleTheme, setLocale: widget.setLocale),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => Scaffold(
+            backgroundColor: _white,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('Startup failed: $e', textAlign: TextAlign.center),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   @override
