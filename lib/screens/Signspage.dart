@@ -25,14 +25,6 @@ import '../l10n/AppLocalizations.dart';
 // ─── Tokens ────────────────────────────────────────────────
 const _blue     = Color(0xFF007AFF);
 const _blue_D   = Color(0xFF0A84FF);
-const _indigo   = Color(0xFF5856D6);
-const _indigo_D = Color(0xFF5E5CE6);
-const _orange   = Color(0xFFFF9500);
-const _orange_D = Color(0xFFFF9F0A);
-const _teal     = Color(0xFF32ADE6);
-const _teal_D   = Color(0xFF5AC8F5);
-const _purple   = Color(0xFFAF52DE);
-const _purple_D = Color(0xFFBF5AF2);
 
 const _kAlpha  = Color(0xFF5856D6);
 const _kAlphaD = Color(0xFF5E5CE6);
@@ -50,7 +42,6 @@ const _lLabel3  = Color(0x4D3C3C43);
 const _lFill    = Color(0x1F787880);
 const _dBg      = Color(0xFF000000);
 const _dSurface = Color(0xFF1C1C1E);
-const _dSurface2= Color(0xFF2C2C2E);
 const _dSep     = Color(0xFF38383A);
 const _dLabel   = Color(0xFFFFFFFF);
 const _dLabel2  = Color(0x99EBEBF5);
@@ -659,13 +650,11 @@ class _FilterChipState extends State<_FilterChip>
     with SingleTickerProviderStateMixin {
   bool _hovered = false;
   late AnimationController _ac;
-  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
     _ac = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
-    _scaleAnim = CurvedAnimation(parent: _ac, curve: Curves.easeOutBack);
     if (widget.active) _ac.value = 1.0;
   }
 

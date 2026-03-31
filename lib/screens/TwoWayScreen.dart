@@ -33,6 +33,7 @@ import '../l10n/AppLocalizations.dart';
 const String _kRailwayHost = 'isl-production-57d4.up.railway.app';
 const String _kWsPath = '/ws';
 const int _kFrameIntervalMs = 100;
+const bool _railwayWsEnabled = true;
 
 String _getWebSocketUrl() {
   // Use wss (Secure) for all platforms in production.
@@ -159,7 +160,6 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
   bool _typeFocused = false;
 
   // ── ISL detection ─────────────────────────
-  String _detected  = '';   // current detected sign word
   String _pending   = '';   // latest detected sign waiting for manual send
   bool   _detecting = false;
   String _candidate = '';
@@ -367,7 +367,6 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
     _lastAcceptedAt = now;
 
     setState(() {
-      _detected = sign;
       _pending = sign;
       _detecting = false;
     });
@@ -376,12 +375,12 @@ class _TwoWayScreenState extends State<TwoWayScreen> with TickerProviderStateMix
   void _confirmSign() {
     if (_pending.trim().isEmpty) return;
     _addMessage(_pending.trim(), _Sender.deaf, isSign: true);
-    setState(() { _pending = ''; _detected = ''; _detecting = false; });
+    setState(() { _pending = ''; _detecting = false; });
     _candidate = '';
   }
 
   void _clearPending() {
-    setState(() { _pending = ''; _detected = ''; _detecting = false; });
+    setState(() { _pending = ''; _detecting = false; });
     _candidate = '';
   }
 

@@ -1,11 +1,21 @@
 // lib/screens/EmergencyScreen.dart
 //
-// ╔══════════════════════════════════════════════════════════╗
-// ║  VANI — Emergency Screen  · Apple-Inspired Premium UI  ║
-// ║  Font: Google Sans (SF Pro equivalent)                 ║
-// ║  < 700px  → iOS native emergency shell                 ║
-// ║  ≥ 700px  → macOS/web emergency centre                 ║
-// ╚══════════════════════════════════════════════════════════╝
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  VANI — Emergency Screen  · UX4G Redesign                         ║
+// ║  Font: Noto Sans (UX4G standard, Devanagari support)              ║
+// ║  < 700px  → Mobile emergency shell                                ║
+// ║  ≥ 700px  → Web/tablet emergency centre                           ║
+// ║                                                                    ║
+// ║  UX4G Principles Applied:                                         ║
+// ║  • Danger semantic color for SOS actions (WCAG AA)                ║
+// ║  • Min 48dp touch targets on all scenario cards                   ║
+// ║  • Status/severity color coding (danger/warning/success/info)     ║
+// ║  • Semantics() wrappers for screen readers                        ║
+// ║  • Clear visual hierarchy: alert → action → reference             ║
+// ║  • No decorative blur/glass — clarity above aesthetics            ║
+// ║  • High-contrast helpline numbers (20px bold)                     ║
+// ║  • Warning banner uses semantic warning color + icon              ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -18,195 +28,166 @@ import 'EmergencySetupScreen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/EmergencyContact.dart';
 
-// ─────────────────────────────────────────────────────────────
-//  APPLE DESIGN TOKENS
-// ─────────────────────────────────────────────────────────────
-const _red = Color(0xFFFF3B30);
-const _red_D = Color(0xFFFF453A);
-const _orange = Color(0xFFFF9500);
-const _orange_D = Color(0xFFFF9F0A);
-const _blue = Color(0xFF007AFF);
-const _blue_D = Color(0xFF0A84FF);
-const _green = Color(0xFF34C759);
-const _green_D = Color(0xFF30D158);
-const _indigo = Color(0xFF5856D6);
-const _indigo_D = Color(0xFF5E5CE6);
-const _teal = Color(0xFF32ADE6);
-const _teal_D = Color(0xFF5AC8F5);
-const _purple = Color(0xFFAF52DE);
-const _purple_D = Color(0xFFBF5AF2);
-const _amber = Color(0xFFFF9500); // same as orange
-const _amber_D = Color(0xFFFF9F0A);
+// ─────────────────────────────────────────────────────────────────────
+//  UX4G DESIGN TOKENS  (shared with HomeScreen)
+// ─────────────────────────────────────────────────────────────────────
+const _fontFamily = 'Noto Sans';
 
-// Light surfaces
-const _lBg = Color(0xFFF2F2F7);
-const _lSurface = Color(0xFFFFFFFF);
-const _lSurface2 = Color(0xFFEFEFF4);
-const _lSep = Color(0xFFC6C6C8);
-const _lLabel = Color(0xFF000000);
-const _lLabel2 = Color(0x993C3C43);
-const _lLabel3 = Color(0x4D3C3C43);
-const _lFill = Color(0x1F787880);
+// Brand
+const _primary      = Color(0xFF1A56DB);
+const _primaryDark  = Color(0xFF4A8EFF);
 
-// Dark surfaces
-const _dBg = Color(0xFF000000);
-const _dSurface = Color(0xFF1C1C1E);
-const _dSurface2 = Color(0xFF2C2C2E);
-const _dSep = Color(0xFF38383A);
-const _dLabel = Color(0xFFFFFFFF);
-const _dLabel2 = Color(0x99EBEBF5);
-const _dLabel3 = Color(0x4DEBEBF5);
-const _dFill = Color(0x3A787880);
+// Status / Semantic
+const _danger       = Color(0xFFB71C1C);
+const _dangerDark   = Color(0xFFEF5350);
+const _dangerLight  = Color(0xFFFFEBEE);
+const _dangerMid    = Color(0xFFE53935);
 
-TextStyle _t(double size, FontWeight w, Color c, {double ls = 0, double? h}) =>
-    TextStyle(
-      fontFamily: 'Google Sans',
-      fontSize: size,
-      fontWeight: w,
-      color: c,
-      letterSpacing: ls,
-      height: h,
-    );
+const _warning      = Color(0xFF7A4800);
+const _warningDark  = Color(0xFFFFB300);
+const _warningLight = Color(0xFFFFF3E0);
 
-// ─────────────────────────────────────────────────────────────
+const _success      = Color(0xFF1B7340);
+const _successDark  = Color(0xFF27AE60);
+const _successLight = Color(0xFFE6F4EC);
+
+const _info         = Color(0xFF0D47A1);
+const _infoDark     = Color(0xFF42A5F5);
+const _infoLight    = Color(0xFFE3F2FD);
+
+// Scenario-specific (all WCAG AA on their light surfaces)
+const _scRed        = Color(0xFFB71C1C); // General / Emergency
+const _scRedD       = Color(0xFFEF5350);
+const _scOrange     = Color(0xFF7A4800); // Medical
+const _scOrangeD    = Color(0xFFFFB300);
+const _scBlue       = Color(0xFF0D47A1); // Police
+const _scBlueD      = Color(0xFF42A5F5);
+const _scAmber      = Color(0xFF6D4C00); // Fire
+const _scAmberD     = Color(0xFFFFA000);
+const _scPurple     = Color(0xFF4A148C); // Accident
+const _scPurpleD    = Color(0xFFCE93D8);
+const _scTeal       = Color(0xFF006064); // Child
+const _scTealD      = Color(0xFF4DD0E1);
+
+// Neutral surfaces
+const _lBg          = Color(0xFFF5F7FA);
+const _lSurface     = Color(0xFFFFFFFF);
+const _lSurface2    = Color(0xFFF0F4F8);
+const _lBorder      = Color(0xFFCDD5DF);
+const _lBorderSub   = Color(0xFFE4E9F0);
+const _lText        = Color(0xFF111827);
+const _lTextSub     = Color(0xFF374151);
+const _lTextMuted   = Color(0xFF6B7280);
+
+const _dBg          = Color(0xFF0D1117);
+const _dSurface     = Color(0xFF161B22);
+const _dSurface2    = Color(0xFF21262D);
+const _dBorder      = Color(0xFF30363D);
+const _dBorderSub   = Color(0xFF21262D);
+const _dText        = Color(0xFFE6EDF3);
+const _dTextSub     = Color(0xFFB0BEC5);
+const _dTextMuted   = Color(0xFF8B949E);
+
+// Spacing
+const _sp4  = 4.0;
+const _sp8  = 8.0;
+const _sp12 = 12.0;
+const _sp16 = 16.0;
+const _sp20 = 20.0;
+const _sp24 = 24.0;
+const _sp32 = 32.0;
+const _sp48 = 48.0;
+
+// ── Text helpers ──────────────────────────────────────────────────────
+TextStyle _display(double size, Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: size, fontWeight: FontWeight.w700,
+    color: c, height: 1.2, letterSpacing: -0.5);
+
+TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+        color: c, height: 1.3, letterSpacing: -0.2);
+
+TextStyle _body(double size, Color c, {FontWeight w = FontWeight.w400}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+        color: c, height: 1.6);
+
+TextStyle _label(double size, Color c, {FontWeight w = FontWeight.w500}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+        color: c, height: 1.4, letterSpacing: 0.1);
+
+// ─────────────────────────────────────────────────────────────────────
 //  SCENARIO MODEL
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
 class _Scenario {
   final SOSMessageType type;
   final IconData icon;
-  final String titleKey,
-      subtitleKey,
-      signHint,
-      helpline,
-      helplineName,
-      smsTemplate;
+  final String titleKey, subtitleKey, signHint, helpline, helplineName, smsTemplate;
   final Color accentLight, accentDark;
   const _Scenario({
-    required this.type,
-    required this.icon,
-    required this.titleKey,
-    required this.subtitleKey,
-    required this.signHint,
-    required this.helpline,
-    required this.helplineName,
-    required this.smsTemplate,
-    required this.accentLight,
-    required this.accentDark,
+    required this.type, required this.icon,
+    required this.titleKey, required this.subtitleKey,
+    required this.signHint, required this.helpline,
+    required this.helplineName, required this.smsTemplate,
+    required this.accentLight, required this.accentDark,
   });
   Color accent(bool dark) => dark ? accentDark : accentLight;
 }
 
 const List<_Scenario> _kScenarios = [
   _Scenario(
-    type: SOSMessageType.generalHelp,
-    icon: Icons.emergency_rounded,
-    titleKey: 'sos_general_title',
-    subtitleKey: 'sos_general_sub',
-    signHint: 'sos_sign_help',
-    helpline: '112',
-    helplineName: 'sos_helpline_emergency',
-    accentLight: _red,
-    accentDark: _red_D,
-    smsTemplate:
-        'URGENT — EMERGENCY ALERT\n\n'
-        'Sent via VANI. The sender is DEAF or MUTE and cannot call for help.\n\n'
-        'Actions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\n'
-        'Location: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
+    type: SOSMessageType.generalHelp, icon: Icons.emergency_rounded,
+    titleKey: 'sos_general_title', subtitleKey: 'sos_general_sub',
+    signHint: 'sos_sign_help', helpline: '112', helplineName: 'sos_helpline_emergency',
+    accentLight: _scRed, accentDark: _scRedD,
+    smsTemplate: 'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
   ),
   _Scenario(
-    type: SOSMessageType.medical,
-    icon: Icons.medical_services_rounded,
-    titleKey: 'sos_medical_title',
-    subtitleKey: 'sos_medical_sub',
-    signHint: 'sos_sign_doctor',
-    helpline: '108',
-    helplineName: 'sos_helpline_ambulance',
-    accentLight: _orange,
-    accentDark: _orange_D,
-    smsTemplate:
-        'URGENT — MEDICAL EMERGENCY\n\n'
-        'Sent via VANI. Sender is DEAF or MUTE — cannot call verbally.\n\n'
-        'Actions:\n  1. Dial 108 (ambulance).\n  2. Go to their location.\n\n'
-        'Location: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
+    type: SOSMessageType.medical, icon: Icons.medical_services_rounded,
+    titleKey: 'sos_medical_title', subtitleKey: 'sos_medical_sub',
+    signHint: 'sos_sign_doctor', helpline: '108', helplineName: 'sos_helpline_ambulance',
+    accentLight: _scOrange, accentDark: _scOrangeD,
+    smsTemplate: 'URGENT — MEDICAL EMERGENCY\n\nSent via VANI. Sender is DEAF or MUTE.\n\nActions:\n  1. Dial 108 (ambulance).\n  2. Go to their location.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
   ),
   _Scenario(
-    type: SOSMessageType.police,
-    icon: Icons.shield_rounded,
-    titleKey: 'sos_police_title',
-    subtitleKey: 'sos_police_sub',
-    signHint: 'sos_sign_strong',
-    helpline: '100',
-    helplineName: 'sos_helpline_police',
-    accentLight: _blue,
-    accentDark: _blue_D,
-    smsTemplate:
-        'URGENT — SAFETY EMERGENCY\n\n'
-        'Sent via VANI. Sender is DEAF or MUTE — cannot call police verbally.\n\n'
-        'Actions:\n  1. Dial 100 (police).\n  2. Go to their location.\n\n'
-        'Location: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
+    type: SOSMessageType.police, icon: Icons.shield_rounded,
+    titleKey: 'sos_police_title', subtitleKey: 'sos_police_sub',
+    signHint: 'sos_sign_strong', helpline: '100', helplineName: 'sos_helpline_police',
+    accentLight: _scBlue, accentDark: _scBlueD,
+    smsTemplate: 'URGENT — SAFETY EMERGENCY\n\nSent via VANI. Sender is DEAF or MUTE.\n\nActions:\n  1. Dial 100 (police).\n  2. Go to their location.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
   ),
   _Scenario(
-    type: SOSMessageType.fire,
-    icon: Icons.local_fire_department_rounded,
-    titleKey: 'sos_fire_title',
-    subtitleKey: 'sos_fire_sub',
-    signHint: 'sos_sign_help_bad',
-    helpline: '101',
-    helplineName: 'sos_helpline_fire',
-    accentLight: _amber,
-    accentDark: _amber_D,
-    smsTemplate:
-        'URGENT — FIRE / SMOKE EMERGENCY\n\n'
-        'Sent via VANI. Sender is DEAF or MUTE — cannot call fire brigade verbally.\n\n'
-        'Actions:\n  1. Dial 101 (fire).\n  2. Evacuate the area.\n\n'
-        'Location: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
+    type: SOSMessageType.fire, icon: Icons.local_fire_department_rounded,
+    titleKey: 'sos_fire_title', subtitleKey: 'sos_fire_sub',
+    signHint: 'sos_sign_help_bad', helpline: '101', helplineName: 'sos_helpline_fire',
+    accentLight: _scAmber, accentDark: _scAmberD,
+    smsTemplate: 'URGENT — FIRE EMERGENCY\n\nSent via VANI. Sender is DEAF or MUTE.\n\nActions:\n  1. Dial 101 (fire).\n  2. Evacuate the area.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
   ),
   _Scenario(
-    type: SOSMessageType.custom,
-    icon: Icons.directions_car_rounded,
-    titleKey: 'sos_accident_title',
-    subtitleKey: 'sos_accident_sub',
-    signHint: 'sos_sign_bad_sorry',
-    helpline: '1033',
-    helplineName: 'sos_helpline_highway',
-    accentLight: _purple,
-    accentDark: _purple_D,
-    smsTemplate:
-        'URGENT — ROAD ACCIDENT\n\n'
-        'Sent via VANI. Sender is DEAF or MUTE.\n\n'
-        'Actions:\n  1. Dial 108 (ambulance).\n  2. Dial 1033 (highway).\n\n'
-        'Location: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
+    type: SOSMessageType.custom, icon: Icons.directions_car_rounded,
+    titleKey: 'sos_accident_title', subtitleKey: 'sos_accident_sub',
+    signHint: 'sos_sign_bad_sorry', helpline: '1033', helplineName: 'sos_helpline_highway',
+    accentLight: _scPurple, accentDark: _scPurpleD,
+    smsTemplate: 'URGENT — ROAD ACCIDENT\n\nSent via VANI. Sender is DEAF or MUTE.\n\nActions:\n  1. Dial 108 (ambulance).\n  2. Dial 1033 (highway).\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
   ),
   _Scenario(
-    type: SOSMessageType.custom,
-    icon: Icons.child_care_rounded,
-    titleKey: 'sos_child_title',
-    subtitleKey: 'sos_child_sub',
-    signHint: 'sos_sign_mother',
-    helpline: '1098',
-    helplineName: 'sos_helpline_childline',
-    accentLight: _teal,
-    accentDark: _teal_D,
-    smsTemplate:
-        'URGENT — CHILD SAFETY ALERT\n\n'
-        'Sent via VANI. Sender is DEAF or MUTE.\n\n'
-        'Actions:\n  1. Dial 1098 (Childline).\n  2. Dial 100 (police).\n\n'
-        'Location: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
+    type: SOSMessageType.custom, icon: Icons.child_care_rounded,
+    titleKey: 'sos_child_title', subtitleKey: 'sos_child_sub',
+    signHint: 'sos_sign_mother', helpline: '1098', helplineName: 'sos_helpline_childline',
+    accentLight: _scTeal, accentDark: _scTealD,
+    smsTemplate: 'URGENT — CHILD SAFETY ALERT\n\nSent via VANI. Sender is DEAF or MUTE.\n\nActions:\n  1. Dial 1098 (Childline).\n  2. Dial 100 (police).\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
   ),
 ];
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 //  EMERGENCY SCREEN
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 class EmergencyScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
   final String? detectedSign;
   const EmergencyScreen({
-    super.key,
-    required this.toggleTheme,
-    required this.setLocale,
-    this.detectedSign,
+    super.key, required this.toggleTheme,
+    required this.setLocale, this.detectedSign,
   });
   @override
   State<EmergencyScreen> createState() => _EmergencyScreenState();
@@ -228,40 +209,28 @@ class _EmergencyScreenState extends State<EmergencyScreen>
   late Animation<Offset> _entrySlide;
   late Animation<double> _pulseAnim;
 
-  // ── Hive box listener ──────────────────────
   late final Box<EmergencyContact> _contactBox;
 
-  void _onContactsChanged() {
-    if (mounted) setState(() {});
-  }
+  void _onContactsChanged() { if (mounted) setState(() {}); }
 
   @override
   void initState() {
     super.initState();
     _service.updateContext(context);
-
-    // Listen to Hive box so UI rebuilds after sync on login
     _contactBox = Hive.box<EmergencyContact>('emergency_contacts');
     _contactBox.listenable().addListener(_onContactsChanged);
 
-    _entryCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    _entryCtrl = AnimationController(vsync: this,
+        duration: const Duration(milliseconds: 500));
+    _pulseCtrl = AnimationController(vsync: this,
+        duration: const Duration(seconds: 2))..repeat(reverse: true);
 
-    _entryFade = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
-    _entrySlide = Tween<Offset>(
-      begin: const Offset(0, 0.03),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
-    _pulseAnim = CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut);
+    _entryFade  = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
+    _entrySlide = Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
+    _pulseAnim  = CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut);
 
     _entryCtrl.forward();
-
     if (widget.detectedSign != null) {
       _autoScenario = _matchSign(widget.detectedSign!);
     }
@@ -269,12 +238,12 @@ class _EmergencyScreenState extends State<EmergencyScreen>
 
   _Scenario? _matchSign(String sign) {
     final s = sign.toLowerCase();
-    if (s.contains('help') || s.contains('sos')) return _kScenarios[0];
-    if (s.contains('doctor') || s.contains('sick')) return _kScenarios[1];
+    if (s.contains('help') || s.contains('sos'))      return _kScenarios[0];
+    if (s.contains('doctor') || s.contains('sick'))   return _kScenarios[1];
     if (s.contains('danger') || s.contains('police')) return _kScenarios[2];
-    if (s.contains('fire') || s.contains('smoke')) return _kScenarios[3];
-    if (s.contains('accident') || s.contains('car')) return _kScenarios[4];
-    if (s.contains('child') || s.contains('mother')) return _kScenarios[5];
+    if (s.contains('fire') || s.contains('smoke'))    return _kScenarios[3];
+    if (s.contains('accident') || s.contains('car'))  return _kScenarios[4];
+    if (s.contains('child') || s.contains('mother'))  return _kScenarios[5];
     return _kScenarios[0];
   }
 
@@ -297,9 +266,8 @@ class _EmergencyScreenState extends State<EmergencyScreen>
     });
 
     final result = await _service.triggerSOS(
-      type: _kScenarios[idx].type,
-      customMessage: _kScenarios[idx].smsTemplate,
-    );
+        type: _kScenarios[idx].type,
+        customMessage: _kScenarios[idx].smsTemplate);
 
     if (mounted) {
       HapticFeedback.mediumImpact();
@@ -309,11 +277,11 @@ class _EmergencyScreenState extends State<EmergencyScreen>
         _statusOk = result.success;
         _statusMsg = result.success
             ? (PlatformHelper.isMobile
-                  ? ((result.sentCount == 1
-                            ? l.t('sos_sent_mobile')
-                            : l.t('sos_sent_mobile_plural'))
-                        .replaceAll('{n}', '${result.sentCount}'))
-                  : l.t('sos_sent_web'))
+            ? ((result.sentCount == 1
+            ? l.t('sos_sent_mobile')
+            : l.t('sos_sent_mobile_plural'))
+            .replaceAll('{n}', '${result.sentCount}'))
+            : l.t('sos_sent_web'))
             : result.reason;
       });
       Future.delayed(const Duration(seconds: 8), () {
@@ -331,208 +299,143 @@ class _EmergencyScreenState extends State<EmergencyScreen>
         : _buildWeb(context, isDark, w);
   }
 
-  // ════════════════════════════════════════════
-  //  MOBILE  (<700px)  — iOS emergency style
-  //  Compact nav bar, 2-col scenario grid,
-  //  helplines pill row, shake card at bottom.
-  // ════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════
+  //  MOBILE
+  // ══════════════════════════════════════════════════════════════════
   Widget _buildMobile(BuildContext ctx, bool isDark) {
-    final l = AppLocalizations.of(ctx);
+    final l  = AppLocalizations.of(ctx);
     final bg = isDark ? _dBg : _lBg;
 
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Mobile nav bar ───────────────────
-            _MobileEmergencyBar(
-              isDark: isDark,
-              pulseAnim: _pulseAnim,
-              onBack: () => Navigator.pop(ctx),
-              onContacts: () => Navigator.push(
-                ctx,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => EmergencySetupScreen(
-                    toggleTheme: widget.toggleTheme,
-                    setLocale: widget.setLocale,
-                  ),
-                  transitionsBuilder: (_, a, __, c) =>
-                      FadeTransition(opacity: a, child: c),
-                  transitionDuration: const Duration(milliseconds: 260),
-                ),
-              ),
-            ),
-
-            // ── Scrollable body ──────────────────
-            Expanded(
-              child: FadeTransition(
-                opacity: _entryFade,
-                child: SlideTransition(
-                  position: _entrySlide,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Auto-detect banner
-                        if (_autoScenario != null) ...[
-                          _AutoDetectBanner(
-                            scenario: _autoScenario!,
-                            isDark: isDark,
-                            signLabel: widget.detectedSign ?? '',
-                            onTap: () => _triggerSOS(
-                              _kScenarios.indexOf(_autoScenario!),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // Status bar
-                        if (_statusMsg != null) ...[
-                          _StatusBar(
-                            message: _statusMsg!,
-                            ok: _statusOk,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // No contacts warning
-                        if (!_service.hasContacts) ...[
-                          _NoContactsBanner(
-                            isDark: isDark,
-                            onTap: () => Navigator.push(
-                              ctx,
-                              PageRouteBuilder(
-                                pageBuilder: (_, __, ___) =>
-                                    EmergencySetupScreen(
-                                      toggleTheme: widget.toggleTheme,
-                                      setLocale: widget.setLocale,
-                                    ),
-                                transitionsBuilder: (_, a, __, c) =>
-                                    FadeTransition(opacity: a, child: c),
-                                transitionDuration: const Duration(
-                                  milliseconds: 260,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // Section label
-                        _MobileSectionLabel(
-                          label: l.t('sos_screen_title').toUpperCase(),
-                          sub: l.t('sos_screen_subtitle_mobile'),
-                          isDark: isDark,
+        child: Column(children: [
+          _MobileEmergencyBar(
+            isDark: isDark,
+            pulseAnim: _pulseAnim,
+            onBack: () => Navigator.pop(ctx),
+            onContacts: () => _pushSetup(ctx),
+          ),
+          Expanded(
+            child: FadeTransition(
+              opacity: _entryFade,
+              child: SlideTransition(
+                position: _entrySlide,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                      _sp16, _sp12, _sp16, _sp48),
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Auto-detect banner
+                      if (_autoScenario != null) ...[
+                        _AutoDetectBanner(
+                          scenario: _autoScenario!, isDark: isDark,
+                          signLabel: widget.detectedSign ?? '',
+                          onTap: () => _triggerSOS(
+                              _kScenarios.indexOf(_autoScenario!)),
                         ),
-                        const SizedBox(height: 12),
-
-                        // 2-col grid
-                        GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          childAspectRatio: 1.10,
-                          children: _kScenarios
-                              .asMap()
-                              .entries
-                              .map(
-                                (e) => _ScenarioCard(
-                                  scenario: e.value,
-                                  isDark: isDark,
-                                  pulseAnim: _pulseAnim,
-                                  isSending:
-                                      _isSending && _activeSendIndex == e.key,
-                                  isDisabled:
-                                      _isSending && _activeSendIndex != e.key,
-                                  isAutoDetected: _autoScenario == e.value,
-                                  onTap: () => _triggerSOS(e.key),
-                                ),
-                              )
-                              .toList(),
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        // Helplines section
-                        _MobileSectionLabel(
-                          label: l.t('sos_helpline_ref').toUpperCase(),
-                          sub: l.t('sos_setup_contacts'),
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 10),
-                        _MobileHelplinesRow(isDark: isDark),
-
-                        const SizedBox(height: 16),
-
-                        // Shake card
-                        if (PlatformHelper.supportsShake)
-                          _ShakeCard(isDark: isDark),
+                        const SizedBox(height: _sp12),
                       ],
-                    ),
+
+                      // Status bar
+                      if (_statusMsg != null) ...[
+                        _StatusBar(message: _statusMsg!,
+                            ok: _statusOk, isDark: isDark),
+                        const SizedBox(height: _sp12),
+                      ],
+
+                      // No contacts warning
+                      if (!_service.hasContacts) ...[
+                        _NoContactsBanner(isDark: isDark,
+                            onTap: () => _pushSetup(ctx)),
+                        const SizedBox(height: _sp12),
+                      ],
+
+                      // Section header
+                      _UX4GSectionLabel(
+                        label: l.t('sos_screen_title').toUpperCase(),
+                        sub: l.t('sos_screen_subtitle_mobile'),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: _sp12),
+
+                      // 2-col scenario grid
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: _sp12,
+                        crossAxisSpacing: _sp12,
+                        childAspectRatio: 1.05,
+                        children: _kScenarios.asMap().entries.map((e) =>
+                            _ScenarioCard(
+                              scenario: e.value, isDark: isDark,
+                              pulseAnim: _pulseAnim,
+                              isSending: _isSending && _activeSendIndex == e.key,
+                              isDisabled: _isSending && _activeSendIndex != e.key,
+                              isAutoDetected: _autoScenario == e.value,
+                              onTap: () => _triggerSOS(e.key),
+                            )).toList(),
+                      ),
+
+                      const SizedBox(height: _sp24),
+
+                      // Helplines section
+                      _UX4GSectionLabel(
+                        label: l.t('sos_helpline_ref').toUpperCase(),
+                        sub: l.t('sos_setup_contacts'),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: _sp12),
+                      _MobileHelplinesRow(isDark: isDark),
+
+                      const SizedBox(height: _sp16),
+
+                      if (PlatformHelper.supportsShake)
+                        _ShakeCard(isDark: isDark),
+                    ],
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
   }
 
-  // ════════════════════════════════════════════
-  //  WEB / TABLET  (≥700px)
-  // ════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════
+  //  WEB / TABLET
+  // ══════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext ctx, bool isDark, double w) {
     final isDesktop = w > 1100;
-    final hPad = isDesktop ? 96.0 : 52.0;
-    final bg = isDark ? _dBg : _lBg;
+    final hPad      = isDesktop ? 80.0 : 40.0;
+    final bg        = isDark ? _dBg : _lBg;
 
     return Scaffold(
       backgroundColor: bg,
-      body: Stack(
-        children: [
-          // Subtle ambient glow — barely visible, premium not flashy
-          Positioned(
-            top: -200,
-            left: w * 0.1,
-            child: _AmbientGlow(
-              color: (isDark ? _red_D : _red).withOpacity(0.06),
-              size: 500,
+      body: SafeArea(
+        child: Column(children: [
+          GlobalNavbar(toggleTheme: widget.toggleTheme,
+              setLocale: widget.setLocale, activeRoute: 'emergency'),
+          Expanded(
+            child: FadeTransition(
+              opacity: _entryFade,
+              child: SlideTransition(
+                position: _entrySlide,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(hPad, _sp24, hPad, 64),
+                  physics: const BouncingScrollPhysics(),
+                  child: isDesktop
+                      ? _webDesktopLayout(ctx, isDark)
+                      : _webTabletLayout(ctx, isDark),
+                ),
+              ),
             ),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                GlobalNavbar(
-                  toggleTheme: widget.toggleTheme,
-                  setLocale: widget.setLocale,
-                  activeRoute: 'emergency',
-                ),
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _entryFade,
-                    child: SlideTransition(
-                      position: _entrySlide,
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 64),
-                        physics: const BouncingScrollPhysics(),
-                        child: isDesktop
-                            ? _webDesktopLayout(ctx, isDark)
-                            : _webTabletLayout(ctx, isDark),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ]),
       ),
     );
   }
@@ -540,586 +443,422 @@ class _EmergencyScreenState extends State<EmergencyScreen>
   Widget _webDesktopLayout(BuildContext ctx, bool isDark) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      // Left — info + utilities
       SizedBox(
         width: 320,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _WebHero(
-              isDark: isDark,
-              pulseAnim: _pulseAnim,
-              onBack: () => Navigator.pop(ctx),
-            ),
-            const SizedBox(height: 20),
-            if (_autoScenario != null) ...[
-              _AutoDetectBanner(
-                scenario: _autoScenario!,
-                isDark: isDark,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _WebHero(isDark: isDark, pulseAnim: _pulseAnim,
+              onBack: () => Navigator.pop(ctx)),
+          const SizedBox(height: _sp20),
+          if (_autoScenario != null) ...[
+            _AutoDetectBanner(scenario: _autoScenario!, isDark: isDark,
                 signLabel: widget.detectedSign ?? '',
-                onTap: () => _triggerSOS(_kScenarios.indexOf(_autoScenario!)),
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (_statusMsg != null) ...[
-              _StatusBar(message: _statusMsg!, ok: _statusOk, isDark: isDark),
-              const SizedBox(height: 12),
-            ],
-            if (!_service.hasContacts) ...[
-              _NoContactsBanner(isDark: isDark, onTap: () => _pushSetup(ctx)),
-              const SizedBox(height: 12),
-            ],
-            _WebHelplinesCard(isDark: isDark),
-            const SizedBox(height: 12),
-            if (PlatformHelper.supportsShake) ...[
-              _ShakeCard(isDark: isDark),
-              const SizedBox(height: 12),
-            ],
-            _ContactsButton(
-              isDark: isDark,
-              count: _service.contactCount,
-              onTap: () => _pushSetup(ctx),
-            ),
+                onTap: () => _triggerSOS(_kScenarios.indexOf(_autoScenario!))),
+            const SizedBox(height: _sp12),
           ],
-        ),
+          if (_statusMsg != null) ...[
+            _StatusBar(message: _statusMsg!, ok: _statusOk, isDark: isDark),
+            const SizedBox(height: _sp12),
+          ],
+          if (!_service.hasContacts) ...[
+            _NoContactsBanner(isDark: isDark, onTap: () => _pushSetup(ctx)),
+            const SizedBox(height: _sp12),
+          ],
+          _WebHelplinesCard(isDark: isDark),
+          const SizedBox(height: _sp12),
+          if (PlatformHelper.supportsShake) ...[
+            _ShakeCard(isDark: isDark),
+            const SizedBox(height: _sp12),
+          ],
+          _ContactsButton(isDark: isDark,
+              count: _service.contactCount,
+              onTap: () => _pushSetup(ctx)),
+        ]),
       ),
       const SizedBox(width: 40),
-      // Right — scenario grid
-      Expanded(
-        child: _WebScenariosGrid(
-          isDark: isDark,
-          pulseAnim: _pulseAnim,
-          activeSendIndex: _activeSendIndex,
-          isSending: _isSending,
-          autoScenario: _autoScenario,
-          onTap: _triggerSOS,
-        ),
-      ),
+      Expanded(child: _WebScenariosGrid(
+        isDark: isDark, pulseAnim: _pulseAnim,
+        activeSendIndex: _activeSendIndex, isSending: _isSending,
+        autoScenario: _autoScenario, onTap: _triggerSOS,
+      )),
     ],
   );
 
   Widget _webTabletLayout(BuildContext ctx, bool isDark) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _WebHero(
-        isDark: isDark,
-        pulseAnim: _pulseAnim,
-        onBack: () => Navigator.pop(ctx),
-      ),
-      const SizedBox(height: 20),
+      _WebHero(isDark: isDark, pulseAnim: _pulseAnim,
+          onBack: () => Navigator.pop(ctx)),
+      const SizedBox(height: _sp20),
       if (_autoScenario != null) ...[
-        _AutoDetectBanner(
-          scenario: _autoScenario!,
-          isDark: isDark,
-          signLabel: widget.detectedSign ?? '',
-          onTap: () => _triggerSOS(_kScenarios.indexOf(_autoScenario!)),
-        ),
-        const SizedBox(height: 12),
+        _AutoDetectBanner(scenario: _autoScenario!, isDark: isDark,
+            signLabel: widget.detectedSign ?? '',
+            onTap: () => _triggerSOS(_kScenarios.indexOf(_autoScenario!))),
+        const SizedBox(height: _sp12),
       ],
       if (_statusMsg != null) ...[
         _StatusBar(message: _statusMsg!, ok: _statusOk, isDark: isDark),
-        const SizedBox(height: 12),
+        const SizedBox(height: _sp12),
       ],
       if (!_service.hasContacts) ...[
         _NoContactsBanner(isDark: isDark, onTap: () => _pushSetup(ctx)),
-        const SizedBox(height: 12),
+        const SizedBox(height: _sp12),
       ],
       _WebScenariosGrid(
-        isDark: isDark,
-        pulseAnim: _pulseAnim,
-        activeSendIndex: _activeSendIndex,
-        isSending: _isSending,
-        autoScenario: _autoScenario,
-        onTap: _triggerSOS,
+        isDark: isDark, pulseAnim: _pulseAnim,
+        activeSendIndex: _activeSendIndex, isSending: _isSending,
+        autoScenario: _autoScenario, onTap: _triggerSOS,
       ),
-      const SizedBox(height: 20),
+      const SizedBox(height: _sp20),
       _WebHelplinesCard(isDark: isDark),
-      const SizedBox(height: 12),
+      const SizedBox(height: _sp12),
       if (PlatformHelper.supportsShake) ...[
         _ShakeCard(isDark: isDark),
-        const SizedBox(height: 12),
+        const SizedBox(height: _sp12),
       ],
-      _ContactsButton(
-        isDark: isDark,
-        count: _service.contactCount,
-        onTap: () => _pushSetup(ctx),
-      ),
+      _ContactsButton(isDark: isDark, count: _service.contactCount,
+          onTap: () => _pushSetup(ctx)),
     ],
   );
 
   void _pushSetup(BuildContext ctx) => Navigator.push(
-    ctx,
-    PageRouteBuilder(
-      pageBuilder: (_, __, ___) => EmergencySetupScreen(
-        toggleTheme: widget.toggleTheme,
-        setLocale: widget.setLocale,
-      ),
-      transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
-      transitionDuration: const Duration(milliseconds: 260),
-    ),
-  );
+      ctx,
+      PageRouteBuilder(
+          pageBuilder: (_, __, ___) => EmergencySetupScreen(
+              toggleTheme: widget.toggleTheme, setLocale: widget.setLocale),
+          transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
+          transitionDuration: const Duration(milliseconds: 260)));
 }
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 //  MOBILE NAV BAR
-// ══════════════════════════════════════════════════════════════
+//  UX4G: solid border, no blur; danger-accented live dot;
+//  48dp minimum height; semantic button for contacts
+// ══════════════════════════════════════════════════════════════════════
 class _MobileEmergencyBar extends StatelessWidget {
   final bool isDark;
   final Animation<double> pulseAnim;
   final VoidCallback onBack, onContacts;
   const _MobileEmergencyBar({
-    required this.isDark,
-    required this.pulseAnim,
-    required this.onBack,
-    required this.onContacts,
+    required this.isDark, required this.pulseAnim,
+    required this.onBack, required this.onContacts,
   });
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg = isDark ? _dSurface : _lSurface;
-    final label = isDark ? _dLabel : _lLabel;
-    final label2 = isDark ? _dLabel2 : _lLabel2;
-    final sep = isDark ? _dSep : _lSep.withOpacity(0.5);
-    final accent = isDark ? _red_D : _red;
-    final blueA = isDark ? _blue_D : _blue;
+    final l       = AppLocalizations.of(context);
+    final bg      = isDark ? _dSurface : _lSurface;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final border  = isDark ? _dBorder  : _lBorder;
+    final accent  = isDark ? _dangerDark : _danger;
+    final navBlue = isDark ? _infoDark   : _info;
 
     return Container(
       decoration: BoxDecoration(
-        color: bg,
-        border: Border(bottom: BorderSide(color: sep, width: 0.5)),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: [
-          // Back
-          GestureDetector(
+          color: bg,
+          border: Border(bottom: BorderSide(color: border, width: 1.0))),
+      padding: const EdgeInsets.fromLTRB(_sp16, _sp12, _sp16, _sp12),
+      child: Row(children: [
+        // Back — semantic button, min 48dp
+        Semantics(
+          label: l.t('common_back'), button: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
             onTap: onBack,
-            behavior: HitTestBehavior.opaque,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.chevron_left_rounded, color: blueA, size: 28),
-                Text(l.t('common_back'), style: _t(15, FontWeight.w400, blueA)),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: _sp8, vertical: _sp8),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.chevron_left_rounded, color: navBlue, size: 22),
+                Text(l.t('common_back'),
+                    style: _body(15, navBlue, w: FontWeight.w500)),
+              ]),
             ),
           ),
-          const Spacer(),
-          // Centre — title with live dot
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedBuilder(
-                animation: pulseAnim,
-                builder: (_, __) => Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accent.withOpacity(pulseAnim.value * 0.7),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l.t('sos_screen_title'),
-                style: _t(16, FontWeight.w600, label, ls: -0.2),
-              ),
-            ],
+        ),
+        const Spacer(),
+        // Centre — live dot + title
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          AnimatedBuilder(
+            animation: pulseAnim,
+            builder: (_, __) => Container(
+                width: 8, height: 8,
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle, color: accent,
+                    boxShadow: [BoxShadow(
+                        color: accent.withOpacity(pulseAnim.value * 0.55),
+                        blurRadius: 6, spreadRadius: 1)])),
           ),
-          const Spacer(),
-          // Contacts icon
-          GestureDetector(
+          const SizedBox(width: _sp8),
+          Text(l.t('sos_screen_title'),
+              style: _heading(16, textClr)),
+        ]),
+        const Spacer(),
+        // Contacts icon — 40dp min
+        Semantics(
+          label: 'Emergency contacts', button: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
             onTap: onContacts,
             child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: isDark ? _dFill : _lFill,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.contacts_rounded, color: label2, size: 16),
-            ),
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                    color: isDark ? _dSurface2 : _lSurface2,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: border, width: 1)),
+                child: Icon(Icons.contacts_rounded, color: subClr, size: 18)),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  SCENARIO CARD  — the core UI unit
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
+//  SCENARIO CARD
+//  UX4G: min 48dp, semantic color per scenario, clear icon+number+label,
+//  sending state replaces icon with spinner
+// ══════════════════════════════════════════════════════════════════════
 class _ScenarioCard extends StatefulWidget {
   final _Scenario scenario;
-  final bool isDark;
+  final bool isDark, isSending, isDisabled, isAutoDetected;
   final Animation<double> pulseAnim;
-  final bool isSending, isDisabled, isAutoDetected;
   final VoidCallback onTap;
   const _ScenarioCard({
-    required this.scenario,
-    required this.isDark,
-    required this.pulseAnim,
-    required this.isSending,
-    required this.isDisabled,
-    required this.isAutoDetected,
-    required this.onTap,
+    required this.scenario, required this.isDark, required this.pulseAnim,
+    required this.isSending, required this.isDisabled,
+    required this.isAutoDetected, required this.onTap,
   });
   @override
   State<_ScenarioCard> createState() => _ScenarioCardState();
 }
 
-class _ScenarioCardState extends State<_ScenarioCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _hCtrl;
-  late Animation<double> _hAnim;
+class _ScenarioCardState extends State<_ScenarioCard> {
   bool _pressed = false;
 
   @override
-  void initState() {
-    super.initState();
-    _hCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 160),
-    );
-    _hAnim = CurvedAnimation(parent: _hCtrl, curve: Curves.easeOut);
-  }
-
-  @override
-  void dispose() {
-    _hCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final s = widget.scenario;
-    final isDark = widget.isDark;
-    final accent = s.accent(isDark);
-    final bg = isDark ? _dSurface : _lSurface;
-    final label = isDark ? _dLabel : _lLabel;
-    final label2 = isDark ? _dLabel2 : _lLabel2;
+    final l       = AppLocalizations.of(context);
+    final s       = widget.scenario;
+    final isDark  = widget.isDark;
+    final accent  = s.accent(isDark);
+    final bg      = isDark ? _dSurface : _lSurface;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final border  = isDark ? _dBorder  : _lBorder;
 
-    return MouseRegion(
-      onEnter: (_) {
-        if (!widget.isDisabled) _hCtrl.forward();
-      },
-      onExit: (_) => _hCtrl.reverse(),
-      child: GestureDetector(
-        onTapDown: (_) {
-          if (!widget.isDisabled) setState(() => _pressed = true);
-        },
-        onTapUp: (_) {
-          setState(() => _pressed = false);
-          if (!widget.isDisabled) widget.onTap();
-        },
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedBuilder(
-          animation: _hAnim,
-          builder: (_, __) {
-            final hv = _hAnim.value;
-            final elevated =
-                widget.isSending || widget.isAutoDetected || hv > 0.1;
-            return AnimatedScale(
-              scale: _pressed ? 0.95 : 1.0,
-              duration: const Duration(milliseconds: 80),
-              curve: Curves.easeOutBack,
-              child: AnimatedOpacity(
-                opacity: widget.isDisabled ? 0.25 : 1.0,
-                duration: const Duration(milliseconds: 180),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: elevated
-                        ? Color.lerp(
-                            bg,
-                            accent.withOpacity(0.08),
-                            hv.clamp(0.0, 1.0),
-                          )
-                        : bg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: elevated
-                          ? accent.withOpacity(
-                              widget.isSending || widget.isAutoDetected
-                                  ? 0.40
-                                  : hv * 0.30,
-                            )
-                          : Colors.black.withOpacity(isDark ? 0.0 : 0.05),
-                      width: (widget.isSending || widget.isAutoDetected)
-                          ? 1.0
-                          : 0.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.30 : 0.07),
-                        blurRadius: elevated ? 20 : 10,
-                        offset: const Offset(0, 4),
-                      ),
-                      if (elevated)
-                        BoxShadow(
-                          color: accent.withOpacity(isDark ? 0.12 : 0.06),
-                          blurRadius: 24,
-                          offset: const Offset(0, 6),
-                        ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    // Active / sending state uses accent-tinted surface
+    final activeBg   = isDark
+        ? Color.lerp(_dSurface, accent.withOpacity(0.20), 0.5)!
+        : accent.withOpacity(0.06);
+    final activeBorder = accent.withOpacity(
+        widget.isSending || widget.isAutoDetected ? 0.55 : 0.22);
+
+    return Semantics(
+      label: l.t(s.titleKey),
+      button: true,
+      enabled: !widget.isDisabled,
+      child: AnimatedOpacity(
+        opacity: widget.isDisabled ? 0.35 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        child: GestureDetector(
+          onTapDown:   (_) { if (!widget.isDisabled) setState(() => _pressed = true); },
+          onTapUp:     (_) { setState(() => _pressed = false); if (!widget.isDisabled) widget.onTap(); },
+          onTapCancel: ()  => setState(() => _pressed = false),
+          child: AnimatedScale(
+            scale: _pressed ? 0.96 : 1.0,
+            duration: const Duration(milliseconds: 80),
+            curve: Curves.easeOutBack,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.all(_sp16),
+              decoration: BoxDecoration(
+                  color: widget.isSending || widget.isAutoDetected ? activeBg : bg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: widget.isSending || widget.isAutoDetected
+                          ? activeBorder : border,
+                      width: widget.isSending || widget.isAutoDetected ? 1.5 : 1.0)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Top row — icon + helpline badge
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top row — icon + helpline badge
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Icon container
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: accent.withOpacity(0.10),
-                              borderRadius: BorderRadius.circular(13),
-                            ),
-                            child: Center(
-                              child: widget.isSending
-                                  ? SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: accent,
-                                      ),
-                                    )
-                                  : Icon(s.icon, color: accent, size: 20),
-                            ),
-                          ),
-                          // Helpline number badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: accent.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              s.helpline,
-                              style: _t(11, FontWeight.w700, accent),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      // Title
-                      Text(
-                        widget.isSending ? l.t('sos_sending') : l.t(s.titleKey),
-                        style: _t(
-                          14,
-                          FontWeight.w600,
-                          widget.isSending ? accent : label,
-                          ls: -0.2,
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                            color: accent.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Center(
+                          child: widget.isSending
+                              ? SizedBox(width: 20, height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2.5, color: accent))
+                              : Icon(s.icon, color: accent, size: 22),
                         ),
                       ),
-
-                      const SizedBox(height: 2),
-
-                      // Subtitle
-                      Text(
-                        widget.isSending
-                            ? l.t('sos_send_to_contacts')
-                            : l.t(s.subtitleKey),
-                        style: _t(
-                          10.5,
-                          FontWeight.w400,
-                          widget.isSending ? accent.withOpacity(0.6) : label2,
-                          h: 1.35,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      // Helpline number — high contrast, bold
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: _sp8, vertical: _sp4),
+                        decoration: BoxDecoration(
+                            color: accent.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: accent.withOpacity(0.25), width: 1)),
+                        child: Text(s.helpline,
+                            style: _label(12, accent, w: FontWeight.w700)),
                       ),
-
-                      // ISL sign hint — shown on hover / auto-detected
-                      if (widget.isAutoDetected || hv > 0.3) ...[
-                        const SizedBox(height: 6),
-                        AnimatedOpacity(
-                          opacity: widget.isAutoDetected ? 1.0 : hv,
-                          duration: const Duration(milliseconds: 130),
-                          child: Text(
-                            l.t(s.signHint),
-                            style: _t(
-                              9,
-                              FontWeight.w600,
-                              accent.withOpacity(0.70),
-                              ls: 0.2,
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
-                ),
+                  const Spacer(),
+                  // Title
+                  Text(
+                    widget.isSending ? l.t('sos_sending') : l.t(s.titleKey),
+                    style: _label(14, widget.isSending ? accent : textClr,
+                        w: FontWeight.w700),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: _sp4),
+                  // Subtitle
+                  Text(
+                    widget.isSending
+                        ? l.t('sos_send_to_contacts')
+                        : l.t(s.subtitleKey),
+                    style: _body(11, subClr),
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  WEB COMPONENTS
-// ══════════════════════════════════════════════════════════════
-
+// ══════════════════════════════════════════════════════════════════════
+//  WEB HERO
+// ══════════════════════════════════════════════════════════════════════
 class _WebHero extends StatelessWidget {
   final bool isDark;
   final Animation<double> pulseAnim;
   final VoidCallback onBack;
-  const _WebHero({
-    required this.isDark,
-    required this.pulseAnim,
-    required this.onBack,
-  });
+  const _WebHero({required this.isDark, required this.pulseAnim,
+    required this.onBack});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final label = isDark ? _dLabel : _lLabel;
-    final label2 = isDark ? _dLabel2 : _lLabel2;
-    final accent = isDark ? _red_D : _red;
-    final blueA = isDark ? _blue_D : _blue;
+    final l       = AppLocalizations.of(context);
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final accent  = isDark ? _dangerDark : _danger;
+    final navBlue = isDark ? _infoDark   : _info;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return Semantics(
+      header: true,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Back breadcrumb
-        GestureDetector(
+        InkWell(
+          borderRadius: BorderRadius.circular(6),
           onTap: onBack,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.chevron_left_rounded, color: blueA, size: 20),
-              Text(
-                l.t('sos_setup_back'),
-                style: _t(14, FontWeight.w400, blueA),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                vertical: _sp4, horizontal: _sp4),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.chevron_left_rounded, color: navBlue, size: 20),
+              Text(l.t('sos_setup_back'),
+                  style: _body(14, navBlue, w: FontWeight.w500)),
+            ]),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: _sp20),
 
-        // Live status badge
+        // Live status badge (UX4G: dot + label in danger color)
         AnimatedBuilder(
           animation: pulseAnim,
           builder: (_, __) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+                horizontal: _sp12, vertical: _sp8),
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: accent.withOpacity(0.18), width: 0.5),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 5,
-                  height: 5,
+                color: isDark
+                    ? _dangerDark.withOpacity(0.12)
+                    : _dangerLight,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                    color: isDark
+                        ? _dangerDark.withOpacity(0.30)
+                        : _danger.withOpacity(0.30),
+                    width: 1)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                  width: 7, height: 7,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accent.withOpacity(pulseAnim.value * 0.7),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l.t('sos_screen_badge_web'),
-                  style: _t(10, FontWeight.w700, accent, ls: 1.0),
-                ),
-              ],
-            ),
+                      shape: BoxShape.circle, color: accent,
+                      boxShadow: [BoxShadow(
+                          color: accent.withOpacity(pulseAnim.value * 0.55),
+                          blurRadius: 6, spreadRadius: 1)])),
+              const SizedBox(width: _sp8),
+              Text(l.t('sos_screen_badge_web'),
+                  style: _label(11, accent, w: FontWeight.w700)),
+            ]),
           ),
         ),
 
-        const SizedBox(height: 16),
-
-        Text(
-          l.t('sos_screen_title'),
-          style: _t(36, FontWeight.w700, label, ls: -1.0, h: 1.08),
-        ),
-
-        const SizedBox(height: 10),
-
-        Text(
-          l.t('sos_screen_subtitle_mobile'),
-          style: _t(14, FontWeight.w400, label2, ls: -0.1, h: 1.65),
-        ),
-      ],
+        const SizedBox(height: _sp16),
+        Text(l.t('sos_screen_title'),
+            style: _display(32, textClr)),
+        const SizedBox(height: _sp8),
+        Text(l.t('sos_screen_subtitle_mobile'),
+            style: _body(14, subClr)),
+      ]),
     );
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════
+//  WEB SCENARIOS GRID
+// ══════════════════════════════════════════════════════════════════════
 class _WebScenariosGrid extends StatelessWidget {
-  final bool isDark;
+  final bool isDark, isSending;
   final Animation<double> pulseAnim;
   final int? activeSendIndex;
-  final bool isSending;
   final _Scenario? autoScenario;
   final void Function(int) onTap;
   const _WebScenariosGrid({
-    required this.isDark,
-    required this.pulseAnim,
-    required this.activeSendIndex,
-    required this.isSending,
-    required this.autoScenario,
-    required this.onTap,
+    required this.isDark, required this.pulseAnim,
+    required this.activeSendIndex, required this.isSending,
+    required this.autoScenario, required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.30,
-      children: _kScenarios
-          .asMap()
-          .entries
-          .map(
-            (e) => _ScenarioCard(
-              scenario: e.value,
-              isDark: isDark,
-              pulseAnim: pulseAnim,
-              isSending: isSending && activeSendIndex == e.key,
-              isDisabled: isSending && activeSendIndex != e.key,
-              isAutoDetected: autoScenario == e.value,
-              onTap: () => onTap(e.key),
-            ),
-          )
-          .toList(),
-    );
-  }
+  Widget build(BuildContext context) => GridView.count(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    crossAxisCount: 2,
+    mainAxisSpacing: _sp12,
+    crossAxisSpacing: _sp12,
+    childAspectRatio: 1.25,
+    children: _kScenarios.asMap().entries.map((e) =>
+        _ScenarioCard(
+          scenario: e.value, isDark: isDark, pulseAnim: pulseAnim,
+          isSending: isSending && activeSendIndex == e.key,
+          isDisabled: isSending && activeSendIndex != e.key,
+          isAutoDetected: autoScenario == e.value,
+          onTap: () => onTap(e.key),
+        )).toList(),
+  );
 }
 
+// ══════════════════════════════════════════════════════════════════════
+//  WEB HELPLINES CARD
+//  UX4G: large numbers, semantic color per service, accessible labels
+// ══════════════════════════════════════════════════════════════════════
 class _WebHelplinesCard extends StatelessWidget {
   final bool isDark;
   const _WebHelplinesCard({required this.isDark});
@@ -1128,200 +867,161 @@ class _WebHelplinesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final items = [
-      ('112', 'Emergency', isDark ? _red_D : _red),
-      ('108', 'Ambulance', isDark ? _orange_D : _orange),
-      ('100', 'Police', isDark ? _blue_D : _blue),
-      ('101', 'Fire', isDark ? _amber_D : _amber),
+      ('112', 'Emergency', isDark ? _dangerDark  : _danger),
+      ('108', 'Ambulance', isDark ? _scOrangeD   : _scOrange),
+      ('100', 'Police',    isDark ? _infoDark     : _info),
+      ('101', 'Fire',      isDark ? _scAmberD     : _scAmber),
     ];
-    final bg = isDark ? _dSurface : _lSurface;
-    final sub = isDark ? _dLabel2 : _lLabel2;
-    final sep = isDark ? _dSep : _lSep.withOpacity(0.4);
+    final bg     = isDark ? _dSurface  : _lSurface;
+    final border = isDark ? _dBorder   : _lBorder;
+    final sep    = isDark ? _dBorderSub : _lBorderSub;
+    final sub    = isDark ? _dTextSub  : _lTextSub;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.black.withOpacity(isDark ? 0.0 : 0.04),
-          width: 0.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l.t('sos_helpline_ref').toUpperCase(),
-            style: _t(10, FontWeight.w600, sub, ls: 0.8),
-          ),
-          const SizedBox(height: 12),
+    return Semantics(
+      label: 'Emergency helpline numbers',
+      child: Container(
+        padding: const EdgeInsets.all(_sp16),
+        decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border, width: 1)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(l.t('sos_helpline_ref').toUpperCase(),
+              style: _label(10, sub, w: FontWeight.w700)),
+          const SizedBox(height: _sp12),
           IntrinsicHeight(
-            child: Row(
-              children: [
-                for (int i = 0; i < items.length; i++) ...[
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Text(
-                          items[i].$1,
-                          style: _t(18, FontWeight.w700, items[i].$3, ls: -0.5),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          items[i].$2,
-                          style: _t(10, FontWeight.w400, sub),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (i < items.length - 1) Container(width: 0.5, color: sep),
-                ],
-              ],
-            ),
+            child: Row(children: [
+              for (int i = 0; i < items.length; i++) ...[
+                Expanded(child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(items[i].$1,
+                          style: _heading(20, items[i].$3,
+                              w: FontWeight.w700)),
+                      const SizedBox(height: _sp4),
+                      Text(items[i].$2, style: _body(11, sub),
+                          textAlign: TextAlign.center),
+                    ])),
+                if (i < items.length - 1)
+                  Container(width: 1, color: sep),
+              ]
+            ]),
           ),
-        ],
+        ]),
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  SHARED COMPONENTS  (mobile + web)
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
+//  SHARED COMPONENTS
+// ══════════════════════════════════════════════════════════════════════
 
-// ── Auto-detect banner ────────────────────────────────────────
+// ── Auto-detect banner ────────────────────────────────────────────────
 class _AutoDetectBanner extends StatelessWidget {
   final _Scenario scenario;
   final bool isDark;
   final String signLabel;
   final VoidCallback onTap;
-  const _AutoDetectBanner({
-    required this.scenario,
-    required this.isDark,
-    required this.signLabel,
-    required this.onTap,
-  });
+  const _AutoDetectBanner({required this.scenario, required this.isDark,
+    required this.signLabel, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l      = AppLocalizations.of(context);
     final accent = scenario.accent(isDark);
-    final label = isDark ? _dLabel : _lLabel;
-    final bg = isDark ? _dSurface : _lSurface;
+    final textClr = isDark ? _dText : _lText;
+    final bg     = isDark ? _dSurface : _lSurface;
+    final border = isDark ? _dBorder  : _lBorder;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withOpacity(0.30), width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withOpacity(isDark ? 0.10 : 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
+    return Semantics(
+      label: l.t('sos_isl_detected').replaceAll('{sign}', signLabel),
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(_sp16),
+          decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: accent.withOpacity(0.35), width: 1.5)),
+          child: Row(children: [
             Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accent.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(scenario.icon, color: accent, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                    color: accent.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Icon(scenario.icon, color: accent, size: 22)),
+            const SizedBox(width: _sp12),
+            Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(l.t('sos_isl_detected').replaceAll('{sign}', signLabel),
+                      style: _label(10.5, accent, w: FontWeight.w700)),
+                  const SizedBox(height: _sp4),
                   Text(
-                    l.t('sos_isl_detected').replaceAll('{sign}', signLabel),
-                    style: _t(10, FontWeight.w600, accent, ls: 0.2),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l
-                        .t('sos_isl_suggested')
-                        .replaceAll('{type}', l.t(scenario.titleKey)),
-                    style: _t(13, FontWeight.w600, label, ls: -0.2),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded, color: accent, size: 12),
-          ],
+                      l.t('sos_isl_suggested')
+                          .replaceAll('{type}', l.t(scenario.titleKey)),
+                      style: _heading(14, textClr)),
+                ])),
+            Icon(Icons.arrow_forward_ios_rounded, color: accent, size: 14),
+          ]),
         ),
       ),
     );
   }
 }
 
-// ── Status bar ────────────────────────────────────────────────
+// ── Status bar ────────────────────────────────────────────────────────
 class _StatusBar extends StatelessWidget {
   final String message;
   final bool ok, isDark;
-  const _StatusBar({
-    required this.message,
-    required this.ok,
-    required this.isDark,
-  });
+  const _StatusBar({required this.message, required this.ok, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final color = ok ? (isDark ? _green_D : _green) : (isDark ? _red_D : _red);
-    final icon = ok ? Icons.check_circle_rounded : Icons.error_outline_rounded;
+    final color = ok
+        ? (isDark ? _successDark : _success)
+        : (isDark ? _dangerDark  : _danger);
+    final bgClr = ok
+        ? (isDark ? _successDark.withOpacity(0.12) : _successLight)
+        : (isDark ? _dangerDark.withOpacity(0.12)  : _dangerLight);
+    final borderClr = ok
+        ? (isDark ? _successDark.withOpacity(0.30) : _success.withOpacity(0.30))
+        : (isDark ? _dangerDark.withOpacity(0.30)  : _danger.withOpacity(0.30));
+    final icon = ok
+        ? Icons.check_circle_rounded
+        : Icons.error_outline_rounded;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 300),
       builder: (_, v, child) => Opacity(
-        opacity: v,
-        child: Transform.translate(
-          offset: Offset(0, (1 - v) * 8),
-          child: child,
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.22), width: 0.5),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 16),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: _t(13, FontWeight.w500, color, h: 1.4),
-              ),
-            ),
-          ],
+          opacity: v, child: Transform.translate(
+          offset: Offset(0, (1 - v) * 6), child: child)),
+      child: Semantics(
+        liveRegion: true,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: _sp16, vertical: _sp12),
+          decoration: BoxDecoration(
+              color: bgClr,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: borderClr, width: 1)),
+          child: Row(children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: _sp12),
+            Expanded(child: Text(message,
+                style: _body(13, color, w: FontWeight.w500))),
+          ]),
         ),
       ),
     );
   }
 }
 
-// ── No contacts banner ────────────────────────────────────────
+// ── No contacts banner — warning style ───────────────────────────────
 class _NoContactsBanner extends StatelessWidget {
   final bool isDark;
   final VoidCallback onTap;
@@ -1329,199 +1029,140 @@ class _NoContactsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final amber = isDark ? _amber_D : _amber;
-    final bg = isDark ? _dSurface : _lSurface;
+    final l      = AppLocalizations.of(context);
+    final amber  = isDark ? _warningDark : _warning;
+    final bgClr  = isDark ? _warningDark.withOpacity(0.12) : _warningLight;
+    final border = isDark ? _warningDark.withOpacity(0.30)
+        : _warning.withOpacity(0.30);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: amber.withOpacity(0.25), width: 0.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.warning_rounded, color: amber, size: 16),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
+    return Semantics(
+      label: l.t('sos_no_contacts_title'), button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(_sp12),
+          decoration: BoxDecoration(
+              color: bgClr,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: border, width: 1)),
+          child: Row(children: [
+            Icon(Icons.warning_amber_rounded, color: amber, size: 18),
+            const SizedBox(width: _sp12),
+            Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l.t('sos_no_contacts_title'),
-                    style: _t(12, FontWeight.w600, amber),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l.t('sos_no_contacts_body'),
-                    style: _t(
-                      11,
-                      FontWeight.w400,
-                      amber.withOpacity(0.70),
-                      h: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: amber, size: 16),
-          ],
+                  Text(l.t('sos_no_contacts_title'),
+                      style: _label(12, amber, w: FontWeight.w700)),
+                  const SizedBox(height: _sp4),
+                  Text(l.t('sos_no_contacts_body'),
+                      style: _body(11, amber)),
+                ])),
+            Icon(Icons.chevron_right_rounded, color: amber, size: 18),
+          ]),
         ),
       ),
     );
   }
 }
 
-// ── Shake card ────────────────────────────────────────────────
+// ── Shake card ────────────────────────────────────────────────────────
 class _ShakeCard extends StatelessWidget {
   final bool isDark;
   const _ShakeCard({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg = isDark ? _dSurface : _lSurface;
-    final label = isDark ? _dLabel : _lLabel;
-    final label2 = isDark ? _dLabel2 : _lLabel2;
-    final accent = isDark ? _indigo_D : _indigo;
+    final l      = AppLocalizations.of(context);
+    final bg     = isDark ? _dSurface  : _lSurface;
+    final border = isDark ? _dBorder   : _lBorder;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final accent  = isDark ? _infoDark : _info;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(_sp16),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.black.withOpacity(isDark ? 0.0 : 0.04),
-          width: 0.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border, width: 1)),
+      child: Row(children: [
+        Container(
+            width: 44, height: 44,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.vibration_rounded, color: accent, size: 18),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.t('sos_shake_title'),
-                  style: _t(13.5, FontWeight.w600, label, ls: -0.2),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l.t('sos_shake_body'),
-                  style: _t(12, FontWeight.w400, label2, h: 1.45),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+                color: accent.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(10)),
+            child: Icon(Icons.vibration_rounded, color: accent, size: 22)),
+        const SizedBox(width: _sp16),
+        Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.t('sos_shake_title'),
+                  style: _label(14, textClr, w: FontWeight.w700)),
+              const SizedBox(height: _sp4),
+              Text(l.t('sos_shake_body'),
+                  style: _body(12, subClr)),
+            ])),
+      ]),
     );
   }
 }
 
-// ── Contacts button ───────────────────────────────────────────
+// ── Contacts button ───────────────────────────────────────────────────
 class _ContactsButton extends StatefulWidget {
   final bool isDark;
   final int count;
   final VoidCallback onTap;
-  const _ContactsButton({
-    required this.isDark,
-    required this.count,
-    required this.onTap,
-  });
+  const _ContactsButton({required this.isDark, required this.count,
+    required this.onTap});
   @override
   State<_ContactsButton> createState() => _ContactsButtonState();
 }
 
 class _ContactsButtonState extends State<_ContactsButton> {
   bool _hovered = false;
-
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg = widget.isDark ? _dSurface : _lSurface;
-    final label = widget.isDark ? _dLabel : _lLabel;
-    final sub = widget.isDark ? _dLabel2 : _lLabel2;
-    final sep = widget.isDark ? _dSep : _lSep.withOpacity(0.5);
+    final l      = AppLocalizations.of(context);
+    final bg     = widget.isDark ? _dSurface   : _lSurface;
+    final bgHov  = widget.isDark ? _dSurface2  : _lSurface2;
+    final border = widget.isDark ? _dBorder    : _lBorder;
+    final textClr = widget.isDark ? _dText     : _lText;
+    final subClr  = widget.isDark ? _dTextSub  : _lTextSub;
+    final accent  = widget.isDark ? _infoDark  : _info;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onExit:  (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          decoration: BoxDecoration(
-            color: _hovered ? (widget.isDark ? _dSurface2 : _lSurface2) : bg,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: _hovered
-                  ? sep
-                  : Colors.black.withOpacity(widget.isDark ? 0.0 : 0.04),
-              width: 0.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(widget.isDark ? 0.25 : 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.contacts_rounded,
-                color: widget.isDark ? _blue_D : _blue,
-                size: 16,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
+      child: Semantics(
+        button: true,
+        label: widget.count > 0 ? 'View emergency contacts' : 'Set up contacts',
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(
+                horizontal: _sp16, vertical: _sp12),
+            decoration: BoxDecoration(
+                color: _hovered ? bgHov : bg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: _hovered ? accent.withOpacity(0.35) : border,
+                    width: _hovered ? 1.5 : 1.0)),
+            child: Row(children: [
+              Icon(Icons.contacts_rounded, color: accent, size: 18),
+              const SizedBox(width: _sp12),
+              Expanded(child: Text(
                   widget.count > 0
                       ? ((widget.count == 1
-                                ? l.t('sos_contacts_configured')
-                                : l.t('sos_contacts_plural'))
-                            .replaceAll('{n}', '${widget.count}'))
+                      ? l.t('sos_contacts_configured')
+                      : l.t('sos_contacts_plural'))
+                      .replaceAll('{n}', '${widget.count}'))
                       : l.t('sos_setup_contacts'),
-                  style: _t(
-                    13,
-                    FontWeight.w500,
-                    widget.count > 0 ? label : sub,
-                  ),
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: sub, size: 16),
-            ],
+                  style: _body(13, widget.count > 0 ? textClr : subClr,
+                      w: FontWeight.w500))),
+              Icon(Icons.chevron_right_rounded, color: subClr, size: 16),
+            ]),
           ),
         ),
       ),
@@ -1529,7 +1170,7 @@ class _ContactsButtonState extends State<_ContactsButton> {
   }
 }
 
-// ── Mobile helplines row ──────────────────────────────────────
+// ── Mobile helplines row ──────────────────────────────────────────────
 class _MobileHelplinesRow extends StatelessWidget {
   final bool isDark;
   const _MobileHelplinesRow({required this.isDark});
@@ -1537,94 +1178,61 @@ class _MobileHelplinesRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('112', 'Emergency', isDark ? _red_D : _red),
-      ('108', 'Ambulance', isDark ? _orange_D : _orange),
-      ('100', 'Police', isDark ? _blue_D : _blue),
-      ('101', 'Fire', isDark ? _amber_D : _amber),
+      ('112', 'Emergency', isDark ? _dangerDark  : _danger),
+      ('108', 'Ambulance', isDark ? _scOrangeD   : _scOrange),
+      ('100', 'Police',    isDark ? _infoDark     : _info),
+      ('101', 'Fire',      isDark ? _scAmberD     : _scAmber),
     ];
-    final bg = isDark ? _dSurface : _lSurface;
-    final sub = isDark ? _dLabel2 : _lLabel2;
+    final bg     = isDark ? _dSurface  : _lSurface;
+    final border = isDark ? _dBorder   : _lBorder;
+    final sep    = isDark ? _dBorderSub : _lBorderSub;
+    final sub    = isDark ? _dTextSub  : _lTextSub;
 
-    return Row(
-      children: items.asMap().entries.map((e) {
-        final i = e.key;
-        final item = e.value;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: i < items.length - 1 ? 8 : 0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: Colors.black.withOpacity(isDark ? 0.0 : 0.04),
-                  width: 0.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    item.$1,
-                    style: _t(17, FontWeight.w700, item.$3, ls: -0.5),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(item.$2, style: _t(9, FontWeight.w400, sub)),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+    return Semantics(
+      label: 'Emergency helpline numbers',
+      child: Container(
+        decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border, width: 1)),
+        child: IntrinsicHeight(
+          child: Row(children: items.asMap().entries.map((e) {
+            final i    = e.key;
+            final item = e.value;
+            return Expanded(child: Container(
+              padding: const EdgeInsets.symmetric(vertical: _sp16),
+              decoration: BoxDecoration(border: i < items.length - 1
+                  ? Border(right: BorderSide(color: sep, width: 1)) : null),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(item.$1,
+                        style: _heading(18, item.$3, w: FontWeight.w700)),
+                    const SizedBox(height: _sp4),
+                    Text(item.$2, style: _body(10, sub),
+                        textAlign: TextAlign.center),
+                  ]),
+            ));
+          }).toList()),
+        ),
+      ),
     );
   }
 }
 
-// ── Mobile section label ──────────────────────────────────────
-class _MobileSectionLabel extends StatelessWidget {
+// ── UX4G section label ────────────────────────────────────────────────
+class _UX4GSectionLabel extends StatelessWidget {
   final String label, sub;
   final bool isDark;
-  const _MobileSectionLabel({
-    required this.label,
-    required this.sub,
-    required this.isDark,
-  });
+  const _UX4GSectionLabel({required this.label, required this.sub,
+    required this.isDark});
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: _t(10, FontWeight.w600, isDark ? _dLabel3 : _lLabel3, ls: 0.6),
-      ),
-      const SizedBox(height: 2),
-      Text(sub, style: _t(12, FontWeight.w400, isDark ? _dLabel2 : _lLabel2)),
-    ],
-  );
-}
-
-// ── Ambient glow ──────────────────────────────────────────────
-class _AmbientGlow extends StatelessWidget {
-  final Color color;
-  final double size;
-  const _AmbientGlow({required this.color, required this.size});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-    child: BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-      child: const SizedBox.expand(),
-    ),
-  );
+  Widget build(BuildContext context) => Semantics(
+      header: true,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: _label(10.5,
+            isDark ? _dTextMuted : _lTextMuted, w: FontWeight.w700)),
+        const SizedBox(height: _sp4),
+        Text(sub, style: _body(12, isDark ? _dTextSub : _lTextSub)),
+      ]));
 }

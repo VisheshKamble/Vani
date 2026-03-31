@@ -79,6 +79,7 @@ class GoogleFonts {
 const String _kRailwayHost = 'isl-production-57d4.up.railway.app';
 const String _kWsPath = '/ws';
 const int _kFrameIntervalMs = 100;
+const bool _railwayWsEnabled = true;
 
 String _getWebSocketUrl() {
   // For Production on Railway, we always use 'wss' (Secure WebSocket)
@@ -713,6 +714,7 @@ class _TranslateScreenState extends State<TranslateScreen>
   }
 
   Future<bool> _connectWs() async {
+
     try {
       _channel = WebSocketChannel.connect(Uri.parse(_getWebSocketUrl()));
       await _channel!.ready.timeout(const Duration(seconds: 3));
@@ -876,7 +878,15 @@ class _TranslateScreenState extends State<TranslateScreen>
       return;
     }
     await _tts.stop();
-    await _tts.setLanguage(langCode);
+    // Try to set language, fallback to English if not available
+    try {
+      final result = await _tts.setLanguage(langCode);
+      if (result == null || (result is bool && !result)) {
+        await _tts.setLanguage('en-US');
+      }
+    } catch (_) {
+      await _tts.setLanguage('en-US');
+    }
     await _tts.setSpeechRate(0.45);
     await _tts.setPitch(1.0);
     setState(() { _ttsSpeaking = true; _ttsTag = tag; });

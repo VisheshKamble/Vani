@@ -68,6 +68,8 @@ class VaniAuthCard extends StatefulWidget {
 
 class _VaniAuthDialogState extends State<VaniAuthCard>
     with SingleTickerProviderStateMixin {
+  static const bool _authBackendEnabled = true;
+
   final _passwordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _usernameCtrl = TextEditingController();
@@ -121,6 +123,26 @@ class _VaniAuthDialogState extends State<VaniAuthCard>
     setState(() => _loading = true);
 
     try {
+      if (!_authBackendEnabled) {
+        if (mounted) {
+          if (!widget.embedded) {
+            Navigator.pop(context);
+          }
+          widget.onAuthenticated?.call();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Backend auth is temporarily disabled.'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
       final sb = Supabase.instance.client;
       final fakeEmail = _fakeEmail(_usernameCtrl.text.trim());
 

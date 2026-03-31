@@ -33,13 +33,9 @@ const _orange   = Color(0xFFFF9500);
 const _orange_D = Color(0xFFFF9F0A);
 const _blue     = Color(0xFF007AFF);
 const _blue_D   = Color(0xFF0A84FF);
-const _green    = Color(0xFF34C759);
 const _green_D  = Color(0xFF30D158);
-const _indigo   = Color(0xFF5856D6);
 const _indigo_D = Color(0xFF5E5CE6);
-const _teal     = Color(0xFF32ADE6);
 const _teal_D   = Color(0xFF5AC8F5);
-const _purple   = Color(0xFFAF52DE);
 const _purple_D = Color(0xFFBF5AF2);
 
 // Light surfaces
@@ -48,16 +44,13 @@ const _lSurface = Color(0xFFFFFFFF);
 const _lSep     = Color(0xFFC6C6C8);
 const _lLabel   = Color(0xFF000000);
 const _lLabel2  = Color(0x993C3C43);
-const _lLabel3  = Color(0x4D3C3C43);
 
 // Dark surfaces
 const _dBg      = Color(0xFF000000);
 const _dSurface = Color(0xFF1C1C1E);
-const _dSurface2= Color(0xFF2C2C2E);
 const _dSep     = Color(0xFF38383A);
 const _dLabel   = Color(0xFFFFFFFF);
 const _dLabel2  = Color(0x99EBEBF5);
-const _dLabel3  = Color(0x4DEBEBF5);
 
 // Legacy aliases — keeps AccessibilityPage etc. compiling unchanged
 const kCrimson = _red;
@@ -398,14 +391,12 @@ class _MobileStatsStrip extends StatefulWidget {
 class _MobileStatsStripState extends State<_MobileStatsStrip>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double>   _anim;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(vsync: this,
         duration: const Duration(milliseconds: 1400));
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutExpo);
     Future.delayed(const Duration(milliseconds: 350), () {
       if (mounted) _ctrl.forward();
     });

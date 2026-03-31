@@ -17,6 +17,9 @@ class SupabaseService {
   static SupabaseService get instance => _instance ??= SupabaseService._();
   SupabaseService._();
 
+  // Temporary switch to prevent paid backend usage.
+  static const bool _backendCallsEnabled = true;
+
   static const String _boxName = 'emergency_contacts';
 
   SupabaseClient get _sb => Supabase.instance.client;
@@ -34,6 +37,8 @@ class SupabaseService {
   /// Called right after signIn or signUp.
   /// Inserts a row in `users` if it doesn't exist yet (upsert by id).
   Future<void> upsertUserProfile({String? fullName, String? phone}) async {
+    if (!_backendCallsEnabled) return;
+
     final uid = userId;
     if (uid == null) throw Exception('upsertUserProfile: no active session.');
 
@@ -56,6 +61,8 @@ class SupabaseService {
 
   /// Fetch all emergency contacts for the current user from Supabase.
   Future<List<Map<String, dynamic>>> fetchContactsFromSupabase() async {
+    if (!_backendCallsEnabled) return [];
+
     final uid = userId;
     if (uid == null) return [];
 
@@ -71,6 +78,10 @@ class SupabaseService {
   Future<Map<String, dynamic>> addContactToSupabase(
     EmergencyContact contact,
   ) async {
+    if (!_backendCallsEnabled) {
+      return {'id': null};
+    }
+
     final uid = userId;
     if (uid == null) throw Exception('addContactToSupabase: not logged in.');
 
@@ -89,7 +100,7 @@ class SupabaseService {
         .single();
 
     print('[ADD] Supabase response: $res');
-    return res as Map<String, dynamic>;
+    return res;
   }
 
   /// Update an existing contact by its Supabase row `id`.
@@ -97,6 +108,8 @@ class SupabaseService {
     String supabaseId,
     EmergencyContact contact,
   ) async {
+    if (!_backendCallsEnabled) return;
+
     await _sb
         .from('emergency_contacts')
         .update({
@@ -109,6 +122,8 @@ class SupabaseService {
 
   /// Delete a contact by its Supabase row `id`.
   Future<void> deleteContactFromSupabase(String supabaseId) async {
+    if (!_backendCallsEnabled) return;
+
     await _sb.from('emergency_contacts').delete().eq('id', supabaseId);
   }
 
@@ -122,6 +137,7 @@ class SupabaseService {
   /// Push all local Hive contacts to Supabase (used when user logs in
   /// with existing local contacts that aren't in the DB yet).
   Future<void> syncContactsToHive() async {
+    if (!_backendCallsEnabled) return;
     if (!isLoggedIn) return;
 
     try {

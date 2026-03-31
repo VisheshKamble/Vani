@@ -27,7 +27,6 @@ const _navRed = Color(0xFFFF3B30);
 const _navRedD = Color(0xFFFF453A);
 const _navTeal = Color(0xFF32ADE6);
 const _navPurple = Color(0xFFAF52DE); // ISL Assistant accent
-const _navPurD = Color(0xFFBF5AF2);
 
 TextStyle _nt(double size, FontWeight w, Color c, {double ls = 0}) => TextStyle(
   fontFamily: 'Google Sans',

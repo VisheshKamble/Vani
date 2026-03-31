@@ -1,11 +1,20 @@
 // lib/screens/EmergencySetupScreen.dart
 //
-// ╔══════════════════════════════════════════════════════════╗
-// ║  VANI — Emergency Setup  · Apple-Inspired Premium UI   ║
-// ║  Font: Google Sans (SF Pro equivalent)                 ║
-// ║  < 700px  → iOS Contacts Manager shell                 ║
-// ║  ≥ 700px  → macOS Settings panel layout                ║
-// ╚══════════════════════════════════════════════════════════╝
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  VANI — Emergency Setup  · UX4G Redesign                          ║
+// ║  Font: Noto Sans (UX4G standard)                                  ║
+// ║  < 700px  → Mobile contacts manager                               ║
+// ║  ≥ 700px  → Web settings panel                                    ║
+// ║                                                                    ║
+// ║  UX4G Principles Applied:                                         ║
+// ║  • Grouped list with visible separators (WCAG structure)          ║
+// ║  • Avatar initials use semantic relation color                    ║
+// ║  • Form validation with semantic danger color + icon              ║
+// ║  • Relation chips use accessible bg/border/text color triplets    ║
+// ║  • Empty state uses info color for helpful prompting              ║
+// ║  • Confirmation dialog: destructive action in danger red          ║
+// ║  • All touch targets min 44dp                                     ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,100 +24,129 @@ import '../models/EmergencyContact.dart';
 import '../services/EmergencyService.dart';
 import '../utils/PlatformHelper.dart';
 
-// ─────────────────────────────────────────────────────────────
-//  APPLE DESIGN TOKENS
-// ─────────────────────────────────────────────────────────────
-const _red      = Color(0xFFFF3B30);
-const _red_D    = Color(0xFFFF453A);
-const _orange   = Color(0xFFFF9500);
-const _orange_D = Color(0xFFFF9F0A);
-const _blue     = Color(0xFF007AFF);
-const _blue_D   = Color(0xFF0A84FF);
-const _green    = Color(0xFF34C759);
-const _green_D  = Color(0xFF30D158);
-const _indigo   = Color(0xFF5856D6);
-const _indigo_D = Color(0xFF5E5CE6);
-const _teal     = Color(0xFF32ADE6);
-const _teal_D   = Color(0xFF5AC8F5);
-const _purple   = Color(0xFFAF52DE);
-const _purple_D = Color(0xFFBF5AF2);
-const _mint     = Color(0xFF00C7BE);
-const _mint_D   = Color(0xFF63E6E2);
+// ─────────────────────────────────────────────────────────────────────
+//  UX4G DESIGN TOKENS  (same palette as EmergencyScreen + HomeScreen)
+// ─────────────────────────────────────────────────────────────────────
+const _fontFamily = 'Noto Sans';
 
-// Light surfaces
-const _lBg       = Color(0xFFF2F2F7);
-const _lSurface  = Color(0xFFFFFFFF);
-const _lSep      = Color(0xFFC6C6C8);
-const _lLabel    = Color(0xFF000000);
-const _lLabel2   = Color(0x993C3C43);
-const _lLabel3   = Color(0x4D3C3C43);
-const _lFill     = Color(0x1F787880);
+const _primary      = Color(0xFF1A56DB);
+const _primaryDark  = Color(0xFF4A8EFF);
+const _primaryLight = Color(0xFFE8F0FE);
 
-// Dark surfaces
-const _dBg       = Color(0xFF000000);
-const _dSurface  = Color(0xFF1C1C1E);
-const _dSurface2 = Color(0xFF2C2C2E);
-const _dSep      = Color(0xFF38383A);
-const _dLabel    = Color(0xFFFFFFFF);
-const _dLabel2   = Color(0x99EBEBF5);
-const _dLabel3   = Color(0x4DEBEBF5);
-const _dFill     = Color(0x3A787880);
+const _danger       = Color(0xFFB71C1C);
+const _dangerDark   = Color(0xFFEF5350);
+const _dangerLight  = Color(0xFFFFEBEE);
 
-// ── Text style shorthand ──────────────────────────────────────
-TextStyle _t(double size, FontWeight w, Color c,
-    {double ls = 0, double? h}) =>
-    TextStyle(fontFamily: 'Google Sans',
-        fontSize: size, fontWeight: w, color: c,
-        letterSpacing: ls, height: h);
+const _warning      = Color(0xFF7A4800);
+const _warningDark  = Color(0xFFFFB300);
+const _warningLight = Color(0xFFFFF3E0);
 
-// ── Relation → system colour mapping ─────────────────────────
+const _success      = Color(0xFF1B7340);
+const _successDark  = Color(0xFF27AE60);
+const _successLight = Color(0xFFE6F4EC);
+
+const _info         = Color(0xFF0D47A1);
+const _infoDark     = Color(0xFF42A5F5);
+const _infoLight    = Color(0xFFE3F2FD);
+
+// Relation accent colors (all WCAG AA)
+const _relFamily    = Color(0xFF0D47A1); // info/blue
+const _relFamilyD   = Color(0xFF42A5F5);
+const _relParent    = Color(0xFF006064); // teal
+const _relParentD   = Color(0xFF4DD0E1);
+const _relSibling   = Color(0xFF1B7340); // success/green
+const _relSiblingD  = Color(0xFF27AE60);
+const _relSpouse    = Color(0xFFB71C1C); // danger/red
+const _relSpouseD   = Color(0xFFEF5350);
+const _relFriend    = Color(0xFF7A4800); // warning/amber
+const _relFriendD   = Color(0xFFFFB300);
+const _relDoctor    = Color(0xFF004D40); // deep teal
+const _relDoctorD   = Color(0xFF26A69A);
+const _relCaretaker = Color(0xFF4A148C); // purple
+const _relCaretakerD = Color(0xFFCE93D8);
+const _relOther     = Color(0xFF374151); // neutral
+const _relOtherD    = Color(0xFF9CA3AF);
+
+// Neutral surfaces
+const _lBg          = Color(0xFFF5F7FA);
+const _lSurface     = Color(0xFFFFFFFF);
+const _lSurface2    = Color(0xFFF0F4F8);
+const _lBorder      = Color(0xFFCDD5DF);
+const _lBorderSub   = Color(0xFFE4E9F0);
+const _lText        = Color(0xFF111827);
+const _lTextSub     = Color(0xFF374151);
+const _lTextMuted   = Color(0xFF6B7280);
+
+const _dBg          = Color(0xFF0D1117);
+const _dSurface     = Color(0xFF161B22);
+const _dSurface2    = Color(0xFF21262D);
+const _dBorder      = Color(0xFF30363D);
+const _dBorderSub   = Color(0xFF21262D);
+const _dText        = Color(0xFFE6EDF3);
+const _dTextSub     = Color(0xFFB0BEC5);
+const _dTextMuted   = Color(0xFF8B949E);
+
+// Spacing
+const _sp4  = 4.0;
+const _sp8  = 8.0;
+const _sp12 = 12.0;
+const _sp16 = 16.0;
+const _sp20 = 20.0;
+const _sp24 = 24.0;
+const _sp32 = 32.0;
+const _sp48 = 48.0;
+
+// ── Type helpers ──────────────────────────────────────────────────────
+TextStyle _display(double size, Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: size, fontWeight: FontWeight.w700,
+    color: c, height: 1.2, letterSpacing: -0.5);
+
+TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+        color: c, height: 1.3, letterSpacing: -0.2);
+
+TextStyle _body(double size, Color c, {FontWeight w = FontWeight.w400}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+        color: c, height: 1.6);
+
+TextStyle _label(double size, Color c, {FontWeight w = FontWeight.w500}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+        color: c, height: 1.4, letterSpacing: 0.1);
+
+// ── Relation → UX4G color mapping ────────────────────────────────────
 const _relationAccents = {
-  'Family':    _blue,
-  'Parent':    _teal,
-  'Sibling':   _green,
-  'Spouse':    _red,
-  'Friend':    _orange,
-  'Doctor':    _mint,
-  'Caretaker': _purple,
-  'Other':     Color(0xFF8E8E93),
+  'Family':    [_relFamily,    _relFamilyD],
+  'Parent':    [_relParent,    _relParentD],
+  'Sibling':   [_relSibling,   _relSiblingD],
+  'Spouse':    [_relSpouse,    _relSpouseD],
+  'Friend':    [_relFriend,    _relFriendD],
+  'Doctor':    [_relDoctor,    _relDoctorD],
+  'Caretaker': [_relCaretaker, _relCaretakerD],
+  'Other':     [_relOther,     _relOtherD],
 };
+
 Color _accentFor(String r, bool dark) {
-  final base = _relationAccents[r] ?? const Color(0xFF8E8E93);
-  if (!dark) return base;
-  final map = {
-    _blue: _blue_D, _teal: _teal_D, _green: _green_D,
-    _red: _red_D, _orange: _orange_D, _mint: _mint_D,
-    _purple: _purple_D,
-  };
-  return map[base] ?? base;
+  final pair = _relationAccents[r] ?? [_relOther, _relOtherD];
+  return dark ? pair[1] : pair[0];
 }
 
-String _relationLabel(AppLocalizations l, String relationCode) {
-  switch (relationCode) {
-    case 'Family':
-      return l.t('rel_family');
-    case 'Parent':
-      return l.t('rel_parent');
-    case 'Sibling':
-      return l.t('rel_sibling');
-    case 'Spouse':
-      return l.t('rel_spouse');
-    case 'Friend':
-      return l.t('rel_friend');
-    case 'Doctor':
-      return l.t('rel_doctor');
-    case 'Caretaker':
-      return l.t('rel_caretaker');
-    case 'Other':
-      return l.t('rel_other');
-    default:
-      return relationCode;
+String _relationLabel(AppLocalizations l, String code) {
+  switch (code) {
+    case 'Family':    return l.t('rel_family');
+    case 'Parent':    return l.t('rel_parent');
+    case 'Sibling':   return l.t('rel_sibling');
+    case 'Spouse':    return l.t('rel_spouse');
+    case 'Friend':    return l.t('rel_friend');
+    case 'Doctor':    return l.t('rel_doctor');
+    case 'Caretaker': return l.t('rel_caretaker');
+    case 'Other':     return l.t('rel_other');
+    default:          return code;
   }
 }
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 //  SCREEN
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 class EmergencySetupScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
@@ -130,10 +168,10 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
   @override
   void initState() {
     super.initState();
-    _entryCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+    _entryCtrl = AnimationController(vsync: this,
+        duration: const Duration(milliseconds: 400));
     _entryFade  = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
-    _entrySlide = Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero)
+    _entrySlide = Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero)
         .animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
     _entryCtrl.forward();
   }
@@ -151,13 +189,14 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
         : _buildWeb(context, contacts, isDark, w > 1100);
   }
 
-  // ════════════════════════════════════════════
-  //  MOBILE  (<700px)  — iOS Contacts style
-  // ════════════════════════════════════════════
-  Widget _buildMobile(BuildContext ctx, List<EmergencyContact> contacts, bool isDark) {
-    final l = AppLocalizations.of(ctx);
+  // ════════════════════════════════════════════════════════════════════
+  //  MOBILE
+  // ════════════════════════════════════════════════════════════════════
+  Widget _buildMobile(BuildContext ctx, List<EmergencyContact> contacts,
+      bool isDark) {
+    final l          = AppLocalizations.of(ctx);
     final hasPrimary = contacts.any((c) => c.isPrimary);
-    final bg     = isDark ? _dBg      : _lBg;
+    final bg         = isDark ? _dBg : _lBg;
 
     return Scaffold(
       backgroundColor: bg,
@@ -165,78 +204,77 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
         child: FadeTransition(
           opacity: _entryFade,
           child: Column(children: [
-
-            // ── iOS-style navigation bar ──────────
+            // Nav bar
             _MobileNavBar(
-              isDark: isDark, title: l.t('sos_setup_title'),
+              isDark: isDark,
+              title: l.t('sos_setup_title'),
               subtitle: l.t('sos_setup_subtitle'),
               onBack: () => Navigator.pop(ctx),
               trailing: _ContactCountBadge(
-                  count: contacts.length, hasPrimary: hasPrimary, isDark: isDark),
+                  count: contacts.length,
+                  hasPrimary: hasPrimary,
+                  isDark: isDark),
             ),
 
-            // ── Body ─────────────────────────────
-            Expanded(
-              child: SlideTransition(
-                position: _entrySlide,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: SlideTransition(
+              position: _entrySlide,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                    _sp16, _sp12, _sp16, _sp48),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _CapabilitiesCard(isDark: isDark),
+                      const SizedBox(height: _sp8),
 
-                    // Capabilities strip — iOS "grouped list" card
-                    _MobileCapabilitiesCard(isDark: isDark),
-                    const SizedBox(height: 8),
+                      if (PlatformHelper.supportsShake) ...[
+                        _ShakeInfoCard(isDark: isDark),
+                        const SizedBox(height: _sp8),
+                      ],
 
-                    // Shake card
-                    if (PlatformHelper.supportsShake) ...[
-                      _ShakeInfoCard(isDark: isDark),
-                      const SizedBox(height: 8),
-                    ],
-
-                    // Section header — iOS grouped list header style
-                    _GroupedSectionHeader(
-                      title: contacts.isEmpty ? l.t('sos_no_contacts_yet') : l.t('sos_setup_title'),
-                      trailing: (!hasPrimary && contacts.isNotEmpty)
-                          ? _WarningChip(label: l.t('sos_no_primary'), isDark: isDark)
-                          : null,
-                      isDark: isDark,
-                    ),
-
-                    // Empty state
-                    if (contacts.isEmpty)
-                      _EmptyContactsCard(isDark: isDark),
-
-                    // Contact list — iOS grouped list style
-                    if (contacts.isNotEmpty)
-                      _ContactList(
-                        contacts: contacts, isDark: isDark,
-                        onDelete:     (i) => _confirmDelete(i),
-                        onSetPrimary: (i) => _setPrimary(i),
-                        onEdit:       (c, i) => _openForm(existing: c, index: i),
+                      // Section header
+                      _GroupedSectionHeader(
+                        title: contacts.isEmpty
+                            ? l.t('sos_no_contacts_yet')
+                            : l.t('sos_setup_title'),
+                        trailing: (!hasPrimary && contacts.isNotEmpty)
+                            ? _WarningBadge(
+                            label: l.t('sos_no_primary'), isDark: isDark)
+                            : null,
+                        isDark: isDark,
                       ),
 
-                    const SizedBox(height: 4),
+                      if (contacts.isEmpty)
+                        _EmptyContactsCard(isDark: isDark),
 
-                    // Add contact — iOS "+" list row
-                    if (contacts.length < 5)
-                      _AddContactRow(isDark: isDark, onTap: () => _openForm()),
-                  ]),
-                ),
+                      if (contacts.isNotEmpty)
+                        _ContactList(
+                          contacts: contacts, isDark: isDark,
+                          onDelete:     (i) => _confirmDelete(i),
+                          onSetPrimary: (i) => _setPrimary(i),
+                          onEdit:       (c, i) => _openForm(existing: c, index: i),
+                        ),
+
+                      const SizedBox(height: _sp8),
+
+                      if (contacts.length < 5)
+                        _AddContactRow(isDark: isDark, onTap: () => _openForm()),
+                    ]),
               ),
-            ),
+            )),
           ]),
         ),
       ),
     );
   }
 
-  // ════════════════════════════════════════════
-  //  WEB / TABLET  (≥700px)  — macOS Settings
-  // ════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════════════
+  //  WEB / TABLET
+  // ════════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext ctx, List<EmergencyContact> contacts,
       bool isDark, bool isDesktop) {
-    final hPad = isDesktop ? 96.0 : 52.0;
+    final hPad = isDesktop ? 80.0 : 40.0;
     final bg   = isDark ? _dBg : _lBg;
 
     return Scaffold(
@@ -247,84 +285,75 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
           child: Column(children: [
             GlobalNavbar(toggleTheme: widget.toggleTheme,
                 setLocale: widget.setLocale, activeRoute: 'emergency'),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 64),
-                physics: const BouncingScrollPhysics(),
-                child: isDesktop
-                    ? _webDesktopLayout(ctx, contacts, isDark)
-                    : _webTabletLayout(ctx, contacts, isDark),
-              ),
-            ),
+            Expanded(child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(hPad, _sp24, hPad, 64),
+              physics: const BouncingScrollPhysics(),
+              child: isDesktop
+                  ? _webDesktopLayout(ctx, contacts, isDark)
+                  : _webTabletLayout(ctx, contacts, isDark),
+            )),
           ]),
         ),
       ),
     );
   }
 
-  Widget _webDesktopLayout(BuildContext ctx, List<EmergencyContact> contacts, bool isDark) {
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Left — info panels
-      SizedBox(
-        width: 320,
+  Widget _webDesktopLayout(BuildContext ctx, List<EmergencyContact> contacts,
+      bool isDark) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    SizedBox(width: 320,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _WebPageHeader(isDark: isDark, onBack: () => Navigator.pop(ctx)),
-          const SizedBox(height: 28),
-          _WebCapabilitiesCard(isDark: isDark),
-          const SizedBox(height: 12),
+          const SizedBox(height: _sp24),
+          _CapabilitiesCard(isDark: isDark),
+          const SizedBox(height: _sp12),
           if (PlatformHelper.supportsShake) ...[
             _ShakeInfoCard(isDark: isDark),
-            const SizedBox(height: 12),
+            const SizedBox(height: _sp12),
           ],
-        ]),
-      ),
-      const SizedBox(width: 48),
-      // Right — contacts
-      Expanded(child: _WebContactsPanel(
-        contacts: contacts, isDark: isDark,
-        onAdd:        () => _openForm(),
-        onDelete:     (i) => _confirmDelete(i),
-        onSetPrimary: (i) => _setPrimary(i),
-        onEdit:       (c, i) => _openForm(existing: c, index: i),
-      )),
-    ]);
-  }
+        ])),
+    const SizedBox(width: 48),
+    Expanded(child: _WebContactsPanel(
+      contacts: contacts, isDark: isDark,
+      onAdd:        () => _openForm(),
+      onDelete:     (i) => _confirmDelete(i),
+      onSetPrimary: (i) => _setPrimary(i),
+      onEdit:       (c, i) => _openForm(existing: c, index: i),
+    )),
+  ]);
 
-  Widget _webTabletLayout(BuildContext ctx, List<EmergencyContact> contacts, bool isDark) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _WebPageHeader(isDark: isDark, onBack: () => Navigator.pop(ctx)),
-      const SizedBox(height: 24),
-      _WebCapabilitiesCard(isDark: isDark),
-      const SizedBox(height: 20),
-      _WebContactsPanel(
-        contacts: contacts, isDark: isDark,
-        onAdd:        () => _openForm(),
-        onDelete:     (i) => _confirmDelete(i),
-        onSetPrimary: (i) => _setPrimary(i),
-        onEdit:       (c, i) => _openForm(existing: c, index: i),
-      ),
-      if (PlatformHelper.supportsShake) ...[
-        const SizedBox(height: 12),
-        _ShakeInfoCard(isDark: isDark),
-      ],
-    ]);
-  }
+  Widget _webTabletLayout(BuildContext ctx, List<EmergencyContact> contacts,
+      bool isDark) => Column(crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _WebPageHeader(isDark: isDark, onBack: () => Navigator.pop(ctx)),
+        const SizedBox(height: _sp24),
+        _CapabilitiesCard(isDark: isDark),
+        const SizedBox(height: _sp20),
+        _WebContactsPanel(
+          contacts: contacts, isDark: isDark,
+          onAdd:        () => _openForm(),
+          onDelete:     (i) => _confirmDelete(i),
+          onSetPrimary: (i) => _setPrimary(i),
+          onEdit:       (c, i) => _openForm(existing: c, index: i),
+        ),
+        if (PlatformHelper.supportsShake) ...[
+          const SizedBox(height: _sp12),
+          _ShakeInfoCard(isDark: isDark),
+        ],
+      ]);
 
-  // ── Actions ──────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────
   void _confirmDelete(int index) {
     final l = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (_) => _AppleAlertDialog(
-        title: l.t('sos_remove_title'),
-        message: l.t('sos_remove_body'),
-        destructiveLabel: l.t('sos_remove_btn'),
-        onDestructive: () async {
-          await _service.deleteContact(index);
-          if (mounted) setState(() {});
-        },
-      ),
-    );
+    showDialog(context: context,
+        builder: (_) => _UX4GAlertDialog(
+          title: l.t('sos_remove_title'),
+          message: l.t('sos_remove_body'),
+          destructiveLabel: l.t('sos_remove_btn'),
+          onDestructive: () async {
+            await _service.deleteContact(index);
+            if (mounted) setState(() {});
+          },
+        ));
   }
 
   void _setPrimary(int index) async {
@@ -334,38 +363,35 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
 
   void _openForm({EmergencyContact? existing, int? index}) {
     final l = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (_) => _ContactFormSheet(
-        existing: existing,
-        isDark: Theme.of(context).brightness == Brightness.dark,
-        onSave: (contact) async {
-          try {
-            index != null
-                ? await _service.updateContact(index, contact)
-                : await _service.addContact(contact);
-            if (mounted) setState(() {});
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(l.t('sos_generic_error'), style: _t(13, FontWeight.w500, Colors.white)),
-                backgroundColor: _red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ));
+    showDialog(context: context,
+        builder: (_) => _ContactFormDialog(
+          existing: existing,
+          isDark: Theme.of(context).brightness == Brightness.dark,
+          onSave: (contact) async {
+            try {
+              index != null
+                  ? await _service.updateContact(index, contact)
+                  : await _service.addContact(contact);
+              if (mounted) setState(() {});
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(l.t('sos_generic_error'),
+                        style: _body(13, Colors.white, w: FontWeight.w500)),
+                    backgroundColor: _danger,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8))));
+              }
             }
-          }
-        },
-      ),
-    );
+          },
+        ));
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  MOBILE COMPONENTS
-// ══════════════════════════════════════════════════════════════
-
-// ── Mobile navigation bar ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+//  MOBILE NAV BAR
+// ══════════════════════════════════════════════════════════════════════
 class _MobileNavBar extends StatelessWidget {
   final bool isDark;
   final String title, subtitle;
@@ -376,40 +402,50 @@ class _MobileNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg     = isDark ? _dSurface : _lSurface;
-    final label  = isDark ? _dLabel   : _lLabel;
-    final sep    = isDark ? _dSep     : _lSep.withOpacity(0.5);
-    final accent = isDark ? _red_D    : _red;
+    final l       = AppLocalizations.of(context);
+    final bg      = isDark ? _dSurface : _lSurface;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final border  = isDark ? _dBorder  : _lBorder;
+    final accent  = isDark ? _dangerDark : _danger;
+    final navBlue = isDark ? _infoDark   : _info;
 
     return Container(
       decoration: BoxDecoration(
           color: bg,
-          border: Border(bottom: BorderSide(color: sep, width: 0.5))),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          border: Border(bottom: BorderSide(color: border, width: 1.0))),
+      padding: const EdgeInsets.fromLTRB(_sp16, _sp12, _sp16, _sp12),
       child: Row(children: [
-        // iOS-style back chevron + label
-        GestureDetector(
-          onTap: onBack,
-          behavior: HitTestBehavior.opaque,
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.chevron_left_rounded, color: accent, size: 28),
-            Text(l.t('common_back'), style: _t(15, FontWeight.w400, accent)),
-          ]),
+        Semantics(
+          label: l.t('common_back'), button: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onBack,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: _sp8, vertical: _sp8),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.chevron_left_rounded, color: navBlue, size: 22),
+                Text(l.t('common_back'),
+                    style: _body(15, navBlue, w: FontWeight.w500)),
+              ]),
+            ),
+          ),
         ),
         const Spacer(),
-        // Centre title
         Column(children: [
-          Text(title, style: _t(15, FontWeight.w600, label, ls: -0.2)),
-          Text(subtitle, style: _t(11, FontWeight.w400, isDark ? _dLabel2 : _lLabel2)),
+          Text(title, style: _heading(15, textClr)),
+          Text(subtitle, style: _label(11, subClr, w: FontWeight.w400)),
         ]),
         const Spacer(),
-        if (trailing != null) trailing!,
+        if (trailing != null) trailing!
+        else const SizedBox(width: 48),
       ]),
     );
   }
 }
 
+// ── Contact count badge ───────────────────────────────────────────────
 class _ContactCountBadge extends StatelessWidget {
   final int count;
   final bool hasPrimary, isDark;
@@ -418,19 +454,27 @@ class _ContactCountBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = hasPrimary ? (isDark ? _green_D : _green) : _orange;
+    final color   = hasPrimary
+        ? (isDark ? _successDark : _success)
+        : (isDark ? _warningDark : _warning);
+    final bgColor = hasPrimary
+        ? (isDark ? _successDark.withOpacity(0.12) : _successLight)
+        : (isDark ? _warningDark.withOpacity(0.12) : _warningLight);
     return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp4),
         decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.22), width: 0.5)),
-      child: Text(AppLocalizations.of(context).t('sos_contacts_progress').replaceAll('{n}', '$count'),
-            style: _t(11, FontWeight.w600, color)));
+            color: bgColor,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: color.withOpacity(0.30), width: 1)),
+        child: Text(
+            AppLocalizations.of(context)
+                .t('sos_contacts_progress')
+                .replaceAll('{n}', '$count'),
+            style: _label(11, color, w: FontWeight.w700)));
   }
 }
 
-// ── Grouped section header — iOS style ───────────────────────
+// ── Grouped section header ────────────────────────────────────────────
 class _GroupedSectionHeader extends StatelessWidget {
   final String title;
   final Widget? trailing;
@@ -439,76 +483,86 @@ class _GroupedSectionHeader extends StatelessWidget {
     required this.isDark});
 
   @override
+  Widget build(BuildContext context) => Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, _sp20, 0, _sp8),
+        child: Row(children: [
+          Text(title.toUpperCase(),
+              style: _label(10.5, isDark ? _dTextMuted : _lTextMuted,
+                  w: FontWeight.w700)),
+          const Spacer(),
+          if (trailing != null) trailing!,
+        ]),
+      ));
+}
+
+// ── Warning badge ─────────────────────────────────────────────────────
+class _WarningBadge extends StatelessWidget {
+  final String label;
+  final bool isDark;
+  const _WarningBadge({required this.label, required this.isDark});
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
-      child: Row(children: [
-        Text(title.toUpperCase(),
-            style: _t(11, FontWeight.w600,
-                isDark ? _dLabel3 : _lLabel3, ls: 0.5)),
-        const Spacer(),
-        if (trailing != null) trailing!,
-      ]),
-    );
+    final color = isDark ? _warningDark : _warning;
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: _sp8, vertical: _sp4),
+        decoration: BoxDecoration(
+            color: isDark
+                ? _warningDark.withOpacity(0.12)
+                : _warningLight,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+                color: color.withOpacity(0.30), width: 1)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.warning_amber_rounded, color: color, size: 12),
+          const SizedBox(width: _sp4),
+          Text(label, style: _label(10.5, color, w: FontWeight.w700)),
+        ]));
   }
 }
 
-class _WarningChip extends StatelessWidget {
-  final String label;
-  final bool isDark;
-  const _WarningChip({required this.label, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-          color: _orange.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _orange.withOpacity(0.22), width: 0.5)),
-      child: Text(label, style: _t(10, FontWeight.w600, _orange)));
-}
-
-// ── Empty state ───────────────────────────────────────────────
+// ── Empty state ───────────────────────────────────────────────────────
 class _EmptyContactsCard extends StatelessWidget {
   final bool isDark;
   const _EmptyContactsCard({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg = isDark ? _dSurface : _lSurface;
+    final l      = AppLocalizations.of(context);
+    final bg     = isDark ? _dSurface  : _lSurface;
+    final border = isDark ? _dBorder   : _lBorder;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final accent  = isDark ? _dangerDark : _danger;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: _sp24),
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.black.withOpacity(isDark ? 0.0 : 0.04), width: 0.5),
-          boxShadow: [BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-              blurRadius: 10, offset: const Offset(0, 3))]),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border, width: 1)),
       child: Column(children: [
         Container(
             width: 56, height: 56,
             decoration: BoxDecoration(
-                color: (isDark ? _red_D : _red).withOpacity(0.10),
+                color: accent.withOpacity(0.10),
                 shape: BoxShape.circle),
-            child: Icon(Icons.person_add_rounded,
-                color: isDark ? _red_D : _red, size: 24)),
-        const SizedBox(height: 14),
+            child: Icon(Icons.person_add_rounded, color: accent, size: 26)),
+        const SizedBox(height: _sp16),
         Text(l.t('sos_add_first'),
-            style: _t(16, FontWeight.w600, isDark ? _dLabel : _lLabel, ls: -0.2)),
-        const SizedBox(height: 6),
-        Text(l.t('sos_add_first_body'),
-            textAlign: TextAlign.center,
-            style: _t(13, FontWeight.w400, isDark ? _dLabel2 : _lLabel2, h: 1.55)),
+            style: _heading(16, textClr)),
+        const SizedBox(height: _sp8),
+        Text(l.t('sos_add_first_body'), textAlign: TextAlign.center,
+            style: _body(13, subClr)),
       ]),
     );
   }
 }
 
-// ── Contact list (iOS grouped list cells) ────────────────────
+// ── Contact list ──────────────────────────────────────────────────────
 class _ContactList extends StatelessWidget {
   final List<EmergencyContact> contacts;
   final bool isDark;
@@ -519,18 +573,15 @@ class _ContactList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg  = isDark ? _dSurface  : _lSurface;
-    final sep = isDark ? _dSep      : _lSep.withOpacity(0.5);
+    final bg     = isDark ? _dSurface  : _lSurface;
+    final border = isDark ? _dBorder   : _lBorder;
+    final sep    = isDark ? _dBorderSub : _lBorderSub;
 
     return Container(
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.black.withOpacity(isDark ? 0.0 : 0.04), width: 0.5),
-          boxShadow: [BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-              blurRadius: 10, offset: const Offset(0, 3))]),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border, width: 1)),
       child: Column(children: contacts.asMap().entries.map((e) {
         final i    = e.key;
         final c    = e.value;
@@ -542,15 +593,14 @@ class _ContactList extends StatelessWidget {
               onSetPrimary: () => onSetPrimary(i),
               onEdit:       () => onEdit(c, i)),
           if (!last)
-            Divider(indent: 70, height: 0, thickness: 0.5,
-                color: sep),
+            Divider(indent: 74, height: 1, thickness: 1, color: sep),
         ]);
       }).toList()),
     );
   }
 }
 
-class _ContactCell extends StatefulWidget {
+class _ContactCell extends StatelessWidget {
   final EmergencyContact contact;
   final int index;
   final bool isDark;
@@ -558,101 +608,114 @@ class _ContactCell extends StatefulWidget {
   const _ContactCell({required this.contact, required this.index,
     required this.isDark, required this.onDelete,
     required this.onSetPrimary, required this.onEdit});
-  @override
-  State<_ContactCell> createState() => _ContactCellState();
-}
 
-class _ContactCellState extends State<_ContactCell> {
   @override
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
-    final c      = widget.contact;
-    final isDark = widget.isDark;
+    final c      = contact;
     final accent = _accentFor(c.relation, isDark);
-    final label  = isDark ? _dLabel   : _lLabel;
-    final label2 = isDark ? _dLabel2  : _lLabel2;
-    final label3 = isDark ? _dLabel3  : _lLabel3;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
     final initial = c.name.isNotEmpty ? c.name[0].toUpperCase() : '?';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(children: [
-        // Avatar — iOS Contacts style
-        Stack(children: [
-          Container(
-            width: 46, height: 46,
-            decoration: BoxDecoration(
-                color: accent.withOpacity(0.12),
-                shape: BoxShape.circle),
-            child: Center(child: Text(initial,
-                style: _t(18, FontWeight.w700, accent))),
-          ),
-          if (c.isPrimary)
-            Positioned(right: 0, bottom: 0, child: Container(
-              width: 14, height: 14,
-              decoration: BoxDecoration(
-                  color: isDark ? _red_D : _red,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: isDark ? _dSurface : _lSurface, width: 1.5)),
-              child: const Center(child: Icon(Icons.star_rounded,
-                  color: Colors.white, size: 8)),
-            )),
-        ]),
-        const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Text(c.name, style: _t(15, FontWeight.w600, label, ls: -0.2)),
-            const SizedBox(width: 8),
+    return Semantics(
+      label: '${c.name}, ${c.relation}, ${c.phone}',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: _sp16, vertical: _sp12),
+        child: Row(children: [
+          // Avatar with relation-color + primary star
+          Stack(children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                  color: accent.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(20)),
-              child: Text(_relationLabel(l, c.relation), style: _t(10, FontWeight.w600, accent)),
-            ),
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                    color: accent.withOpacity(0.12),
+                    shape: BoxShape.circle),
+                child: Center(child: Text(initial,
+                    style: _heading(20, accent)))),
+            if (c.isPrimary)
+              Positioned(right: 0, bottom: 0, child: Container(
+                  width: 16, height: 16,
+                  decoration: BoxDecoration(
+                      color: isDark ? _dangerDark : _danger,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: isDark ? _dSurface : _lSurface,
+                          width: 1.5)),
+                  child: const Icon(Icons.star_rounded,
+                      color: Colors.white, size: 9))),
           ]),
-          const SizedBox(height: 2),
-          Text(c.phone, style: _t(13, FontWeight.w400, label2)),
-        ])),
-        // iOS-style context menu trigger
-        PopupMenuButton<String>(
-          color: isDark ? _dSurface2 : _lSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 12,
-          offset: const Offset(0, 8),
-          icon: Icon(Icons.more_horiz_rounded, color: label3, size: 20),
-          onSelected: (v) {
-            if (v == 'edit')    widget.onEdit();
-            if (v == 'primary') widget.onSetPrimary();
-            if (v == 'delete')  widget.onDelete();
-          },
-          itemBuilder: (_) => [
-            if (!c.isPrimary)
-              _popupItem('primary', AppLocalizations.of(context).t('sos_set_primary'), Icons.star_rounded,
-                  isDark ? _blue_D : _blue, isDark),
-            _popupItem('edit', AppLocalizations.of(context).t('sos_edit_btn'), Icons.edit_rounded,
-                isDark ? _dLabel : _lLabel, isDark),
-            _popupItem('delete', AppLocalizations.of(context).t('sos_remove_menu'), Icons.delete_rounded,
-                isDark ? _red_D : _red, isDark),
-          ],
-        ),
-      ]),
+          const SizedBox(width: _sp16),
+          Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Flexible(child: Text(c.name,
+                      style: _heading(15, textClr),
+                      overflow: TextOverflow.ellipsis)),
+                  const SizedBox(width: _sp8),
+                  // Relation badge — semantic colors
+                  Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: _sp8, vertical: _sp4),
+                      decoration: BoxDecoration(
+                          color: accent.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: accent.withOpacity(0.25), width: 1)),
+                      child: Text(_relationLabel(l, c.relation),
+                          style: _label(10, accent, w: FontWeight.w700))),
+                ]),
+                const SizedBox(height: _sp4),
+                Text(c.phone, style: _body(13, subClr)),
+              ])),
+
+          // Context menu — 3-dot
+          PopupMenuButton<String>(
+            tooltip: 'Options',
+            color: isDark ? _dSurface2 : _lSurface,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                    color: isDark ? _dBorder : _lBorder, width: 1)),
+            elevation: 8,
+            offset: const Offset(0, 8),
+            icon: Icon(Icons.more_horiz_rounded, color: mutedClr, size: 20),
+            onSelected: (v) {
+              if (v == 'edit')    onEdit();
+              if (v == 'primary') onSetPrimary();
+              if (v == 'delete')  onDelete();
+            },
+            itemBuilder: (_) => [
+              if (!c.isPrimary)
+                _popupItem(context, 'primary',
+                    l.t('sos_set_primary'), Icons.star_rounded,
+                    isDark ? _infoDark : _info, isDark),
+              _popupItem(context, 'edit',
+                  l.t('sos_edit_btn'), Icons.edit_rounded,
+                  isDark ? _dText : _lText, isDark),
+              _popupItem(context, 'delete',
+                  l.t('sos_remove_menu'), Icons.delete_rounded,
+                  isDark ? _dangerDark : _danger, isDark),
+            ],
+          ),
+        ]),
+      ),
     );
   }
 
-  PopupMenuItem<String> _popupItem(String value, String label,
-      IconData icon, Color color, bool isDark) =>
-      PopupMenuItem(
-          value: value, height: 44,
+  PopupMenuItem<String> _popupItem(BuildContext ctx, String value,
+      String lbl, IconData icon, Color color, bool isDark) =>
+      PopupMenuItem(value: value, height: 44,
           child: Row(children: [
             Icon(icon, color: color, size: 16),
-            const SizedBox(width: 10),
-            Text(label, style: _t(14, FontWeight.w500, color)),
+            const SizedBox(width: _sp12),
+            Text(lbl, style: _body(14, color, w: FontWeight.w500)),
           ]));
 }
 
-// ── Add contact row ───────────────────────────────────────────
+// ── Add contact row ───────────────────────────────────────────────────
 class _AddContactRow extends StatefulWidget {
   final bool isDark;
   final VoidCallback onTap;
@@ -666,174 +729,173 @@ class _AddContactRowState extends State<_AddContactRow> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg     = widget.isDark ? _dSurface  : _lSurface;
-    final accent = widget.isDark ? _blue_D    : _blue;
+    final l      = AppLocalizations.of(context);
+    final bg     = widget.isDark ? _dSurface : _lSurface;
+    final border = widget.isDark ? _dBorder  : _lBorder;
+    final accent = widget.isDark ? _infoDark : _info;
 
-    return GestureDetector(
-      onTapDown:   (_) => setState(() => _pressed = true),
-      onTapUp:     (_) { setState(() => _pressed = false); widget.onTap(); },
-      onTapCancel: ()  => setState(() => _pressed = false),
-      child: AnimatedOpacity(
-        opacity: _pressed ? 0.6 : 1.0,
-        duration: const Duration(milliseconds: 80),
-        child: Container(
-          decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: Colors.black.withOpacity(widget.isDark ? 0.0 : 0.04), width: 0.5),
-              boxShadow: [BoxShadow(
-                  color: Colors.black.withOpacity(widget.isDark ? 0.25 : 0.05),
-                  blurRadius: 10, offset: const Offset(0, 3))]),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(children: [
-            Container(
-                width: 30, height: 30,
-                decoration: BoxDecoration(
-                    color: accent, shape: BoxShape.circle),
-                child: const Icon(Icons.add_rounded, color: Colors.white, size: 18)),
-            const SizedBox(width: 14),
-            Text(l.t('sos_add_contact'),
-                style: _t(15, FontWeight.w400, accent)),
-          ]),
+    return Semantics(
+      button: true, label: l.t('sos_add_contact'),
+      child: GestureDetector(
+        onTapDown:   (_) => setState(() => _pressed = true),
+        onTapUp:     (_) { setState(() => _pressed = false); widget.onTap(); },
+        onTapCancel: ()  => setState(() => _pressed = false),
+        child: AnimatedOpacity(
+          opacity: _pressed ? 0.7 : 1.0,
+          duration: const Duration(milliseconds: 80),
+          child: Container(
+            decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: border, width: 1)),
+            padding: const EdgeInsets.symmetric(
+                horizontal: _sp16, vertical: _sp16),
+            child: Row(children: [
+              Container(
+                  width: 32, height: 32,
+                  decoration: BoxDecoration(
+                      color: accent, shape: BoxShape.circle),
+                  child: const Icon(Icons.add_rounded,
+                      color: Colors.white, size: 18)),
+              const SizedBox(width: _sp16),
+              Text(l.t('sos_add_contact'),
+                  style: _body(15, accent, w: FontWeight.w500)),
+            ]),
+          ),
         ),
       ),
     );
   }
 }
 
-// ── Capabilities card (mobile) ───────────────────────────────
-class _MobileCapabilitiesCard extends StatelessWidget {
+// ── Capabilities card ─────────────────────────────────────────────────
+class _CapabilitiesCard extends StatelessWidget {
   final bool isDark;
-  const _MobileCapabilitiesCard({required this.isDark});
+  const _CapabilitiesCard({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l        = AppLocalizations.of(context);
     final isMobile = PlatformHelper.isMobile;
-    final caps     = isMobile
+    final caps = isMobile
         ? [
-      (_red,    Icons.sms_rounded,           l.t('sos_cap_mobile_1_title'), l.t('sos_cap_mobile_1_desc')),
-      (_indigo, Icons.vibration_rounded,     l.t('sos_cap_mobile_2_title'), l.t('sos_cap_mobile_2_desc')),
-      (_teal,   Icons.location_on_rounded,   l.t('sos_cap_mobile_3_title'), l.t('sos_cap_mobile_3_desc')),
-      (_green,  Icons.notifications_rounded, l.t('sos_cap_mobile_4_title'), l.t('sos_cap_mobile_4_desc')),
+      (_danger,  Icons.sms_rounded,           l.t('sos_cap_mobile_1_title'), l.t('sos_cap_mobile_1_desc')),
+      (_info,    Icons.vibration_rounded,      l.t('sos_cap_mobile_2_title'), l.t('sos_cap_mobile_2_desc')),
+      (_success, Icons.location_on_rounded,    l.t('sos_cap_mobile_3_title'), l.t('sos_cap_mobile_3_desc')),
+      (_warning, Icons.notifications_rounded,  l.t('sos_cap_mobile_4_title'), l.t('sos_cap_mobile_4_desc')),
     ]
         : [
-      (_blue,   Icons.chat_bubble_rounded,    l.t('sos_cap_web_1_title'), l.t('sos_cap_web_1_desc')),
-      (_teal,   Icons.location_on_rounded,    l.t('sos_cap_web_2_title'), l.t('sos_cap_web_2_desc')),
-      (_orange, Icons.content_copy_rounded,   l.t('sos_cap_web_3_title'), l.t('sos_cap_web_3_desc')),
-      (_purple, Icons.link_rounded,           l.t('sos_cap_web_4_title'), l.t('sos_cap_web_4_desc')),
+      (_info,    Icons.chat_bubble_rounded,    l.t('sos_cap_web_1_title'), l.t('sos_cap_web_1_desc')),
+      (_success, Icons.location_on_rounded,    l.t('sos_cap_web_2_title'), l.t('sos_cap_web_2_desc')),
+      (_warning, Icons.content_copy_rounded,   l.t('sos_cap_web_3_title'), l.t('sos_cap_web_3_desc')),
+      (_danger,  Icons.link_rounded,           l.t('sos_cap_web_4_title'), l.t('sos_cap_web_4_desc')),
     ];
 
-    final bg    = isDark ? _dSurface  : _lSurface;
-    final label = isDark ? _dLabel    : _lLabel;
-    final sub   = isDark ? _dLabel2   : _lLabel2;
+    final bg      = isDark ? _dSurface  : _lSurface;
+    final border  = isDark ? _dBorder   : _lBorder;
+    final textClr = isDark ? _dText     : _lText;
+    final subClr  = isDark ? _dTextSub  : _lTextSub;
+    final header  = isMobile
+        ? (isDark ? _dangerDark : _danger)
+        : (isDark ? _infoDark   : _info);
+
+    Color dv(Color c) {
+      if (c == _danger)  return isDark ? _dangerDark  : _danger;
+      if (c == _info)    return isDark ? _infoDark    : _info;
+      if (c == _success) return isDark ? _successDark : _success;
+      if (c == _warning) return isDark ? _warningDark : _warning;
+      return c;
+    }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(_sp16),
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.black.withOpacity(isDark ? 0.0 : 0.04), width: 0.5),
-          boxShadow: [BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-              blurRadius: 10, offset: const Offset(0, 3))]),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border, width: 1)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Icon(isMobile
-              ? Icons.smartphone_rounded : Icons.language_rounded,
-              color: isDark ? _blue_D : _blue, size: 14),
-          const SizedBox(width: 7),
-            Text(isMobile
-              ? l.t('sos_mobile_features') : l.t('sos_web_features'),
-              style: _t(11, FontWeight.w600,
-                  isDark ? _blue_D : _blue, ls: 0.3)),
+          Icon(isMobile ? Icons.smartphone_rounded : Icons.language_rounded,
+              color: header, size: 14),
+          const SizedBox(width: _sp8),
+          Text(isMobile
+              ? l.t('sos_mobile_features')
+              : l.t('sos_web_features'),
+              style: _label(11.5, header, w: FontWeight.w700)),
         ]),
-        const SizedBox(height: 14),
+        const SizedBox(height: _sp16),
         Row(children: caps.asMap().entries.map((e) {
-          final i    = e.key; final c = e.value;
+          final i    = e.key;
+          final c    = e.value;
           final last = i == caps.length - 1;
-          final accent = isDark ? _darkOf(c.$1) : c.$1;
+          final ac   = dv(c.$1);
           return Expanded(child: Padding(
-            padding: EdgeInsets.only(right: last ? 0 : 8),
+            padding: EdgeInsets.only(right: last ? 0 : _sp8),
             child: Column(children: [
               Container(
-                  width: 42, height: 42,
+                  width: 44, height: 44,
                   decoration: BoxDecoration(
-                      color: accent.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(12)),
-                  child: Icon(c.$2, color: accent, size: 18)),
-              const SizedBox(height: 6),
-              Text(c.$3, style: _t(10.5, FontWeight.w600, label)),
-              Text(c.$4, style: _t(9, FontWeight.w400, sub), textAlign: TextAlign.center),
+                      color: ac.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Icon(c.$2, color: ac, size: 20)),
+              const SizedBox(height: _sp8),
+              Text(c.$3, style: _label(10.5, textClr, w: FontWeight.w700),
+                  textAlign: TextAlign.center),
+              Text(c.$4, style: _body(9.5, subClr),
+                  textAlign: TextAlign.center),
             ]),
           ));
         }).toList()),
       ]),
     );
   }
-
-  Color _darkOf(Color c) {
-    if (c == _red)    return _red_D;
-    if (c == _indigo) return _indigo_D;
-    if (c == _teal)   return _teal_D;
-    if (c == _green)  return _green_D;
-    if (c == _blue)   return _blue_D;
-    if (c == _orange) return _orange_D;
-    if (c == _purple) return _purple_D;
-    return c;
-  }
 }
 
-// ── Shake info card ───────────────────────────────────────────
+// ── Shake info card ───────────────────────────────────────────────────
 class _ShakeInfoCard extends StatelessWidget {
   final bool isDark;
   const _ShakeInfoCard({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l      = AppLocalizations.of(context);
     final bg     = isDark ? _dSurface  : _lSurface;
-    final label  = isDark ? _dLabel    : _lLabel;
-    final label2 = isDark ? _dLabel2   : _lLabel2;
-    final accent = isDark ? _indigo_D  : _indigo;
+    final border = isDark ? _dBorder   : _lBorder;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final accent  = isDark ? _infoDark : _info;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(_sp16),
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.black.withOpacity(isDark ? 0.0 : 0.04), width: 0.5),
-          boxShadow: [BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-              blurRadius: 10, offset: const Offset(0, 3))]),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border, width: 1)),
       child: Row(children: [
         Container(
-            width: 40, height: 40,
+            width: 44, height: 44,
             decoration: BoxDecoration(
                 color: accent.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(12)),
-            child: Icon(Icons.vibration_rounded, color: accent, size: 18)),
-        const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l.t('sos_shake_active'),
-              style: _t(13.5, FontWeight.w600, label, ls: -0.2)),
-          const SizedBox(height: 2),
-            Text(l.t('sos_shake_body_setup'),
-              style: _t(12, FontWeight.w400, label2, h: 1.45)),
-        ])),
+                borderRadius: BorderRadius.circular(10)),
+            child: Icon(Icons.vibration_rounded, color: accent, size: 22)),
+        const SizedBox(width: _sp16),
+        Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.t('sos_shake_active'),
+                  style: _label(14, textClr, w: FontWeight.w700)),
+              const SizedBox(height: _sp4),
+              Text(l.t('sos_shake_body_setup'),
+                  style: _body(12, subClr)),
+            ])),
       ]),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 //  WEB COMPONENTS
-// ══════════════════════════════════════════════════════════════
-
+// ══════════════════════════════════════════════════════════════════════
 class _WebPageHeader extends StatelessWidget {
   final bool isDark;
   final VoidCallback onBack;
@@ -841,100 +903,42 @@ class _WebPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final accent = isDark ? _blue_D : _blue;
-    final label  = isDark ? _dLabel  : _lLabel;
-    final label2 = isDark ? _dLabel2 : _lLabel2;
+    final l       = AppLocalizations.of(context);
+    final navBlue = isDark ? _infoDark   : _info;
+    final accent  = isDark ? _dangerDark : _danger;
+    final textClr = isDark ? _dText      : _lText;
+    final subClr  = isDark ? _dTextSub   : _lTextSub;
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Back link — macOS style
-      GestureDetector(
-        onTap: onBack,
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.chevron_left_rounded, color: accent, size: 20),
-          Text(l.t('sos_setup_back'), style: _t(14, FontWeight.w400, accent)),
-        ]),
-      ),
-      const SizedBox(height: 20),
-      Row(children: [
-        Container(
-          width: 48, height: 48,
-          decoration: BoxDecoration(
-              color: (isDark ? _red_D : _red).withOpacity(0.10),
-              borderRadius: BorderRadius.circular(14)),
-          child: Icon(Icons.contacts_rounded,
-              color: isDark ? _red_D : _red, size: 22)),
-        const SizedBox(width: 16),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l.t('sos_setup_title'),
-              style: _t(22, FontWeight.w700, label, ls: -0.5)),
-            Text(l.t('sos_setup_subtitle'),
-              style: _t(13, FontWeight.w400, label2)),
-        ]),
-      ]),
-    ]);
-  }
-}
-
-class _WebCapabilitiesCard extends StatelessWidget {
-  final bool isDark;
-  const _WebCapabilitiesCard({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final isMobile = PlatformHelper.isMobile;
-    final features = isMobile
-        ? [
-      (Icons.sms_rounded,            l.t('sos_web_cap_mobile_1')),
-      (Icons.vibration_rounded,      l.t('sos_web_cap_mobile_2')),
-      (Icons.location_on_rounded,    l.t('sos_web_cap_mobile_3')),
-      (Icons.notifications_rounded,  l.t('sos_web_cap_mobile_4')),
-    ]
-        : [
-      (Icons.chat_bubble_rounded,    l.t('sos_web_cap_web_1')),
-      (Icons.location_on_rounded,    l.t('sos_web_cap_web_2')),
-      (Icons.content_copy_rounded,   l.t('sos_web_cap_web_3')),
-      (Icons.link_rounded,           l.t('sos_web_cap_web_4')),
-    ];
-
-    final bg     = isDark ? _dSurface  : _lSurface;
-    final label2 = isDark ? _dLabel2   : _lLabel2;
-    final accent = isDark ? _blue_D    : _blue;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.black.withOpacity(isDark ? 0.0 : 0.04), width: 0.5),
-          boxShadow: [BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
-              blurRadius: 10, offset: const Offset(0, 3))]),
+    return Semantics(
+      header: true,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(6),
+          onTap: onBack,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                vertical: _sp4, horizontal: _sp4),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.chevron_left_rounded, color: navBlue, size: 20),
+              Text(l.t('sos_setup_back'),
+                  style: _body(14, navBlue, w: FontWeight.w500)),
+            ]),
+          ),
+        ),
+        const SizedBox(height: _sp20),
         Row(children: [
-          Icon(isMobile ? Icons.smartphone_rounded : Icons.language_rounded,
-              color: accent, size: 14),
-          const SizedBox(width: 7),
-          Text(isMobile ? l.t('sos_mobile_features') : l.t('sos_web_features'),
-              style: _t(11, FontWeight.w600, accent, ls: 0.3)),
-        ]),
-        const SizedBox(height: 14),
-        ...features.map((f) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(children: [
-            Container(
-                width: 32, height: 32,
-                decoration: BoxDecoration(
-                    color: accent.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(9)),
-                child: Icon(f.$1, color: accent, size: 14)),
-            const SizedBox(width: 12),
-            Expanded(child: Text(f.$2,
-                style: _t(13, FontWeight.w400, label2, h: 1.4))),
+          Container(
+              width: 52, height: 52,
+              decoration: BoxDecoration(
+                  color: accent.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(12)),
+              child: Icon(Icons.contacts_rounded, color: accent, size: 24)),
+          const SizedBox(width: _sp16),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(l.t('sos_setup_title'), style: _display(22, textClr)),
+            Text(l.t('sos_setup_subtitle'), style: _body(13, subClr)),
           ]),
-        )),
+        ]),
       ]),
     );
   }
@@ -952,35 +956,31 @@ class _WebContactsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l          = AppLocalizations.of(context);
     final hasPrimary = contacts.any((c) => c.isPrimary);
-    final label2     = isDark ? _dLabel2 : _lLabel2;
+    final subClr     = isDark ? _dTextSub : _lTextSub;
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Section header
       Row(children: [
         Text(contacts.isEmpty
             ? l.t('sos_no_contacts_yet')
             : l.t('sos_contacts_count').replaceAll('{n}', '${contacts.length}'),
-            style: _t(12, FontWeight.w600, label2, ls: 0.2)),
+            style: _label(12, subClr, w: FontWeight.w700)),
         const Spacer(),
         if (contacts.isNotEmpty)
-          _ContactCountBadge(
-              count: contacts.length, hasPrimary: hasPrimary, isDark: isDark),
+          _ContactCountBadge(count: contacts.length,
+              hasPrimary: hasPrimary, isDark: isDark),
       ]),
-      const SizedBox(height: 12),
+      const SizedBox(height: _sp12),
 
       if (contacts.isEmpty)
         _EmptyContactsCard(isDark: isDark)
       else
         _ContactList(
-          contacts: contacts, isDark: isDark,
-          onDelete:     onDelete,
-          onSetPrimary: onSetPrimary,
-          onEdit:       onEdit,
-        ),
+            contacts: contacts, isDark: isDark,
+            onDelete: onDelete, onSetPrimary: onSetPrimary, onEdit: onEdit),
 
-      const SizedBox(height: 8),
+      const SizedBox(height: _sp8),
       if (contacts.length < 5)
         _WebAddButton(isDark: isDark, onTap: onAdd),
     ]);
@@ -997,56 +997,59 @@ class _WebAddButton extends StatefulWidget {
 
 class _WebAddButtonState extends State<_WebAddButton> {
   bool _hovered = false;
-
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final accent = widget.isDark ? _blue_D : _blue;
-    final sep    = widget.isDark ? _dSep : _lSep.withOpacity(0.5);
+    final l      = AppLocalizations.of(context);
+    final accent = widget.isDark ? _infoDark : _info;
+    final border = widget.isDark ? _dBorder  : _lBorder;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit:  (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-              color: _hovered
-                  ? accent.withOpacity(0.06)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                  color: _hovered ? accent.withOpacity(0.30) : sep,
-                  width: 0.5)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(Icons.add_rounded, color: accent, size: 18),
-            const SizedBox(width: 8),
-            Text(l.t('sos_add_contact'),
-                style: _t(14, FontWeight.w500, accent)),
-          ]),
+      child: Semantics(
+        button: true, label: l.t('sos_add_contact'),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: _sp16),
+            decoration: BoxDecoration(
+                color: _hovered ? accent.withOpacity(0.06) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: _hovered ? accent.withOpacity(0.35) : border,
+                    width: _hovered ? 1.5 : 1.0)),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.add_rounded, color: accent, size: 18),
+              const SizedBox(width: _sp8),
+              Text(l.t('sos_add_contact'),
+                  style: _body(14, accent, w: FontWeight.w500)),
+            ]),
+          ),
         ),
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  CONTACT FORM SHEET  — iOS action sheet / modal card
-// ══════════════════════════════════════════════════════════════
-class _ContactFormSheet extends StatefulWidget {
+// ══════════════════════════════════════════════════════════════════════
+//  CONTACT FORM DIALOG
+//  UX4G: clear field labels, danger for errors, relation chips with
+//        semantic colors, accessible cancel/confirm pair
+// ══════════════════════════════════════════════════════════════════════
+class _ContactFormDialog extends StatefulWidget {
   final EmergencyContact? existing;
   final bool isDark;
   final Function(EmergencyContact) onSave;
-  const _ContactFormSheet({this.existing, required this.isDark, required this.onSave});
+  const _ContactFormDialog({this.existing, required this.isDark,
+    required this.onSave});
   @override
-  State<_ContactFormSheet> createState() => _ContactFormSheetState();
+  State<_ContactFormDialog> createState() => _ContactFormDialogState();
 }
 
-class _ContactFormSheetState extends State<_ContactFormSheet> {
+class _ContactFormDialogState extends State<_ContactFormDialog> {
   final _formKey  = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
   late final TextEditingController _phoneCtrl;
@@ -1071,147 +1074,164 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final l      = AppLocalizations.of(context);
     final isDark = widget.isDark;
     final bg     = isDark ? _dSurface  : _lSurface;
-    final label  = isDark ? _dLabel    : _lLabel;
-    final label2 = isDark ? _dLabel2   : _lLabel2;
-    final sep    = isDark ? _dSep      : _lSep.withOpacity(0.5);
-    final accent = isDark ? _blue_D    : _blue;
-    final isEdit = widget.existing != null;
+    final border = isDark ? _dBorder   : _lBorder;
+    final sep    = isDark ? _dBorderSub : _lBorderSub;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
+    final accent  = isDark ? _infoDark : _info;
+    final isEdit  = widget.existing != null;
 
     return Dialog(
       backgroundColor: bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: border, width: 1)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: _sp20, vertical: 40),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 420),
-        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 440),
+        padding: const EdgeInsets.all(_sp24),
         child: Form(
           key: _formKey,
           child: Column(mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start, children: [
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(children: [
+                  Expanded(child: Text(
+                      isEdit
+                          ? l.t('sos_edit_contact')
+                          : l.t('sos_new_contact'),
+                      style: _heading(18, textClr))),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(
+                            color: isDark ? _dSurface2 : _lSurface2,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: border, width: 1)),
+                        child: Icon(Icons.close_rounded,
+                            color: mutedClr, size: 16)),
+                  ),
+                ]),
+                const SizedBox(height: _sp4),
+                Text(l.t('sos_will_notify'),
+                    style: _body(13, subClr)),
+                const SizedBox(height: _sp20),
+                Divider(height: 1, thickness: 1, color: sep),
+                const SizedBox(height: _sp20),
 
-            // Header — iOS modal header with close
-            Row(children: [
-                Expanded(child: Text(isEdit ? l.t('sos_edit_contact') : l.t('sos_new_contact'),
-                  style: _t(17, FontWeight.w600, label, ls: -0.3))),
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                    width: 28, height: 28,
-                    decoration: BoxDecoration(
-                        color: isDark ? _dFill : _lFill,
-                        shape: BoxShape.circle),
-                    child: Icon(Icons.close_rounded,
-                        color: label2, size: 14)),
-              ),
-            ]),
+                // Name field
+                _FieldLabel(text: l.t('sos_full_name'), isDark: isDark),
+                const SizedBox(height: _sp8),
+                _UX4GTextField(
+                    controller: _nameCtrl,
+                    hint: l.t('sos_name_hint'),
+                    isDark: isDark,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? l.t('sos_name_required') : null),
 
-            const SizedBox(height: 4),
-            Text(l.t('sos_will_notify'),
-                style: _t(13, FontWeight.w400, label2)),
+                const SizedBox(height: _sp16),
 
-            const SizedBox(height: 20),
-            Divider(height: 1, thickness: 0.5, color: sep),
-            const SizedBox(height: 20),
+                // Phone field
+                _FieldLabel(text: l.t('sos_phone'), isDark: isDark),
+                const SizedBox(height: _sp8),
+                _UX4GTextField(
+                    controller: _phoneCtrl,
+                    hint: l.t('sos_phone_hint'),
+                    keyboardType: TextInputType.phone,
+                    isDark: isDark,
+                    prefixText: '+91  ',
+                    prefixColor: accent,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return l.t('sos_phone_required');
+                      }
+                      final c = v.replaceAll(
+                          RegExp(r'[\s\-\(\)\+]'), '');
+                      if (c.length < 10 ||
+                          !RegExp(r'^\d+$').hasMatch(c)) {
+                        return l.t('sos_phone_invalid10');
+                      }
+                      return null;
+                    }),
 
-            // Full name field
-            _FieldLabel(text: l.t('sos_full_name'), isDark: isDark),
-            const SizedBox(height: 6),
-            _AppleTextField(
-              controller: _nameCtrl, hint: l.t('sos_name_hint'),
-                isDark: isDark,
-                validator: (v) =>
-              (v == null || v.trim().isEmpty) ? l.t('sos_name_required') : null),
+                const SizedBox(height: _sp16),
 
-            const SizedBox(height: 16),
-
-            // Phone field
-            _FieldLabel(text: l.t('sos_phone'), isDark: isDark),
-            const SizedBox(height: 6),
-            _AppleTextField(
-                controller: _phoneCtrl, hint: l.t('sos_phone_hint'),
-                keyboardType: TextInputType.phone,
-                isDark: isDark,
-                prefixText: '+91  ',
-                prefixColor: accent,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return l.t('sos_phone_required');
-                  final c = v.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
-                  if (c.length < 10 || !RegExp(r'^\d+$').hasMatch(c)) {
-                    return l.t('sos_phone_invalid10');
-                  }
-                  return null;
-                }),
-
-            const SizedBox(height: 16),
-
-            // Relation chips
-            _FieldLabel(text: l.t('sos_relation'), isDark: isDark),
-            const SizedBox(height: 10),
-            Wrap(spacing: 8, runSpacing: 8,
-                children: _relations.map((r) {
-                  final selected = r == _relation;
-                  final chipAccent = _accentFor(r, isDark);
-                  return GestureDetector(
-                    onTap: () => setState(() => _relation = r),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 130),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                          color: selected
-                              ? chipAccent.withOpacity(0.12)
-                              : (isDark ? _dFill : _lFill),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
+                // Relation chips
+                _FieldLabel(text: l.t('sos_relation'), isDark: isDark),
+                const SizedBox(height: _sp12),
+                Wrap(spacing: _sp8, runSpacing: _sp8,
+                    children: _relations.map((r) {
+                      final selected  = r == _relation;
+                      final chipAccent = _accentFor(r, isDark);
+                      return GestureDetector(
+                        onTap: () => setState(() => _relation = r),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 130),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: _sp12, vertical: _sp8),
+                          decoration: BoxDecoration(
                               color: selected
-                                  ? chipAccent.withOpacity(0.40)
-                                  : Colors.transparent,
-                              width: selected ? 1.0 : 0.0)),
-                            child: Text(_relationLabel(l, r), style: _t(12.5, FontWeight.w500,
-                          selected ? chipAccent : label2)),
-                    ),
-                  );
-                }).toList()),
+                                  ? chipAccent.withOpacity(0.12)
+                                  : (isDark ? _dSurface2 : _lSurface2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: selected
+                                      ? chipAccent.withOpacity(0.40)
+                                      : border,
+                                  width: selected ? 1.5 : 1.0)),
+                          child: Text(_relationLabel(l, r),
+                              style: _label(12.5,
+                                  selected ? chipAccent : subClr,
+                                  w: selected
+                                      ? FontWeight.w700 : FontWeight.w400)),
+                        ),
+                      );
+                    }).toList()),
 
-            const SizedBox(height: 24),
+                const SizedBox(height: _sp24),
 
-            // Buttons — iOS modal action row
-            Row(children: [
-              // Cancel — text button
-              Expanded(child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    decoration: BoxDecoration(
-                        color: isDark ? _dFill : _lFill,
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Center(child: Text(l.t('sos_cancel'),
-                        style: _t(15, FontWeight.w500, label2)))),
-              )),
-              const SizedBox(width: 12),
-              // Confirm — filled
-              Expanded(flex: 2, child: GestureDetector(
-                onTap: _saving ? null : _save,
-                child: AnimatedOpacity(
-                  opacity: _saving ? 0.6 : 1.0,
-                  duration: const Duration(milliseconds: 120),
-                  child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      decoration: BoxDecoration(
-                          color: accent,
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Center(child: _saving
-                          ? SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                          : Text(isEdit ? l.t('sos_save_changes') : l.t('sos_add_btn'),
-                          style: _t(15, FontWeight.w600, Colors.white)))),
-                ),
-              )),
-            ]),
-          ]),
+                // Action buttons — cancel left, confirm right
+                Row(children: [
+                  Expanded(child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 48),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: border, width: 1)),
+                    child: Text(l.t('sos_cancel'),
+                        style: _body(15, subClr, w: FontWeight.w600)),
+                  )),
+                  const SizedBox(width: _sp12),
+                  Expanded(flex: 2, child: ElevatedButton(
+                    onPressed: _saving ? null : _save,
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(0, 48),
+                        backgroundColor: accent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8))),
+                    child: _saving
+                        ? const SizedBox(width: 18, height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2.5, color: Colors.white))
+                        : Text(
+                        isEdit
+                            ? l.t('sos_save_changes')
+                            : l.t('sos_add_btn'),
+                        style: _label(15, Colors.white,
+                            w: FontWeight.w700)),
+                  )),
+                ]),
+              ]),
         ),
       ),
     );
@@ -1221,28 +1241,27 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     widget.onSave(EmergencyContact(
-      name:      _nameCtrl.text.trim(),
-      phone:     _phoneCtrl.text.trim(),
-      relation:  _relation,
-      isPrimary: widget.existing?.isPrimary ?? false,
-    ));
+        name:      _nameCtrl.text.trim(),
+        phone:     _phoneCtrl.text.trim(),
+        relation:  _relation,
+        isPrimary: widget.existing?.isPrimary ?? false));
     if (mounted) Navigator.pop(context);
   }
 }
 
-// ── Field label ───────────────────────────────────────────────
+// ── Field label ───────────────────────────────────────────────────────
 class _FieldLabel extends StatelessWidget {
   final String text;
   final bool isDark;
   const _FieldLabel({required this.text, required this.isDark});
   @override
   Widget build(BuildContext context) => Text(text,
-      style: _t(12, FontWeight.w600,
-          isDark ? _dLabel2 : _lLabel2, ls: 0.3));
+      style: _label(12, isDark ? _dTextSub : _lTextSub,
+          w: FontWeight.w700));
 }
 
-// ── Apple-style text field ────────────────────────────────────
-class _AppleTextField extends StatelessWidget {
+// ── UX4G text field ───────────────────────────────────────────────────
+class _UX4GTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final TextInputType keyboardType;
@@ -1250,7 +1269,7 @@ class _AppleTextField extends StatelessWidget {
   final String? prefixText;
   final Color? prefixColor;
   final String? Function(String?)? validator;
-  const _AppleTextField({
+  const _UX4GTextField({
     required this.controller, required this.hint,
     this.keyboardType = TextInputType.text,
     required this.isDark, this.prefixText,
@@ -1259,99 +1278,128 @@ class _AppleTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fill   = isDark ? _dFill.withOpacity(0.3) : _lFill.withOpacity(0.5);
-    final label  = isDark ? _dLabel   : _lLabel;
-    final label2 = isDark ? _dLabel2  : _lLabel2;
-    final accent = isDark ? _blue_D   : _blue;
-    final border = BorderRadius.circular(11);
+    final bg     = isDark ? _dSurface2 : _lSurface2;
+    final border = isDark ? _dBorder   : _lBorder;
+    final textClr = isDark ? _dText    : _lText;
+    final hintClr = isDark ? _dTextMuted : _lTextMuted;
+    final accent  = isDark ? _infoDark : _info;
+    final radius  = BorderRadius.circular(8);
 
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      style: _t(15, FontWeight.w400, label),
+      style: _body(15, textClr),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: _t(15, FontWeight.w400, label2),
+        hintStyle: _body(15, hintClr),
         prefixText: prefixText,
         prefixStyle: prefixText != null
-            ? _t(15, FontWeight.w600, prefixColor ?? accent)
+            ? _label(15, prefixColor ?? accent, w: FontWeight.w600)
             : null,
         filled: true,
-        fillColor: fill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: border,
-            borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: border,
-            borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: border,
-            borderSide: BorderSide(color: accent, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: border,
-            borderSide: BorderSide(color: isDark ? _red_D : _red, width: 1.0)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: border,
-            borderSide: BorderSide(color: isDark ? _red_D : _red, width: 1.5)),
-        errorStyle: _t(11, FontWeight.w500, isDark ? _red_D : _red),
+        fillColor: bg,
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: _sp16, vertical: _sp16),
+        border: OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(color: border, width: 1)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(color: border, width: 1)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(color: accent, width: 2)),
+        errorBorder: OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(
+                color: isDark ? _dangerDark : _danger, width: 1.5)),
+        focusedErrorBorder: OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(
+                color: isDark ? _dangerDark : _danger, width: 2)),
+        errorStyle: _label(11,
+            isDark ? _dangerDark : _danger, w: FontWeight.w600),
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  APPLE ALERT DIALOG  — replaces old _ConfirmDialog
-// ══════════════════════════════════════════════════════════════
-class _AppleAlertDialog extends StatelessWidget {
+// ══════════════════════════════════════════════════════════════════════
+//  UX4G ALERT DIALOG
+//  UX4G: destructive action uses danger color; cancel is neutral
+// ══════════════════════════════════════════════════════════════════════
+class _UX4GAlertDialog extends StatelessWidget {
   final String title, message, destructiveLabel;
   final VoidCallback onDestructive;
-  const _AppleAlertDialog({
-    required this.title, required this.message,
-    required this.destructiveLabel, required this.onDestructive,
-  });
+  const _UX4GAlertDialog({required this.title, required this.message,
+    required this.destructiveLabel, required this.onDestructive});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg     = isDark ? _dSurface  : _lSurface;
-    final label  = isDark ? _dLabel    : _lLabel;
-    final label2 = isDark ? _dLabel2   : _lLabel2;
-    final sep    = isDark ? _dSep      : _lSep.withOpacity(0.5);
-    final dRed   = isDark ? _red_D     : _red;
+    final isDark  = Theme.of(context).brightness == Brightness.dark;
+    final bg      = isDark ? _dSurface  : _lSurface;
+    final border  = isDark ? _dBorder   : _lBorder;
+    final sep     = isDark ? _dBorderSub : _lBorderSub;
+    final textClr = isDark ? _dText     : _lText;
+    final subClr  = isDark ? _dTextSub  : _lTextSub;
+    final redClr  = isDark ? _dangerDark : _danger;
 
     return Dialog(
       backgroundColor: bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: border, width: 1)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: const BoxConstraints(maxWidth: 340),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            padding: const EdgeInsets.fromLTRB(
+                _sp24, _sp24, _sp24, _sp16),
             child: Column(children: [
+              // Danger icon — prominent
+              Container(
+                  width: 48, height: 48,
+                  decoration: BoxDecoration(
+                      color: isDark
+                          ? _dangerDark.withOpacity(0.12)
+                          : _dangerLight,
+                      shape: BoxShape.circle),
+                  child: Icon(Icons.delete_forever_rounded,
+                      color: redClr, size: 24)),
+              const SizedBox(height: _sp12),
               Text(title, textAlign: TextAlign.center,
-                  style: _t(17, FontWeight.w600, label, ls: -0.2)),
-              const SizedBox(height: 6),
+                  style: _heading(17, textClr)),
+              const SizedBox(height: _sp8),
               Text(message, textAlign: TextAlign.center,
-                  style: _t(13, FontWeight.w400, label2, h: 1.5)),
+                  style: _body(13, subClr)),
             ]),
           ),
-          Divider(height: 1, thickness: 0.5, color: sep),
-          // Buttons row — iOS alert style
+          Divider(height: 1, thickness: 1, color: sep),
           IntrinsicHeight(child: Row(children: [
-            Expanded(child: GestureDetector(
+            // Cancel
+            Expanded(child: InkWell(
               onTap: () => Navigator.pop(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                    border: Border(right: BorderSide(color: sep, width: 0.5))),
-                child: Center(child: Text(AppLocalizations.of(context).t('sos_cancel'),
-                    style: _t(17, FontWeight.w400,
-                        isDark ? _blue_D : _blue))),
+                padding: const EdgeInsets.symmetric(vertical: _sp16),
+                decoration: BoxDecoration(border: Border(
+                    right: BorderSide(color: sep, width: 1))),
+                child: Center(child: Text(
+                    AppLocalizations.of(context).t('sos_cancel'),
+                    style: _body(16, isDark ? _infoDark : _info,
+                        w: FontWeight.w500))),
               ),
             )),
-            Expanded(child: GestureDetector(
-              onTap: () { Navigator.pop(context); onDestructive(); },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+            // Destructive
+            Expanded(child: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                onDestructive();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: _sp16),
                 child: Center(child: Text(destructiveLabel,
-                    style: _t(17, FontWeight.w600, dRed))),
+                    style: _body(16, redClr, w: FontWeight.w700))),
               ),
             )),
           ])),
