@@ -27,46 +27,50 @@ High-level architecture:
 ```mermaid
 flowchart LR
   subgraph Client[Flutter Client]
-    UI[UI Screens and Components]
-    CAM[Camera Controller]
+    UI[UI Screens]
+    CAM[Camera]
     WS[WebSocket Client]
-    TTS[TTS and UX Feedback]
     SOS[Emergency Service]
-    L10N[Localization Layer]
-    DB[(Hive Local Storage)]
+    L10N[Localization]
+    TTS[TTS]
+    DB[(Hive)]
     SB[Supabase SDK]
   end
 
-  subgraph Inference[ML Inference Backend]
-    API[FastAPI App]
-    WSE[WS Endpoint /ws]
-    PRE[Frame Decode and Preprocess]
-    YOLO[YOLO Model CPU Inference]
-    SMOOTH[Prediction Smoother]
-    HEALTH[Health Endpoint /health]
+  subgraph Backend[ML Backend]
+    API[FastAPI]
+    WSE[WS Endpoint]
+    PRE[Decode and Preprocess]
+    INF[YOLO Inference]
+    SMO[Prediction Smoothing]
+    RES[Prediction Response]
+    HLT[Health Endpoint]
   end
 
   subgraph Cloud[Cloud Services]
-    RAILWAY[Railway Deployment]
-    SUPABASE[(Supabase Auth and DB)]
-    GDRIVE[(Google Drive Model Source)]
+    RAILWAY[Railway]
+    SUPABASE[(Supabase)]
+    GDRIVE[(Google Drive Model)]
   end
 
   UI --> CAM
   CAM --> WS
   WS --> WSE
-  WSE --> PRE --> YOLO --> SMOOTH --> WSE
-  WSE --> WS --> UI
+  WSE --> PRE
+  PRE --> INF
+  INF --> SMO
+  SMO --> RES
+  RES --> WS
+  WS --> UI
 
-  API --> HEALTH
   API --> WSE
-
-  API -. startup model download .-> GDRIVE
+  API --> HLT
   API --> RAILWAY
+  API -. model download .-> GDRIVE
 
   SOS --> DB
-  SB <--> SUPABASE
-  SOS <--> SB
+  SOS --> SB
+  SB --> SUPABASE
   UI --> L10N
   UI --> TTS
 ```
@@ -112,10 +116,10 @@ Shared UI components:
 
 ```mermaid
 flowchart TB
-  APP[App Root and Routing]
+  APP[App Root]
   UI[Screen Widgets]
-  COMP[Reusable Components]
-  SVC[Services Layer]
+  COMP[Components]
+  SVC[Services]
   DATA[Data Sources]
 
   APP --> UI
@@ -128,7 +132,7 @@ flowchart TB
   DATA --> HIVE[(Hive)]
   DATA --> SUPA[(Supabase)]
   DATA --> GEO[(Geolocator)]
-  DATA --> TTS[(Flutter TTS)]
+  DATA --> FTTS[(Flutter TTS)]
 ```
 
 ## 2.3 Feature-Oriented Frontend Modules
@@ -212,7 +216,7 @@ sequenceDiagram
   participant T as Translate/TwoWay Screen
   participant C as CameraController
   participant W as WebSocket Client
-  participant B as Backend /ws
+  participant B as Backend WS
 
   U->>T: Start session
   T->>C: Initialize camera
@@ -220,7 +224,7 @@ sequenceDiagram
   loop Every frame interval
     C->>T: Capture frame bytes
     T->>W: Send base64 frame
-    W->>B: Frame payload
+    W->>B: Send frame payload
     B-->>W: prediction JSON
     W-->>T: label + confidence + frame index
     T-->>U: Update overlay, tokens, sentence
@@ -276,15 +280,15 @@ The `/ws` endpoint handles:
 
 ```mermaid
 flowchart TD
-  A[Receive frame text] --> B{Command?}
-  B -- __PING__ --> P[Send pong]
-  B -- __STOP__ --> Q[Reset smoother]
-  B -- frame --> C[Throttle check by FRAME_SKIP_MS]
+  A[Receive payload] --> B{Is command?}
+  B -- PING --> P[Send pong]
+  B -- STOP --> Q[Reset smoother]
+  B -- FRAME --> C[Throttle check]
   C --> D[Base64 decode]
-  D --> E[cv2.imdecode]
-  E --> F[YOLO predict in executor]
-  F --> G[Extract top box label and conf]
-  G --> H[PredictionSmoother push]
+  D --> E[Image decode]
+  E --> F[YOLO inference]
+  F --> G[Select top detection]
+  G --> H[Smoothing window]
   H --> I[Send prediction JSON]
 ```
 
@@ -336,14 +340,14 @@ This section explains the full inference path from sensor to rendered text.
 flowchart LR
   subgraph Device[Client Device]
     CAM[Camera Capture]
-    ENC[Frame Encoding base64]
+    ENC[Frame Encoding]
     SEND[WebSocket Send]
   end
 
   subgraph Server[Inference Server]
     RX[WebSocket Receive]
     DEC[Base64 Decode]
-    IMG[OpenCV Image Decode]
+    IMG[Image Decode]
     THR[Frame Throttle]
     INF[YOLO Inference CPU]
     TOP[Top Detection Selection]
@@ -353,14 +357,14 @@ flowchart LR
 
   subgraph UX[Client Post Processing]
     PARSE[Parse prediction]
-    STAB[Stability and confidence rules]
-    TOKEN[Token or sentence builder]
-    TTS[Optional speech synthesis]
-    UIR[UI overlays and transcript]
+    STAB[Stability Rules]
+    TOKEN[Token Builder]
+    SPK[Speech Synthesis]
+    UIR[UI and Transcript]
   end
 
   CAM --> ENC --> SEND --> RX --> DEC --> IMG --> THR --> INF --> TOP --> SM --> RESP
-  RESP --> PARSE --> STAB --> TOKEN --> TTS --> UIR
+  RESP --> PARSE --> STAB --> TOKEN --> SPK --> UIR
 ```
 
 ## 4.2 Pipeline Stage Breakdown
