@@ -1,0 +1,26 @@
+flowchart TD
+  A[Stakeholder Inputs and Accessibility Needs]
+  B[Requirement Analysis and Backlog Refinement]
+  C[Sprint Planning]
+  D1[Flutter Feature Development]
+  D2[Backend API and WebSocket Development]
+  D3[ML Dataset Curation and Label Review]
+  E[Model Training and Validation]
+  F[System Integration]
+  G[QA, Device Testing, and Localization Validation]
+  H[Staging and Release]
+  I[Production Monitoring and User Feedback]
+  J[Metrics Review and Prioritization]
+
+  A --> B --> C
+  C --> D1
+  C --> D2
+  C --> D3
+  D1 --> F
+  D2 --> F
+  D3 --> E
+  E --> F
+  F --> G --> H --> I --> J --> B
+
+  K[Cycle Output: Better Accuracy, Better UX, Better Reliability]
+  J --> K

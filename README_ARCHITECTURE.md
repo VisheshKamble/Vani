@@ -57,6 +57,12 @@ All diagrams in this document are also exported as image files for direct downlo
 
 ![ML Pipeline Vertical](docs/architecture/diagrams/svg/07-ml-pipeline-vertical-report.svg)
 
+8. Agile Model Cycle Diagram
+- SVG: [docs/architecture/diagrams/svg/08-agile-model-cycle.svg](docs/architecture/diagrams/svg/08-agile-model-cycle.svg)
+- PNG: [docs/architecture/diagrams/png/08-agile-model-cycle.png](docs/architecture/diagrams/png/08-agile-model-cycle.png)
+
+![Agile Model Cycle](docs/architecture/diagrams/svg/08-agile-model-cycle.svg)
+
 ## 1. System At A Glance
 
 VANI is a cross-platform accessibility system for Indian Sign Language (ISL) support.
@@ -503,6 +509,43 @@ Trade-offs:
 - lower interval -> faster updates but more CPU/network load
 - higher threshold -> fewer false positives but more misses
 - larger smoothing window -> steadier labels but slower adaptation
+
+## 4.4 Agile Model Cycle Diagram
+
+This diagram maps the actual iterative delivery flow used by this project across product, Flutter, backend, and ML tracks.
+
+Download links:
+- SVG: [docs/architecture/diagrams/svg/08-agile-model-cycle.svg](docs/architecture/diagrams/svg/08-agile-model-cycle.svg)
+- PNG: [docs/architecture/diagrams/png/08-agile-model-cycle.png](docs/architecture/diagrams/png/08-agile-model-cycle.png)
+
+```mermaid
+flowchart TD
+  A[Stakeholder Inputs and Accessibility Needs]
+  B[Requirement Analysis and Backlog Refinement]
+  C[Sprint Planning]
+  D1[Flutter Feature Development]
+  D2[Backend API and WebSocket Development]
+  D3[ML Dataset Curation and Label Review]
+  E[Model Training and Validation]
+  F[System Integration]
+  G[QA, Device Testing, and Localization Validation]
+  H[Staging and Release]
+  I[Production Monitoring and User Feedback]
+  J[Metrics Review and Prioritization]
+
+  A --> B --> C
+  C --> D1
+  C --> D2
+  C --> D3
+  D1 --> F
+  D2 --> F
+  D3 --> E
+  E --> F
+  F --> G --> H --> I --> J --> B
+
+  K[Cycle Output: Better Accuracy, Better UX, Better Reliability]
+  J --> K
+```
 
 ## 5. Project Structure Deep Dive
 
