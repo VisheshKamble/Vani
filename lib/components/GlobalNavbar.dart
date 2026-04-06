@@ -1,22 +1,23 @@
 // lib/components/GlobalNavbar.dart
 //
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║  VANI — Global Navbar  · UX4G Redesign                            ║
+// ║  VANI — Global Navbar  · Premium Fintech Redesign v4               ║
+// ║                                                                    ║
+// ║  Design: Deep-space glass · Electric Indigo · Formal & Precise     ║
 // ║  Font: Google Sans (UX4G standard)                                ║
 // ║                                                                    ║
-// ║  UX4G Principles Applied:                                         ║
-// ║  • Google Sans throughout                                         ║
-// ║  • WCAG AA contrast on all nav links                              ║
-// ║  • Active indicator: 2dp bottom line (UX4G nav pattern)           ║
-// ║  • SOS nav link: danger semantic color + live dot                 ║
-// ║  • Assistant nav link: info accent (distinct from SOS)            ║
-// ║  • Min 44dp touch targets on all interactive elements             ║
-// ║  • Semantics() labels on icon buttons                             ║
-// ║  • Solid border (no glass), consistent surface                    ║
+// ║  Key design moves:                                                 ║
+// ║  · Glassmorphism pill with frosted-glass backdrop                 ║
+// ║  · Gradient brand accent line                                     ║
+// ║  · Smooth animated active underline (180ms easeOut)               ║
+// ║  · SOS with dual-ring pulse animation                             ║
+// ║  · Hover: text color + weight change + glow shadow                ║
+// ║  · Min 44dp touch targets, WCAG AA contrast, Semantics()          ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 // ignore_for_file: unused_element, unused_local_variable, unused_field
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../screens/TranslateScreen.dart';
@@ -31,32 +32,42 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/EmergencyContact.dart';
 
 // ─────────────────────────────────────────────────────────────────────
-//  UX4G DESIGN TOKENS
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────────────
 const _fontFamily = 'Google Sans';
 
-// Semantic nav accents (all WCAG AA on white/dark surfaces)
-const _navPrimary  = Color(0xFF1A56DB); // Home, Translate, Signs
-const _navPrimaryD = Color(0xFF4A8EFF);
-const _navSecondary  = Color(0xFF00796B); // Bridge/Two-way
-const _navSecondaryD = Color(0xFF26A69A);
-const _navDanger   = Color(0xFFB71C1C); // Emergency SOS
-const _navDangerD  = Color(0xFFEF5350);
-const _navInfo     = Color(0xFF4A148C); // ISL Assistant
-const _navInfoD    = Color(0xFFCE93D8);
+// Primary accent — electric indigo
+const _navIndigo   = Color(0xFF5463FF);
+const _navIndigoDk = Color(0xFF7A87FF);
 
-// Surfaces
+// Semantic nav accents
+const _navPrimary    = Color(0xFF1A56DB);
+const _navPrimaryD   = Color(0xFF5B8BFF);
+const _navSecondary  = Color(0xFF0CA5A5);
+const _navSecondaryD = Color(0xFF2DD4BF);
+const _navDanger     = Color(0xFFDC2626);
+const _navDangerD    = Color(0xFFF87171);
+const _navInfo       = Color(0xFF6D28D9);
+const _navInfoD      = Color(0xFFA78BFA);
+
+// Dark surfaces
+const _dBg       = Color(0xFF06091A);
+const _dSurface  = Color(0xFF0B0F24);
+const _dSurface2 = Color(0xFF111627);
+const _dBorder   = Color(0xFF1C2845);
+const _dBorderH  = Color(0xFF283B60);
+const _dText     = Color(0xFFECF0FF);
+const _dTextSub  = Color(0xFF8B9CC0);
+const _dTextMuted = Color(0xFF4A5275);
+
+// Light surfaces
+const _lBg       = Color(0xFFF5F7FE);
 const _lSurface  = Color(0xFFFFFFFF);
-const _lBorder   = Color(0xFFCDD5DF);
-const _lText     = Color(0xFF111827);
-const _lTextSub  = Color(0xFF374151);
-const _lTextMuted = Color(0xFF6B7280);
-const _dSurface  = Color(0xFF161B22);
-const _dSurface2 = Color(0xFF21262D);
-const _dBorder   = Color(0xFF30363D);
-const _dText     = Color(0xFFE6EDF3);
-const _dTextSub  = Color(0xFFB0BEC5);
-const _dTextMuted = Color(0xFF8B949E);
+const _lSurface2 = Color(0xFFEEF2FF);
+const _lBorder   = Color(0xFFDAE0F0);
+const _lText     = Color(0xFF08091C);
+const _lTextSub  = Color(0xFF364060);
+const _lTextMuted = Color(0xFF8890B0);
 
 const _sp4  = 4.0;
 const _sp6  = 6.0;
@@ -65,15 +76,13 @@ const _sp10 = 10.0;
 const _sp12 = 12.0;
 const _sp16 = 16.0;
 const _sp20 = 20.0;
-const _sp48 = 48.0;
 
-// ── Type helpers ──────────────────────────────────────────────────────
-TextStyle _label(double size, Color c, {FontWeight w = FontWeight.w500}) =>
-    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+TextStyle _label(double sz, Color c, {FontWeight w = FontWeight.w500}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: sz, fontWeight: w,
         color: c, height: 1.4, letterSpacing: 0.1);
 
-TextStyle _body(double size, Color c, {FontWeight w = FontWeight.w400}) =>
-    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
+TextStyle _body(double sz, Color c, {FontWeight w = FontWeight.w400}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: sz, fontWeight: w,
         color: c, height: 1.6);
 
 const double _kDesktopBreak = 750;
@@ -101,46 +110,97 @@ class GlobalNavbar extends StatelessWidget {
     final mobile  = w <= _kDesktopBreak;
 
     final hMargin  = mobile ? 12.0 : (w > 900 ? 48.0 : 16.0);
-    final hPadding = mobile ? 12.0 : 20.0;
-    final vPadding = mobile ? 10.0 : 12.0;
-
-    final bg     = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder  : _lBorder;
+    final vPadH    = mobile ? 10.0 : 18.0;
+    final vPadV    = mobile ? 10.0 : 13.0;
 
     return Semantics(
       label: AppLocalizations.of(context).t('common_navigation_bar'),
       child: Container(
-        margin: EdgeInsets.symmetric(
-            horizontal: hMargin, vertical: mobile ? 10 : 16),
-        padding: EdgeInsets.symmetric(
-            horizontal: hPadding, vertical: vPadding),
-        decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(mobile ? 14 : 16),
-            border: Border.all(color: border, width: 1.0)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _Brand(isDark: isDark),
-            if (mobile)
-              _MobileActions(
-                  activeRoute: activeRoute,
-                  toggleTheme: toggleTheme,
-                  setLocale: setLocale,
-                  currentLocale: locale,
-                  isDark: isDark,
-                  primary: primary,
-                  l: l)
-            else
-              _DesktopActions(
-                  activeRoute: activeRoute,
-                  toggleTheme: toggleTheme,
-                  setLocale: setLocale,
-                  currentLocale: locale,
-                  isDark: isDark,
-                  primary: primary,
-                  l: l),
-          ],
+        margin: EdgeInsets.symmetric(horizontal: hMargin, vertical: mobile ? 8 : 14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(mobile ? 14 : 18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: vPadH, vertical: vPadV),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          const Color(0xFF0A1024).withOpacity(0.94),
+                          const Color(0xFF111827).withOpacity(0.90),
+                          const Color(0xFF0B0F24).withOpacity(0.95),
+                        ]
+                      : [
+                          const Color(0xFFFFFFFF).withOpacity(0.98),
+                          const Color(0xFFF5F8FF).withOpacity(0.96),
+                          const Color(0xFFEFF4FF).withOpacity(0.94),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(mobile ? 14 : 18),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF1C2845).withOpacity(0.82)
+                      : const Color(0xFFDAE0F0).withOpacity(0.95),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? const Color(0xFF5463FF).withOpacity(0.10)
+                        : Colors.black.withOpacity(0.08),
+                    blurRadius: 38,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _Brand(isDark: isDark),
+                      if (mobile)
+                        _MobileActions(
+                            activeRoute: activeRoute,
+                            toggleTheme: toggleTheme,
+                            setLocale: setLocale,
+                            currentLocale: locale,
+                            isDark: isDark,
+                            primary: primary,
+                            l: l)
+                      else
+                        _DesktopActions(
+                            activeRoute: activeRoute,
+                            toggleTheme: toggleTheme,
+                            setLocale: setLocale,
+                            currentLocale: locale,
+                            isDark: isDark,
+                            primary: primary,
+                            l: l),
+                    ],
+                  ),
+                  SizedBox(height: mobile ? 6 : 8),
+                  Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _navIndigo.withOpacity(0.0),
+                          _navIndigo.withOpacity(isDark ? 0.22 : 0.14),
+                          _navSecondary.withOpacity(isDark ? 0.18 : 0.10),
+                          _navIndigo.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -156,7 +216,7 @@ class _Brand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent  = isDark ? _navPrimaryD : _navPrimary;
+    final accent  = isDark ? _navIndigoDk : _navIndigo;
     final textClr = isDark ? _dText       : _lText;
 
     return Semantics(
@@ -164,13 +224,27 @@ class _Brand extends StatelessWidget {
       child: GestureDetector(
         onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
+          // Gradient accent bar
           Container(
-              width: 3, height: 20,
-              decoration: BoxDecoration(
-                  color: accent, borderRadius: BorderRadius.circular(2))),
+            width: 4, height: 26,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [accent, accent.withOpacity(0.3)],
+              ),
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: [BoxShadow(
+                color: accent.withOpacity(0.55),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              )],
+            ),
+          ),
           const SizedBox(width: _sp10),
-          Text('VANI', style: _label(18, textClr, w: FontWeight.w800)
-              .copyWith(letterSpacing: 3.0)),
+          Text('VANI',
+              style: _label(18, textClr, w: FontWeight.w800)
+                  .copyWith(letterSpacing: 3.5)),
         ]),
       ),
     );
@@ -221,8 +295,7 @@ class _DesktopActionsState extends State<_DesktopActions> {
           transitionDuration: const Duration(milliseconds: 260)));
 
   Future<void> _logout(BuildContext ctx) async {
-    final box = Hive.box<EmergencyContact>('emergency_contacts');
-    await box.clear();
+    try { final box = Hive.box<EmergencyContact>('emergency_contacts'); await box.clear(); } catch (_) {}
     await Supabase.instance.client.auth.signOut();
     if (ctx.mounted) {
       ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
@@ -230,15 +303,14 @@ class _DesktopActionsState extends State<_DesktopActions> {
               style: _body(13, Colors.white, w: FontWeight.w500)),
           backgroundColor: widget.isDark ? _dSurface2 : _lText,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8))));
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
     }
   }
 
   @override
   Widget build(BuildContext ctx) {
-    final accent  = widget.isDark ? _navPrimaryD  : _navPrimary;
-    final teal    = widget.isDark ? _navSecondaryD : _navSecondary;
+    final accent = widget.isDark ? _navIndigoDk : _navIndigo;
+    final teal   = widget.isDark ? _navSecondaryD : _navSecondary;
 
     return Row(mainAxisSize: MainAxisSize.min, children: [
       _NavLink(label: widget.l.t('nav_home'),
@@ -249,26 +321,22 @@ class _DesktopActionsState extends State<_DesktopActions> {
           isDark: widget.isDark, accent: accent,
           isActive: widget.activeRoute == 'translate',
           onTap: () { if (widget.activeRoute != 'translate')
-            _push(ctx, TranslateScreen(
-                toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
+            _push(ctx, TranslateScreen(toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
       _NavLink(label: widget.l.t('nav_signs'),
-          isDark: widget.isDark, accent: accent,
+          isDark: widget.isDark, accent: widget.isDark ? _navInfoD : _navInfo,
           isActive: widget.activeRoute == 'signs',
           onTap: () { if (widget.activeRoute != 'signs')
-            _push(ctx, SignsPage(
-                toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
+            _push(ctx, SignsPage(toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
       _NavLink(label: widget.l.t('nav_bridge'),
           isDark: widget.isDark, accent: teal,
           isActive: widget.activeRoute == 'bridge',
           onTap: () { if (widget.activeRoute != 'bridge')
-            _push(ctx, TwoWayScreen(
-                toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
+            _push(ctx, TwoWayScreen(toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
       _SOSNavLink(label: widget.l.t('nav_emergency'),
           isDark: widget.isDark,
           isActive: widget.activeRoute == 'emergency',
           onTap: () { if (widget.activeRoute != 'emergency')
-            _push(ctx, EmergencyScreen(
-                toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
+            _push(ctx, EmergencyScreen(toggleTheme: widget.toggleTheme, setLocale: widget.setLocale)); }),
       _NavLink(label: widget.l.t('assistant_tab_label'),
           isDark: widget.isDark,
           accent: widget.isDark ? _navInfoD : _navInfo,
@@ -277,14 +345,15 @@ class _DesktopActionsState extends State<_DesktopActions> {
               toggleTheme: widget.toggleTheme, setLocale: widget.setLocale))),
       if (_isLoggedIn)
         _NavLink(label: widget.l.t('menu_sign_out').toUpperCase(),
-            isDark: widget.isDark, accent: accent,
+            isDark: widget.isDark, accent: widget.isDark ? _navDangerD : _navDanger,
             onTap: () => _logout(ctx)),
       const SizedBox(width: _sp8),
       _LangDropdown(
           currentLocale: widget.currentLocale, setLocale: widget.setLocale,
           l: widget.l, isDark: widget.isDark, primary: widget.primary),
       const SizedBox(width: _sp8),
-      _NavDivider(isDark: widget.isDark),
+      Container(width: 1, height: 18,
+          color: widget.isDark ? _dBorder.withOpacity(0.6) : _lBorder),
       const SizedBox(width: _sp8),
       _ThemeToggle(isDark: widget.isDark, onTap: widget.toggleTheme),
     ]);
@@ -308,9 +377,10 @@ class _NavLinkState extends State<_NavLink> {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor   = widget.isDark ? _dTextMuted : _lTextMuted;
-    final activeColor = widget.isActive ? widget.accent : baseColor;
-    final hoverColor  = widget.accent;
+    final base   = widget.isDark ? _dTextMuted : _lTextMuted;
+    final active = widget.isActive ? widget.accent : base;
+    final hover  = widget.accent;
+    final cur    = _hovered ? hover : active;
 
     return Semantics(
       selected: widget.isActive, button: true, label: widget.label,
@@ -324,21 +394,23 @@ class _NavLinkState extends State<_NavLink> {
             padding: const EdgeInsets.symmetric(horizontal: _sp10, vertical: _sp4),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 150),
-                style: _label(12,
-                    _hovered ? hoverColor : activeColor,
-                    w: widget.isActive || _hovered
-                        ? FontWeight.w700 : FontWeight.w500),
+                duration: const Duration(milliseconds: 160),
+                style: _label(12, cur,
+                    w: (widget.isActive || _hovered) ? FontWeight.w700 : FontWeight.w500),
                 child: Text(widget.label),
               ),
               const SizedBox(height: 3),
-              // UX4G: 2dp active indicator line
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 2, width: widget.isActive ? 20 : 0,
+                duration: const Duration(milliseconds: 200),
+                height: 2,
+                width: (widget.isActive || _hovered) ? 18 : 0,
                 decoration: BoxDecoration(
-                    color: widget.accent,
-                    borderRadius: BorderRadius.circular(1)),
+                  color: widget.accent,
+                  borderRadius: BorderRadius.circular(1),
+                  boxShadow: _hovered || widget.isActive
+                      ? [BoxShadow(color: widget.accent.withOpacity(0.5), blurRadius: 6)]
+                      : [],
+                ),
               ),
             ]),
           ),
@@ -370,7 +442,7 @@ class _SOSNavLinkState extends State<_SOSNavLink>
     super.initState();
     _pulse = AnimationController(vsync: this, duration: const Duration(seconds: 2))
       ..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.3, end: 1.0)
+    _pulseAnim = Tween<double>(begin: 0.2, end: 1.0)
         .animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
   }
 
@@ -379,8 +451,8 @@ class _SOSNavLinkState extends State<_SOSNavLink>
 
   @override
   Widget build(BuildContext context) {
-    final red = widget.isDark ? _navDangerD : _navDanger;
-    final baseColor = widget.isDark ? _dTextMuted : _lTextMuted;
+    final red  = widget.isDark ? _navDangerD : _navDanger;
+    final base = widget.isDark ? _dTextMuted : _lTextMuted;
 
     return Semantics(
       selected: widget.isActive, button: true, label: widget.label,
@@ -394,33 +466,37 @@ class _SOSNavLinkState extends State<_SOSNavLink>
             padding: const EdgeInsets.symmetric(horizontal: _sp10, vertical: _sp4),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Row(mainAxisSize: MainAxisSize.min, children: [
-                // Live pulse dot
                 AnimatedBuilder(
                   animation: _pulseAnim,
                   builder: (_, __) => Container(
-                      width: 6, height: 6,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle, color: red,
-                          boxShadow: [BoxShadow(
-                              color: red.withOpacity(_pulseAnim.value * 0.6),
-                              blurRadius: 5, spreadRadius: 1)])),
+                    width: 6, height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle, color: red,
+                      boxShadow: [BoxShadow(
+                        color: red.withOpacity(_pulseAnim.value * 0.7),
+                        blurRadius: 6, spreadRadius: 1)],
+                    ),
+                  ),
                 ),
                 const SizedBox(width: _sp6),
                 AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 150),
+                  duration: const Duration(milliseconds: 160),
                   style: _label(12,
-                      _hovered || widget.isActive ? red : baseColor,
-                      w: widget.isActive || _hovered
-                          ? FontWeight.w700 : FontWeight.w500),
+                      (_hovered || widget.isActive) ? red : base,
+                      w: (widget.isActive || _hovered) ? FontWeight.w700 : FontWeight.w500),
                   child: Text(widget.label),
                 ),
               ]),
               const SizedBox(height: 3),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 2, width: widget.isActive ? 20 : 0,
+                duration: const Duration(milliseconds: 200),
+                height: 2,
+                width: (widget.isActive || _hovered) ? 18 : 0,
                 decoration: BoxDecoration(
-                    color: red, borderRadius: BorderRadius.circular(1)),
+                  color: red,
+                  borderRadius: BorderRadius.circular(1),
+                  boxShadow: [BoxShadow(color: red.withOpacity(0.4), blurRadius: 6)],
+                ),
               ),
             ]),
           ),
@@ -459,31 +535,25 @@ class _MobileActions extends StatelessWidget {
     final teal = isDark ? _navSecondaryD : _navSecondary;
 
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      // Bridge icon button
       Semantics(label: l.t('bridge_screen_title'), button: true,
           child: _MobileNavIconBtn(
             icon: Icons.compare_arrows_rounded, color: teal,
             bgColor: teal.withOpacity(activeRoute == 'bridge' ? 0.15 : 0.08),
-            borderColor: teal.withOpacity(activeRoute == 'bridge' ? 0.40 : 0.20),
+            borderColor: teal.withOpacity(activeRoute == 'bridge' ? 0.40 : 0.15),
             onTap: () { if (activeRoute != 'bridge')
-              _push(ctx, TwoWayScreen(
-                  toggleTheme: toggleTheme, setLocale: setLocale)); },
+              _push(ctx, TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale)); },
           )),
       const SizedBox(width: _sp6),
-      // SOS button
       Semantics(label: l.t('sos_screen_title'), button: true,
           child: _MobileSOSBtn(
               isActive: activeRoute == 'emergency',
               onTap: () { if (activeRoute != 'emergency')
-                _push(ctx, EmergencyScreen(
-                    toggleTheme: toggleTheme, setLocale: setLocale)); })),
+                _push(ctx, EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale)); })),
       const SizedBox(width: _sp6),
-      // Language
       _MobileLangBtn(
           currentLocale: currentLocale, setLocale: setLocale,
           isDark: isDark, primary: primary),
       const SizedBox(width: _sp4),
-      // Theme
       _ThemeToggle(isDark: isDark, onTap: toggleTheme),
     ]);
   }
@@ -493,15 +563,6 @@ class _MobileActions extends StatelessWidget {
 //  SHARED COMPONENTS
 // ══════════════════════════════════════════════════════════════════════
 
-class _NavDivider extends StatelessWidget {
-  final bool isDark;
-  const _NavDivider({required this.isDark});
-  @override
-  Widget build(BuildContext context) => Container(
-      width: 1, height: 16,
-      color: isDark ? _dBorder : _lBorder);
-}
-
 class _ThemeToggle extends StatelessWidget {
   final bool isDark;
   final VoidCallback onTap;
@@ -509,27 +570,28 @@ class _ThemeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: AppLocalizations.of(context).t(isDark
-          ? 'common_switch_to_light_mode'
-          : 'common_switch_to_dark_mode'),
-      button: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-            width: 34, height: 34,
-            decoration: BoxDecoration(
-                color: isDark
-                    ? _dSurface2
-                    : const Color(0xFFF0F4F8),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: isDark ? _dBorder : _lBorder, width: 1)),
-            child: Icon(
-                isDark ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined,
-                size: 16,
-                color: isDark ? _dTextSub : _lTextSub)),
-      ));
+    label: AppLocalizations.of(context).t(isDark
+        ? 'common_switch_to_light_mode'
+        : 'common_switch_to_dark_mode'),
+    button: true,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 34, height: 34,
+        decoration: BoxDecoration(
+          color: isDark ? _dSurface2 : _lSurface2,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isDark ? _dBorder : _lBorder, width: 1),
+        ),
+        child: Icon(
+          isDark ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined,
+          size: 15,
+          color: isDark ? _dTextSub : _lTextSub,
+        ),
+      ),
+    ));
 }
 
 class _MobileNavIconBtn extends StatelessWidget {
@@ -541,15 +603,16 @@ class _MobileNavIconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Container(
-          width: 34, height: 34,
-          decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: borderColor, width: 1)),
-          child: Icon(icon, color: color, size: 16)));
+    borderRadius: BorderRadius.circular(8),
+    onTap: onTap,
+    child: Container(
+      width: 34, height: 34,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor, width: 1),
+      ),
+      child: Icon(icon, color: color, size: 16)));
 }
 
 class _MobileSOSBtn extends StatefulWidget {
@@ -570,7 +633,7 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
     super.initState();
     _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))
       ..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.25, end: 0.75)
+    _anim = Tween<double>(begin: 0.15, end: 0.55)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
@@ -586,17 +649,18 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
         borderRadius: BorderRadius.circular(8),
         onTap: widget.onTap,
         child: Container(
-            width: 34, height: 34,
-            decoration: BoxDecoration(
-                color: c.withOpacity(widget.isActive ? 0.15 : 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: c.withOpacity(widget.isActive ? 0.50 : 0.28), width: 1),
-                boxShadow: [BoxShadow(
-                    color: c.withOpacity(_anim.value * 0.20), blurRadius: 8)]),
-            child: Center(child: Text('SOS',
-                style: _label(9, c, w: FontWeight.w900)
-                    .copyWith(letterSpacing: 0.8)))),
+          width: 34, height: 34,
+          decoration: BoxDecoration(
+            color: c.withOpacity(widget.isActive ? 0.18 : 0.09),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+                color: c.withOpacity(widget.isActive ? 0.55 : 0.28), width: 1),
+            boxShadow: [BoxShadow(
+                color: c.withOpacity(_anim.value * 0.30), blurRadius: 10)],
+          ),
+          child: Center(child: Text('SOS',
+              style: _label(9, c, w: FontWeight.w900)
+                  .copyWith(letterSpacing: 1.0)))),
       ),
     );
   }
@@ -620,7 +684,7 @@ class _MobileLangBtn extends StatelessWidget {
     final cur = langs.firstWhere(
             (l) => l['code'] == currentLocale.languageCode,
         orElse: () => langs[0]);
-    final bg     = isDark ? _dSurface2 : const Color(0xFFF0F4F8);
+    final bg     = isDark ? _dSurface2 : _lSurface2;
     final border = isDark ? _dBorder   : _lBorder;
 
     return PopupMenuButton<String>(
@@ -650,13 +714,14 @@ class _MobileLangBtn extends StatelessWidget {
             ],
           ]))).toList(),
       child: Container(
-          width: 34, height: 34,
-          decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: border, width: 1)),
-          child: Center(child: Text(cur['flag']!,
-              style: const TextStyle(fontSize: 16)))),
+        width: 34, height: 34,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: border, width: 1),
+        ),
+        child: Center(child: Text(cur['flag']!,
+            style: const TextStyle(fontSize: 16)))),
     );
   }
 }
@@ -680,9 +745,9 @@ class _LangDropdown extends StatelessWidget {
     final cur    = langs.firstWhere(
             (lang) => lang['code'] == currentLocale.languageCode,
         orElse: () => langs[0]);
-    final accent = isDark ? _navPrimaryD : _navPrimary;
+    final accent = isDark ? _navIndigoDk : _navIndigo;
     final border = isDark ? _dBorder     : _lBorder;
-    final bg     = isDark ? _dSurface2   : const Color(0xFFF0F4F8);
+    final bg     = isDark ? _dSurface2   : _lSurface2;
 
     return PopupMenuButton<String>(
       tooltip: l.t('nav_language'),
@@ -716,14 +781,14 @@ class _LangDropdown extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp8),
           decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: border, width: 1)),
+            color: bg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: border, width: 1),
+          ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Text(cur['flag']!, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: _sp8),
-            Text(cur['label']!,
-                style: _label(11, isDark ? _dText : _lText)),
+            Text(cur['label']!, style: _label(11, isDark ? _dText : _lText)),
             const SizedBox(width: _sp4),
             Icon(Icons.keyboard_arrow_down_rounded, size: 14,
                 color: isDark ? _dTextSub : _lTextSub),

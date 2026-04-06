@@ -8,6 +8,7 @@
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,7 +34,6 @@ const _secondaryDark = Color(0xFF26A69A);
 // Assistant accent (violet)
 const _purple = Color(0xFF6200EA);
 const _purpleDark = Color(0xFF9C6BFF);
-const _purpleGlow = Color(0xFF7C3AED);
 
 // Status
 const _danger = Color(0xFFB71C1C);
@@ -41,14 +41,11 @@ const _dangerDark = Color(0xFFEF5350);
 const _dangerLight = Color(0xFFFFEBEE);
 const _info = Color(0xFF0D47A1);
 const _infoDark = Color(0xFF42A5F5);
-const _success = Color(0xFF1B7340);
-const _successDark = Color(0xFF27AE60);
 
 // Light theme
 const _lBg = Color(0xFFF8F9FC);
 const _lSurface = Color(0xFFFFFFFF);
 const _lSurface2 = Color(0xFFF0F4F8);
-const _lSurface3 = Color(0xFFEAEEF4);
 const _lBorder = Color(0xFFDDE3ED);
 const _lBorderSub = Color(0xFFEDF0F5);
 const _lText = Color(0xFF0D1117);
@@ -59,7 +56,6 @@ const _lTextMuted = Color(0xFF6B7280);
 const _dBg = Color(0xFF080C12);
 const _dSurface = Color(0xFF0F1520);
 const _dSurface2 = Color(0xFF161D2A);
-const _dSurface3 = Color(0xFF1C2535);
 const _dBorder = Color(0xFF252F40);
 const _dBorderSub = Color(0xFF1C2535);
 const _dText = Color(0xFFECF0F7);
@@ -77,7 +73,6 @@ const _sp16 = 16.0;
 const _sp20 = 20.0;
 const _sp24 = 24.0;
 const _sp32 = 32.0;
-const _sp48 = 48.0;
 
 // ── Type helpers ─────────────────────────────────────────────────────
 TextStyle _display(double size, Color c) => TextStyle(
@@ -117,15 +112,6 @@ TextStyle _label(double size, Color c, {FontWeight w = FontWeight.w500}) =>
       height: 1.4,
       letterSpacing: 0.1,
     );
-
-TextStyle _mono(double size, Color c) => TextStyle(
-  fontFamily: 'monospace',
-  fontSize: size,
-  fontWeight: FontWeight.w500,
-  color: c,
-  height: 1.5,
-  letterSpacing: 0.5,
-);
 
 // ─────────────────────────────────────────────────────────────────────
 //  GEMINI CONFIG
@@ -793,59 +779,204 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
 
     return Scaffold(
       backgroundColor: bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            GlobalNavbar(
-              toggleTheme: widget.toggleTheme,
-              setLocale: widget.setLocale,
-              activeRoute: 'assistant',
+      body: Stack(
+        children: [
+          Positioned(
+            top: -220,
+            left: -180,
+            child: _AssistantOrb(
+              color: _primary.withOpacity(isDark ? 0.15 : 0.10),
+              size: 760,
             ),
-            Expanded(
-              child: isDesktop
-                  ? _webDesktopLayout(ctx, isDark)
-                  : _webTabletLayout(ctx, isDark),
+          ),
+          Positioned(
+            top: 220,
+            right: -160,
+            child: _AssistantOrb(
+              color: _purple.withOpacity(isDark ? 0.14 : 0.09),
+              size: 620,
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            bottom: 110,
+            left: w * 0.28,
+            child: _AssistantOrb(
+              color: _secondary.withOpacity(isDark ? 0.12 : 0.08),
+              size: 500,
+            ),
+          ),
+          Positioned(
+            top: 84,
+            right: 160,
+            child: _AssistantArcDecor(
+              size: 250,
+              color: _primary,
+              dark: isDark,
+              flip: true,
+            ),
+          ),
+          Positioned(
+            bottom: 210,
+            left: -32,
+            child: _AssistantArcDecor(
+              size: 210,
+              color: _secondary,
+              dark: isDark,
+              flip: false,
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isDark
+                        ? [
+                            Colors.white.withOpacity(0.018),
+                            Colors.transparent,
+                            _primary.withOpacity(0.024),
+                          ]
+                        : [
+                            _primary.withOpacity(0.04),
+                            Colors.transparent,
+                            _secondary.withOpacity(0.02),
+                          ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                GlobalNavbar(
+                  toggleTheme: widget.toggleTheme,
+                  setLocale: widget.setLocale,
+                  activeRoute: 'assistant',
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      _sp12,
+                      _sp10,
+                      _sp12,
+                      _sp12,
+                    ),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktop ? 1520 : 1140,
+                        ),
+                        child: isDesktop
+                            ? _webDesktopLayout(ctx, isDark)
+                            : _webTabletLayout(ctx, isDark),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _webDesktopLayout(BuildContext ctx, bool isDark) => Row(
-    children: [
-      _WebSidebar(
-        isDark: isDark,
-        selectedLang: _lang,
-        ttsEnabled: _ttsEnabled,
-        onLangSelect: (l) => setState(() => _lang = l),
-        onTtsToggle: () {
-          setState(() => _ttsEnabled = !_ttsEnabled);
-          if (!_ttsEnabled) _tts.stop();
-        },
-        onClearChat: _clearChat,
-        onQuickPrompt: _send,
-      ),
-      Expanded(
-        child: _WebChatPane(
-          msgs: _msgs,
-          isDark: isDark,
-          isLoading: _isLoading,
-          typingAnim: _typingAnim,
-          scrollCtrl: _scrollCtrl,
-          inputCtrl: _inputCtrl,
-          isListening: _isListening,
-          speechOk: _speechOk,
-          onSend: _send,
-          onVoice: _toggleVoice,
-          onTapSign: (s) => _send(_askMoreSignPrompt(s)),
-          onSpeak: (text) async {
-            await _syncTtsLang();
-            await _tts.speak(_cleanForTts(text));
-          },
-        ),
-      ),
-    ],
+  Widget _webDesktopLayout(BuildContext ctx, bool isDark) => LayoutBuilder(
+    builder: (context, constraints) {
+      const sidebarWidth = 300.0;
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            Colors.white.withOpacity(0.020),
+                            _primary.withOpacity(0.030),
+                          ]
+                        : [
+                            Colors.white.withOpacity(0.46),
+                            _primary.withOpacity(0.055),
+                          ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: sidebarWidth - 52,
+            top: 88,
+            child: _AssistantSemiCircle(
+              color: _purple,
+              dark: isDark,
+              diameter: 102,
+              leftSide: false,
+            ),
+          ),
+          Positioned(
+            left: sidebarWidth + 30,
+            top: 230,
+            child: _AssistantRing(
+              diameter: 22,
+              color: _primary,
+              dark: isDark,
+            ),
+          ),
+          Positioned(
+            left: sidebarWidth - 18,
+            top: 456,
+            child: _AssistantRing(
+              diameter: 14,
+              color: _secondary,
+              dark: isDark,
+            ),
+          ),
+          Row(
+            children: [
+              _WebSidebar(
+                isDark: isDark,
+                selectedLang: _lang,
+                ttsEnabled: _ttsEnabled,
+                onLangSelect: (l) => setState(() => _lang = l),
+                onTtsToggle: () {
+                  setState(() => _ttsEnabled = !_ttsEnabled);
+                  if (!_ttsEnabled) _tts.stop();
+                },
+                onClearChat: _clearChat,
+                onQuickPrompt: _send,
+              ),
+              Expanded(
+                child: _WebChatPane(
+                  msgs: _msgs,
+                  isDark: isDark,
+                  isLoading: _isLoading,
+                  typingAnim: _typingAnim,
+                  scrollCtrl: _scrollCtrl,
+                  inputCtrl: _inputCtrl,
+                  isListening: _isListening,
+                  speechOk: _speechOk,
+                  onSend: _send,
+                  onVoice: _toggleVoice,
+                  onTapSign: (s) => _send(_askMoreSignPrompt(s)),
+                  onSpeak: (text) async {
+                    await _syncTtsLang();
+                    await _tts.speak(_cleanForTts(text));
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
   );
 
   Widget _webTabletLayout(BuildContext ctx, bool isDark) => Column(
@@ -884,6 +1015,165 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
   );
 }
 
+class _AssistantOrb extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _AssistantOrb({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: [color, Colors.transparent]),
+      ),
+    );
+  }
+}
+
+class _AssistantArcDecor extends StatelessWidget {
+  final double size;
+  final Color color;
+  final bool dark;
+  final bool flip;
+  const _AssistantArcDecor({
+    required this.size,
+    required this.color,
+    required this.dark,
+    required this.flip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform(
+      transform:
+          flip ? (Matrix4.identity()..rotateZ(math.pi)) : Matrix4.identity(),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(
+          painter: _AssistantArcPainter(color: color, dark: dark),
+        ),
+      ),
+    );
+  }
+}
+
+class _AssistantArcPainter extends CustomPainter {
+  final Color color;
+  final bool dark;
+  const _AssistantArcPainter({required this.color, required this.dark});
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    void arc(double r, double op) {
+      final glow = Paint()
+        ..color = color.withOpacity(dark ? op * 0.05 : op * 0.035)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: r),
+        0,
+        math.pi / 2,
+        false,
+        glow,
+      );
+
+      final p = Paint()
+        ..color = color.withOpacity(dark ? op * 0.40 : op * 0.30)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: r),
+        0,
+        math.pi / 2,
+        false,
+        p,
+      );
+    }
+
+    arc(s.width * 0.34, 0.30);
+    arc(s.width * 0.66, 0.20);
+    arc(s.width * 0.88, 0.11);
+  }
+
+  @override
+  bool shouldRepaint(_AssistantArcPainter old) => false;
+}
+
+class _AssistantSemiCircle extends StatelessWidget {
+  final Color color;
+  final bool dark;
+  final double diameter;
+  final bool leftSide;
+  const _AssistantSemiCircle({
+    required this.color,
+    required this.dark,
+    required this.diameter,
+    required this.leftSide,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(diameter / 2),
+      child: Align(
+        widthFactor: 0.5,
+        alignment: leftSide ? Alignment.centerLeft : Alignment.centerRight,
+        child: Container(
+          width: diameter,
+          height: diameter,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(dark ? 0.13 : 0.10),
+            border: Border.all(
+              color: color.withOpacity(dark ? 0.38 : 0.30),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(dark ? 0.16 : 0.10),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AssistantRing extends StatelessWidget {
+  final double diameter;
+  final Color color;
+  final bool dark;
+  const _AssistantRing({
+    required this.diameter,
+    required this.color,
+    required this.dark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: diameter,
+      height: diameter,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: color.withOpacity(dark ? 0.42 : 0.34),
+          width: 1.5,
+        ),
+        color: Colors.transparent,
+      ),
+    );
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════
 //  LANGUAGE PILL ROW (mobile) — scrollable, 10 languages
 // ══════════════════════════════════════════════════════════════════════
@@ -904,7 +1194,6 @@ class _LangPillRow extends StatelessWidget {
     final border = isDark ? _dBorder : _lBorder;
     final subClr = isDark ? _dTextSub : _lTextSub;
     final mutedClr = isDark ? _dTextMuted : _lTextMuted;
-    final l = AppLocalizations.of(context);
 
     return Container(
       height: 44,
@@ -1752,7 +2041,6 @@ class _WebSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final prompts = _kQuickPromptKeys.map((q) => (l.t(q.$1), q.$2)).toList();
-    final bg = isDark ? _dSurface : _lSurface;
     final border = isDark ? _dBorder : _lBorder;
     final sep = isDark ? _dBorderSub : _lBorderSub;
     final textClr = isDark ? _dText : _lText;
@@ -1761,83 +2049,75 @@ class _WebSidebar extends StatelessWidget {
     final accent = isDark ? _purpleDark : _purple;
 
     return Container(
-      width: 290,
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(right: BorderSide(color: border, width: 1.0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      width: 300,
+      color: Colors.transparent,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        physics: const BouncingScrollPhysics(),
         children: [
           // ── Header with gradient accent bar ────────────────────────
           Container(
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: sep, width: 1)),
+              border: Border(
+                bottom: BorderSide(color: sep.withOpacity(0.45), width: 1),
+              ),
             ),
             padding: const EdgeInsets.all(_sp20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [accent, accent.withOpacity(0.7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(13),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withOpacity(0.30),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.sign_language_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [accent, accent.withOpacity(0.7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: _sp12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    borderRadius: BorderRadius.circular(13),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent.withOpacity(0.30),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.sign_language_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: _sp12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l.t('assistant_title'), style: _heading(16, textClr)),
+                      Row(
                         children: [
-                          Text(
-                            l.t('assistant_title'),
-                            style: _heading(16, textClr),
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF22C55E),
+                            ),
                           ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(0xFF22C55E),
-                                ),
-                              ),
-                              const SizedBox(width: _sp4),
-                              Text(
-                                'Online',
-                                style: _label(
-                                  10.5,
-                                  Color(0xFF22C55E),
-                                  w: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: _sp4),
+                          Text(
+                            'Online',
+                            style: _label(
+                              10.5,
+                              const Color(0xFF22C55E),
+                              w: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1848,15 +2128,11 @@ class _WebSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(_sp16, _sp14, _sp16, _sp8),
             child: Text(
               'LANGUAGE',
-              style: _label(
-                9.5,
-                mutedClr,
-                w: FontWeight.w700,
-              ).copyWith(letterSpacing: 1.2),
+              style: _label(9.5, mutedClr, w: FontWeight.w700).copyWith(
+                letterSpacing: 1.2,
+              ),
             ),
           ),
-
-          // Language grid — 2 columns
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: _sp12),
             child: GridView.count(
@@ -1922,7 +2198,7 @@ class _WebSidebar extends StatelessWidget {
 
           Container(
             height: 1,
-            color: sep,
+            color: sep.withOpacity(0.45),
             margin: const EdgeInsets.symmetric(
               vertical: _sp12,
               horizontal: _sp16,
@@ -1934,11 +2210,9 @@ class _WebSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp8),
             child: Text(
               'SETTINGS',
-              style: _label(
-                9.5,
-                mutedClr,
-                w: FontWeight.w700,
-              ).copyWith(letterSpacing: 1.2),
+              style: _label(9.5, mutedClr, w: FontWeight.w700).copyWith(
+                letterSpacing: 1.2,
+              ),
             ),
           ),
           _SidebarToggle(
@@ -1954,7 +2228,7 @@ class _WebSidebar extends StatelessWidget {
 
           Container(
             height: 1,
-            color: sep,
+            color: sep.withOpacity(0.45),
             margin: const EdgeInsets.symmetric(
               vertical: _sp12,
               horizontal: _sp16,
@@ -1966,33 +2240,35 @@ class _WebSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp8),
             child: Text(
               'QUICK PROMPTS',
-              style: _label(
-                9.5,
-                mutedClr,
-                w: FontWeight.w700,
-              ).copyWith(letterSpacing: 1.2),
+              style: _label(9.5, mutedClr, w: FontWeight.w700).copyWith(
+                letterSpacing: 1.2,
+              ),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: _sp12),
-              physics: const BouncingScrollPhysics(),
-              itemCount: prompts.length,
-              itemBuilder: (_, i) {
-                final q = prompts[i];
-                return _SidebarPromptBtn(
-                  icon: q.$2,
-                  label: q.$1,
-                  isDark: isDark,
-                  accent: isDark ? _infoDark : _info,
-                  onTap: () => onQuickPrompt(q.$1),
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _sp12),
+            child: Column(
+              children: prompts
+                  .map(
+                    (q) => _SidebarPromptBtn(
+                      icon: q.$2,
+                      label: q.$1,
+                      isDark: isDark,
+                      accent: isDark ? _infoDark : _info,
+                      onTap: () => onQuickPrompt(q.$1),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
 
-          Container(height: 1, color: sep),
-          // Clear chat
+          Container(
+            height: 1,
+            color: sep.withOpacity(0.45),
+            margin: const EdgeInsets.only(top: _sp12),
+          ),
+
+          // Clear chat (inside scroll)
           Semantics(
             label: l.t('isl_options_clear_conversation'),
             button: true,
@@ -2034,6 +2310,7 @@ class _WebSidebar extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: _sp8),
         ],
       ),
     );
@@ -2232,12 +2509,11 @@ class _WebChatPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? _dBg : _lBg;
     return Column(
       children: [
         Expanded(
           child: Container(
-            color: bg,
+            color: Colors.transparent,
             child: msgs.isEmpty
                 ? _EmptyState(isDark: isDark, onPrompt: onSend)
                 : ListView.builder(
@@ -2252,16 +2528,28 @@ class _WebChatPane extends StatelessWidget {
                     itemCount: msgs.length + (isLoading ? 1 : 0),
                     itemBuilder: (_, i) {
                       if (i == msgs.length) {
-                        return _TypingIndicator(
-                          isDark: isDark,
-                          anim: typingAnim,
+                        return Align(
+                          alignment: Alignment.centerLeft,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 920),
+                            child: _TypingIndicator(
+                              isDark: isDark,
+                              anim: typingAnim,
+                            ),
+                          ),
                         );
                       }
-                      return _MsgBubble(
-                        msg: msgs[i],
-                        isDark: isDark,
-                        onTapSign: onTapSign,
-                        onSpeak: onSpeak,
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 920),
+                          child: _MsgBubble(
+                            msg: msgs[i],
+                            isDark: isDark,
+                            onTapSign: onTapSign,
+                            onSpeak: onSpeak,
+                          ),
+                        ),
                       );
                     },
                   ),

@@ -212,15 +212,24 @@ flutter run -d windows
 
 ## Runtime Configuration
 
-Current production socket host is hardcoded:
+WebSocket settings are read from `--dart-define` values or the `.env.*` files:
 
-- `lib/screens/TranslateScreen.dart`
-- `lib/screens/TwoWayScreen.dart`
+- `ISL_WS_ENABLED`
+- `ISL_WS_URL`
+- `ISL_WS_SCHEME`
+- `ISL_WS_HOST`
+- `ISL_WS_PATH`
 
-Current value:
-- `isl-production-57d4.up.railway.app`
+Recommended files:
+- `.env.local` -> `ws://127.0.0.1:8000/ws`
+- `.env.prod` -> `wss://isl-production-57d4.up.railway.app/ws`
 
-To switch environments, update `_kRailwayHost` in both files.
+Example run commands:
+
+```powershell
+flutter run --dart-define-from-file=.env.local
+flutter run --dart-define-from-file=.env.prod
+```
 
 ## API Contract
 

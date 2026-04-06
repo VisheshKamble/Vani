@@ -1,19 +1,9 @@
 // lib/screens/EmergencySetupScreen.dart
 //
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║  VANI — Emergency Setup  · UX4G Redesign                          ║
-// ║  Font: Google Sans (UX4G standard)                                ║
-// ║  < 700px  → Mobile contacts manager                               ║
-// ║  ≥ 700px  → Web settings panel                                    ║
-// ║                                                                    ║
-// ║  UX4G Principles Applied:                                         ║
-// ║  • Grouped list with visible separators (WCAG structure)          ║
-// ║  • Avatar initials use semantic relation color                    ║
-// ║  • Form validation with semantic danger color + icon              ║
-// ║  • Relation chips use accessible bg/border/text color triplets    ║
-// ║  • Empty state uses info color for helpful prompting              ║
-// ║  • Confirmation dialog: destructive action in danger red          ║
-// ║  • All touch targets min 44dp                                     ║
+// ║  VANI — Emergency Setup  · Apple-Minimal Redesign                  ║
+// ║  Aesthetic: Refined minimal, SF-inspired depth, frosted surfaces   ║
+// ║  Fixes: Keyboard avoidance, dialog overflow, form scroll           ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'package:flutter/material.dart';
@@ -25,103 +15,115 @@ import '../services/EmergencyService.dart';
 import '../utils/PlatformHelper.dart';
 
 // ─────────────────────────────────────────────────────────────────────
-//  UX4G DESIGN TOKENS  (same palette as EmergencyScreen + HomeScreen)
+//  DESIGN TOKENS — Apple-inspired refined palette
 // ─────────────────────────────────────────────────────────────────────
 const _fontFamily = 'Google Sans';
 
+// Semantic
+const _danger      = Color(0xFFFF3B30);  // iOS red
+const _dangerSoft  = Color(0xFFFFEEED);
+const _warning     = Color(0xFFFF9500);  // iOS orange
+const _warningSoft = Color(0xFFFFF4E6);
+const _success     = Color(0xFF34C759);  // iOS green
+const _successSoft = Color(0xFFEAF7EE);
+const _info        = Color(0xFF007AFF);  // iOS blue
+const _infoSoft    = Color(0xFFE5F1FF);
 
-const _danger       = Color(0xFFB71C1C);
-const _dangerDark   = Color(0xFFEF5350);
-const _dangerLight  = Color(0xFFFFEBEE);
+// Dark semantic
+const _dangerD  = Color(0xFFFF453A);
+const _warningD = Color(0xFFFF9F0A);
+const _successD = Color(0xFF32D74B);
+const _infoD    = Color(0xFF0A84FF);
 
-const _warning      = Color(0xFF7A4800);
-const _warningDark  = Color(0xFFFFB300);
-const _warningLight = Color(0xFFFFF3E0);
+// Relation colors — muted, Apple-style
+const _relColors = {
+  'Family':    [Color(0xFF007AFF), Color(0xFF0A84FF)],
+  'Parent':    [Color(0xFF5856D6), Color(0xFF5E5CE6)],
+  'Sibling':   [Color(0xFF34C759), Color(0xFF32D74B)],
+  'Spouse':    [Color(0xFFFF3B30), Color(0xFFFF453A)],
+  'Friend':    [Color(0xFFFF9500), Color(0xFFFF9F0A)],
+  'Doctor':    [Color(0xFF00C7BE), Color(0xFF63E6E2)],
+  'Caretaker': [Color(0xFFAF52DE), Color(0xFFBF5AF2)],
+  'Other':     [Color(0xFF8E8E93), Color(0xFFAEAEB2)],
+};
 
-const _success      = Color(0xFF1B7340);
-const _successDark  = Color(0xFF27AE60);
-const _successLight = Color(0xFFE6F4EC);
+// Light surfaces
+const _lBg       = Color(0xFFF2F2F7);   // iOS grouped background
+const _lSurface  = Color(0xFFFFFFFF);
+const _lSurface2 = Color(0xFFF2F2F7);
+const _lBorder   = Color(0xFFE5E5EA);
+const _lSep      = Color(0xFFC6C6C8);
+const _lText     = Color(0xFF000000);
+const _lTextSub  = Color(0xFF3C3C43);
+const _lTextMuted = Color(0xFF8E8E93);
 
-const _info         = Color(0xFF0D47A1);
-const _infoDark     = Color(0xFF42A5F5);
+// Dark surfaces
+const _dBg       = Color(0xFF000000);
+const _dSurface  = Color(0xFF1C1C1E);
+const _dSurface2 = Color(0xFF2C2C2E);
+const _dBorder   = Color(0xFF38383A);
+const _dSep      = Color(0xFF48484A);
+const _dText     = Color(0xFFFFFFFF);
+const _dTextSub  = Color(0xFFAEAEB2);
+const _dTextMuted = Color(0xFF636366);
 
-// Relation accent colors (all WCAG AA)
-const _relFamily    = Color(0xFF0D47A1); // info/blue
-const _relFamilyD   = Color(0xFF42A5F5);
-const _relParent    = Color(0xFF006064); // teal
-const _relParentD   = Color(0xFF4DD0E1);
-const _relSibling   = Color(0xFF1B7340); // success/green
-const _relSiblingD  = Color(0xFF27AE60);
-const _relSpouse    = Color(0xFFB71C1C); // danger/red
-const _relSpouseD   = Color(0xFFEF5350);
-const _relFriend    = Color(0xFF7A4800); // warning/amber
-const _relFriendD   = Color(0xFFFFB300);
-const _relDoctor    = Color(0xFF004D40); // deep teal
-const _relDoctorD   = Color(0xFF26A69A);
-const _relCaretaker = Color(0xFF4A148C); // purple
-const _relCaretakerD = Color(0xFFCE93D8);
-const _relOther     = Color(0xFF374151); // neutral
-const _relOtherD    = Color(0xFF9CA3AF);
-
-// Neutral surfaces
-const _lBg          = Color(0xFFF5F7FA);
-const _lSurface     = Color(0xFFFFFFFF);
-const _lSurface2    = Color(0xFFF0F4F8);
-const _lBorder      = Color(0xFFCDD5DF);
-const _lBorderSub   = Color(0xFFE4E9F0);
-const _lText        = Color(0xFF111827);
-const _lTextSub     = Color(0xFF374151);
-const _lTextMuted   = Color(0xFF6B7280);
-
-const _dBg          = Color(0xFF0D1117);
-const _dSurface     = Color(0xFF161B22);
-const _dSurface2    = Color(0xFF21262D);
-const _dBorder      = Color(0xFF30363D);
-const _dBorderSub   = Color(0xFF21262D);
-const _dText        = Color(0xFFE6EDF3);
-const _dTextSub     = Color(0xFFB0BEC5);
-const _dTextMuted   = Color(0xFF8B949E);
-
-// Spacing
+// Spacing (8pt grid)
+const _sp2  = 2.0;
 const _sp4  = 4.0;
+const _sp6  = 6.0;
 const _sp8  = 8.0;
 const _sp12 = 12.0;
+const _sp14 = 14.0;
 const _sp16 = 16.0;
 const _sp20 = 20.0;
 const _sp24 = 24.0;
+const _sp32 = 32.0;
 const _sp48 = 48.0;
 
 // ── Type helpers ──────────────────────────────────────────────────────
-TextStyle _display(double size, Color c) => TextStyle(
-    fontFamily: _fontFamily, fontSize: size, fontWeight: FontWeight.w700,
-    color: c, height: 1.2, letterSpacing: -0.5);
+TextStyle _largeTitle(Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 34, fontWeight: FontWeight.w700,
+    color: c, height: 1.2, letterSpacing: 0.37);
 
-TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
-    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
-        color: c, height: 1.3, letterSpacing: -0.2);
+TextStyle _title1(Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 28, fontWeight: FontWeight.w700,
+    color: c, height: 1.2, letterSpacing: 0.34);
 
-TextStyle _body(double size, Color c, {FontWeight w = FontWeight.w400}) =>
-    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
-        color: c, height: 1.6);
+TextStyle _title2(Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 22, fontWeight: FontWeight.w600,
+    color: c, height: 1.3, letterSpacing: 0.35);
 
-TextStyle _label(double size, Color c, {FontWeight w = FontWeight.w500}) =>
-    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
-        color: c, height: 1.4, letterSpacing: 0.1);
+TextStyle _title3(Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 20, fontWeight: FontWeight.w600,
+    color: c, height: 1.3, letterSpacing: 0.38);
 
-// ── Relation → UX4G color mapping ────────────────────────────────────
-const _relationAccents = {
-  'Family':    [_relFamily,    _relFamilyD],
-  'Parent':    [_relParent,    _relParentD],
-  'Sibling':   [_relSibling,   _relSiblingD],
-  'Spouse':    [_relSpouse,    _relSpouseD],
-  'Friend':    [_relFriend,    _relFriendD],
-  'Doctor':    [_relDoctor,    _relDoctorD],
-  'Caretaker': [_relCaretaker, _relCaretakerD],
-  'Other':     [_relOther,     _relOtherD],
-};
+TextStyle _headline(Color c) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.w600,
+    color: c, height: 1.3, letterSpacing: -0.41);
 
+TextStyle _body(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 17, fontWeight: w,
+    color: c, height: 1.5, letterSpacing: -0.41);
+
+TextStyle _callout(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 16, fontWeight: w,
+    color: c, height: 1.5, letterSpacing: -0.32);
+
+TextStyle _subhead(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 15, fontWeight: w,
+    color: c, height: 1.5, letterSpacing: -0.23);
+
+TextStyle _footnote(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 13, fontWeight: w,
+    color: c, height: 1.4, letterSpacing: -0.08);
+
+TextStyle _caption(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
+    fontFamily: _fontFamily, fontSize: 12, fontWeight: w,
+    color: c, height: 1.3, letterSpacing: 0.0);
+
+// ── Relation helpers ──────────────────────────────────────────────────
 Color _accentFor(String r, bool dark) {
-  final pair = _relationAccents[r] ?? [_relOther, _relOtherD];
+  final pair = _relColors[r] ?? _relColors['Other']!;
   return dark ? pair[1] : pair[0];
 }
 
@@ -164,9 +166,9 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
   void initState() {
     super.initState();
     _entryCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 400));
+        duration: const Duration(milliseconds: 360));
     _entryFade  = CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut);
-    _entrySlide = Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero)
+    _entrySlide = Tween<Offset>(begin: const Offset(0, 0.015), end: Offset.zero)
         .animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
     _entryCtrl.forward();
   }
@@ -187,75 +189,79 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
   // ════════════════════════════════════════════════════════════════════
   //  MOBILE
   // ════════════════════════════════════════════════════════════════════
-  Widget _buildMobile(BuildContext ctx, List<EmergencyContact> contacts,
-      bool isDark) {
+  Widget _buildMobile(BuildContext ctx, List<EmergencyContact> contacts, bool isDark) {
     final l          = AppLocalizations.of(ctx);
     final hasPrimary = contacts.any((c) => c.isPrimary);
     final bg         = isDark ? _dBg : _lBg;
 
     return Scaffold(
       backgroundColor: bg,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: FadeTransition(
           opacity: _entryFade,
           child: Column(children: [
-            // Nav bar
-            _MobileNavBar(
+            _AppleNavBar(
               isDark: isDark,
               title: l.t('sos_setup_title'),
-              subtitle: l.t('sos_setup_subtitle'),
               onBack: () => Navigator.pop(ctx),
-              trailing: _ContactCountBadge(
-                  count: contacts.length,
-                  hasPrimary: hasPrimary,
-                  isDark: isDark),
+              trailing: contacts.isNotEmpty
+                  ? _PillBadge(
+                  label: '${contacts.length}/5',
+                  color: hasPrimary
+                      ? (isDark ? _successD : _success)
+                      : (isDark ? _warningD : _warning),
+                  isDark: isDark)
+                  : null,
             ),
 
             Expanded(child: SlideTransition(
               position: _entrySlide,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                    _sp16, _sp12, _sp16, _sp48),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(_sp16, _sp8, _sp16, _sp48),
                 physics: const BouncingScrollPhysics(),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _CapabilitiesCard(isDark: isDark),
-                      const SizedBox(height: _sp8),
+                children: [
+                  // Header description
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(_sp4, _sp8, _sp4, _sp20),
+                    child: Text(l.t('sos_setup_subtitle'),
+                        style: _subhead(isDark ? _dTextMuted : _lTextMuted)),
+                  ),
 
-                      if (PlatformHelper.supportsShake) ...[
-                        _ShakeInfoCard(isDark: isDark),
-                        const SizedBox(height: _sp8),
-                      ],
+                  _CapabilitiesCard(isDark: isDark),
+                  const SizedBox(height: _sp12),
 
-                      // Section header
-                      _GroupedSectionHeader(
-                        title: contacts.isEmpty
-                            ? l.t('sos_no_contacts_yet')
-                            : l.t('sos_setup_title'),
-                        trailing: (!hasPrimary && contacts.isNotEmpty)
-                            ? _WarningBadge(
-                            label: l.t('sos_no_primary'), isDark: isDark)
-                            : null,
-                        isDark: isDark,
-                      ),
+                  if (PlatformHelper.supportsShake) ...[
+                    _ShakeInfoCard(isDark: isDark),
+                    const SizedBox(height: _sp12),
+                  ],
 
-                      if (contacts.isEmpty)
-                        _EmptyContactsCard(isDark: isDark),
+                  // Section header
+                  _SectionHeader(
+                    title: contacts.isEmpty
+                        ? l.t('sos_no_contacts_yet')
+                        : 'CONTACTS',
+                    trailing: (!hasPrimary && contacts.isNotEmpty)
+                        ? _InlineWarning(label: l.t('sos_no_primary'), isDark: isDark)
+                        : null,
+                    isDark: isDark,
+                  ),
 
-                      if (contacts.isNotEmpty)
-                        _ContactList(
-                          contacts: contacts, isDark: isDark,
-                          onDelete:     (i) => _confirmDelete(i),
-                          onSetPrimary: (i) => _setPrimary(i),
-                          onEdit:       (c, i) => _openForm(existing: c, index: i),
-                        ),
+                  if (contacts.isEmpty)
+                    _EmptyState(isDark: isDark)
+                  else
+                    _ContactList(
+                      contacts: contacts, isDark: isDark,
+                      onDelete:     (i) => _confirmDelete(i),
+                      onSetPrimary: (i) => _setPrimary(i),
+                      onEdit:       (c, i) => _openForm(existing: c, index: i),
+                    ),
 
-                      const SizedBox(height: _sp8),
-
-                      if (contacts.length < 5)
-                        _AddContactRow(isDark: isDark, onTap: () => _openForm()),
-                    ]),
+                  if (contacts.length < 5) ...[
+                    const SizedBox(height: _sp8),
+                    _AddButton(isDark: isDark, onTap: () => _openForm()),
+                  ],
+                ],
               ),
             )),
           ]),
@@ -293,32 +299,29 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
     );
   }
 
-  Widget _webDesktopLayout(BuildContext ctx, List<EmergencyContact> contacts,
-      bool isDark) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    SizedBox(width: 320,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  Widget _webDesktopLayout(BuildContext ctx, List<EmergencyContact> contacts, bool isDark) =>
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(width: 300, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _WebPageHeader(isDark: isDark, onBack: () => Navigator.pop(ctx)),
           const SizedBox(height: _sp24),
           _CapabilitiesCard(isDark: isDark),
           const SizedBox(height: _sp12),
           if (PlatformHelper.supportsShake) ...[
             _ShakeInfoCard(isDark: isDark),
-            const SizedBox(height: _sp12),
           ],
         ])),
-    const SizedBox(width: 48),
-    Expanded(child: _WebContactsPanel(
-      contacts: contacts, isDark: isDark,
-      onAdd:        () => _openForm(),
-      onDelete:     (i) => _confirmDelete(i),
-      onSetPrimary: (i) => _setPrimary(i),
-      onEdit:       (c, i) => _openForm(existing: c, index: i),
-    )),
-  ]);
+        const SizedBox(width: 48),
+        Expanded(child: _WebContactsPanel(
+          contacts: contacts, isDark: isDark,
+          onAdd:        () => _openForm(),
+          onDelete:     (i) => _confirmDelete(i),
+          onSetPrimary: (i) => _setPrimary(i),
+          onEdit:       (c, i) => _openForm(existing: c, index: i),
+        )),
+      ]);
 
-  Widget _webTabletLayout(BuildContext ctx, List<EmergencyContact> contacts,
-      bool isDark) => Column(crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+  Widget _webTabletLayout(BuildContext ctx, List<EmergencyContact> contacts, bool isDark) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _WebPageHeader(isDark: isDark, onBack: () => Navigator.pop(ctx)),
         const SizedBox(height: _sp24),
         _CapabilitiesCard(isDark: isDark),
@@ -339,188 +342,251 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
   // ── Actions ───────────────────────────────────────────────────────
   void _confirmDelete(int index) {
     final l = AppLocalizations.of(context);
-    showDialog(context: context,
-        builder: (_) => _UX4GAlertDialog(
-          title: l.t('sos_remove_title'),
-          message: l.t('sos_remove_body'),
-          destructiveLabel: l.t('sos_remove_btn'),
-          onDestructive: () async {
-            await _service.deleteContact(index);
-            if (mounted) setState(() {});
-          },
-        ));
+    showCupertinoStyleDialog(
+      context: context,
+      isDark: Theme.of(context).brightness == Brightness.dark,
+      title: l.t('sos_remove_title'),
+      message: l.t('sos_remove_body'),
+      destructiveLabel: l.t('sos_remove_btn'),
+      cancelLabel: l.t('sos_cancel'),
+      onDestructive: () async {
+        await _service.deleteContact(index);
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   void _setPrimary(int index) async {
+    HapticFeedback.selectionClick();
     await _service.setPrimary(index);
     if (mounted) setState(() {});
   }
 
   void _openForm({EmergencyContact? existing, int? index}) {
     final l = AppLocalizations.of(context);
-    showDialog(context: context,
-        builder: (_) => _ContactFormDialog(
-          existing: existing,
-          isDark: Theme.of(context).brightness == Brightness.dark,
-          onSave: (contact) async {
-            try {
-              index != null
-                  ? await _service.updateContact(index, contact)
-                  : await _service.addContact(contact);
-              if (mounted) setState(() {});
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l.t('sos_generic_error'),
-                        style: _body(13, Colors.white, w: FontWeight.w500)),
-                    backgroundColor: _danger,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8))));
-              }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.40),
+      builder: (_) => _ContactFormSheet(
+        existing: existing,
+        isDark: Theme.of(context).brightness == Brightness.dark,
+        onSave: (contact) async {
+          try {
+            index != null
+                ? await _service.updateContact(index, contact)
+                : await _service.addContact(contact);
+            if (mounted) setState(() {});
+          } catch (e) {
+            if (mounted) {
+              _showToast(l.t('sos_generic_error'), ok: false);
             }
-          },
-        ));
+          }
+        },
+      ),
+    );
+  }
+
+  void _showToast(String msg, {required bool ok}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Row(children: [
+          Icon(ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+              color: Colors.white, size: 16),
+          const SizedBox(width: _sp8),
+          Expanded(child: Text(msg,
+              style: _subhead(Colors.white, w: FontWeight.w500))),
+        ]),
+        backgroundColor: ok
+            ? (Theme.of(context).brightness == Brightness.dark ? _successD : _success)
+            : (Theme.of(context).brightness == Brightness.dark ? _dangerD  : _danger),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(_sp16),
+        padding: const EdgeInsets.symmetric(horizontal: _sp16, vertical: _sp12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3)));
   }
 }
 
+// ── Cupertino-style dialog ────────────────────────────────────────────
+void showCupertinoStyleDialog({
+  required BuildContext context,
+  required bool isDark,
+  required String title,
+  required String message,
+  required String destructiveLabel,
+  required String cancelLabel,
+  required VoidCallback onDestructive,
+}) {
+  final bg     = isDark ? _dSurface : _lSurface;
+  final border = isDark ? _dBorder  : _lBorder;
+  final sep    = isDark ? _dSep     : _lSep;
+  final textClr = isDark ? _dText   : _lText;
+  final subClr  = isDark ? _dTextSub : _lTextSub;
+
+  showDialog(
+    context: context,
+    barrierColor: Colors.black.withOpacity(0.35),
+    builder: (_) => Dialog(
+      backgroundColor: bg,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: border, width: 0.5)),
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 270),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(_sp20, _sp20, _sp20, _sp16),
+            child: Column(children: [
+              Text(title, textAlign: TextAlign.center,
+                  style: _headline(textClr)),
+              const SizedBox(height: _sp6),
+              Text(message, textAlign: TextAlign.center,
+                  style: _footnote(subClr)),
+            ]),
+          ),
+          Divider(height: 0.5, thickness: 0.5, color: sep),
+          IntrinsicHeight(child: Row(children: [
+            Expanded(child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(border: Border(
+                    right: BorderSide(color: sep, width: 0.5))),
+                alignment: Alignment.center,
+                child: Text(cancelLabel,
+                    style: _callout(isDark ? _infoD : _info)),
+              ),
+            )),
+            Expanded(child: GestureDetector(
+              onTap: () { Navigator.pop(context); onDestructive(); },
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                height: 44,
+                child: Center(child: Text(destructiveLabel,
+                    style: _callout(isDark ? _dangerD : _danger,
+                        w: FontWeight.w600))),
+              ),
+            )),
+          ])),
+        ]),
+      ),
+    ),
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════
-//  MOBILE NAV BAR
+//  APPLE NAV BAR
 // ══════════════════════════════════════════════════════════════════════
-class _MobileNavBar extends StatelessWidget {
+class _AppleNavBar extends StatelessWidget {
   final bool isDark;
-  final String title, subtitle;
+  final String title;
   final VoidCallback onBack;
   final Widget? trailing;
-  const _MobileNavBar({required this.isDark, required this.title,
-    required this.subtitle, required this.onBack, this.trailing});
+  const _AppleNavBar({required this.isDark, required this.title,
+    required this.onBack, this.trailing});
 
   @override
   Widget build(BuildContext context) {
-    final l       = AppLocalizations.of(context);
-    final bg      = isDark ? _dSurface : _lSurface;
-    final textClr = isDark ? _dText    : _lText;
-    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final bg      = isDark ? _dSurface.withOpacity(0.94) : Colors.white.withOpacity(0.94);
     final border  = isDark ? _dBorder  : _lBorder;
-    final navBlue = isDark ? _infoDark   : _info;
+    final textClr = isDark ? _dText    : _lText;
+    final accent  = isDark ? _infoD    : _info;
+    final l       = AppLocalizations.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
+    return ClipRect(
+      child: Container(
+        decoration: BoxDecoration(
           color: bg,
-          border: Border(bottom: BorderSide(color: border, width: 1.0))),
-      padding: const EdgeInsets.fromLTRB(_sp16, _sp12, _sp16, _sp12),
-      child: Row(children: [
-        Semantics(
-          label: l.t('common_back'), button: true,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: onBack,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: _sp8, vertical: _sp8),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.chevron_left_rounded, color: navBlue, size: 22),
-                Text(l.t('common_back'),
-                    style: _body(15, navBlue, w: FontWeight.w500)),
-              ]),
-            ),
-          ),
+          border: Border(bottom: BorderSide(color: border, width: 0.5)),
         ),
-        const Spacer(),
-        Column(children: [
-          Text(title, style: _heading(15, textClr)),
-          Text(subtitle, style: _label(11, subClr, w: FontWeight.w400)),
+        padding: const EdgeInsets.symmetric(horizontal: _sp8, vertical: _sp8),
+        child: Row(children: [
+          // Back button
+          _TapTarget(
+            onTap: onBack,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.chevron_left_rounded, color: accent, size: 28),
+              Text(l.t('common_back'),
+                  style: _callout(accent, w: FontWeight.w400)),
+            ]),
+          ),
+          Expanded(child: Center(
+            child: Text(title, style: _headline(textClr)),
+          )),
+          if (trailing != null)
+            Padding(padding: const EdgeInsets.only(right: _sp8), child: trailing!)
+          else
+            const SizedBox(width: 64),
         ]),
-        const Spacer(),
-        if (trailing != null) trailing!
-        else const SizedBox(width: 48),
-      ]),
+      ),
     );
   }
 }
 
-// ── Contact count badge ───────────────────────────────────────────────
-class _ContactCountBadge extends StatelessWidget {
-  final int count;
-  final bool hasPrimary, isDark;
-  const _ContactCountBadge({required this.count, required this.hasPrimary,
-    required this.isDark});
+// ── Pill badge ────────────────────────────────────────────────────────
+class _PillBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool isDark;
+  const _PillBadge({required this.label, required this.color, required this.isDark});
 
   @override
-  Widget build(BuildContext context) {
-    final color   = hasPrimary
-        ? (isDark ? _successDark : _success)
-        : (isDark ? _warningDark : _warning);
-    final bgColor = hasPrimary
-        ? (isDark ? _successDark.withOpacity(0.12) : _successLight)
-        : (isDark ? _warningDark.withOpacity(0.12) : _warningLight);
-    return Container(
-        padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp4),
-        decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: color.withOpacity(0.30), width: 1)),
-        child: Text(
-            AppLocalizations.of(context)
-                .t('sos_contacts_progress')
-                .replaceAll('{n}', '$count'),
-            style: _label(11, color, w: FontWeight.w700)));
-  }
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: _sp10, vertical: _sp4),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.25), width: 0.5)),
+    child: Text(label, style: _caption(color, w: FontWeight.w700)),
+  );
 }
 
-// ── Grouped section header ────────────────────────────────────────────
-class _GroupedSectionHeader extends StatelessWidget {
+// Helper
+const _sp10 = 10.0;
+
+// ── Section header ────────────────────────────────────────────────────
+class _SectionHeader extends StatelessWidget {
   final String title;
   final Widget? trailing;
   final bool isDark;
-  const _GroupedSectionHeader({required this.title, this.trailing,
-    required this.isDark});
+  const _SectionHeader({required this.title, this.trailing, required this.isDark});
 
   @override
-  Widget build(BuildContext context) => Semantics(
-      header: true,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, _sp20, 0, _sp8),
-        child: Row(children: [
-          Text(title.toUpperCase(),
-              style: _label(10.5, isDark ? _dTextMuted : _lTextMuted,
-                  w: FontWeight.w700)),
-          const Spacer(),
-          if (trailing != null) trailing!,
-        ]),
-      ));
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(_sp4, _sp16, _sp4, _sp8),
+    child: Row(children: [
+      Text(title,
+          style: _caption(isDark ? _dTextMuted : _lTextMuted, w: FontWeight.w600)),
+      if (trailing != null) ...[const Spacer(), trailing!],
+    ]),
+  );
 }
 
-// ── Warning badge ─────────────────────────────────────────────────────
-class _WarningBadge extends StatelessWidget {
+// ── Inline warning ────────────────────────────────────────────────────
+class _InlineWarning extends StatelessWidget {
   final String label;
   final bool isDark;
-  const _WarningBadge({required this.label, required this.isDark});
+  const _InlineWarning({required this.label, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final color = isDark ? _warningDark : _warning;
-    return Container(
-        padding: const EdgeInsets.symmetric(horizontal: _sp8, vertical: _sp4),
-        decoration: BoxDecoration(
-            color: isDark
-                ? _warningDark.withOpacity(0.12)
-                : _warningLight,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-                color: color.withOpacity(0.30), width: 1)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.warning_amber_rounded, color: color, size: 12),
-          const SizedBox(width: _sp4),
-          Text(label, style: _label(10.5, color, w: FontWeight.w700)),
-        ]));
+    final color = isDark ? _warningD : _warning;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(Icons.info_outline_rounded, color: color, size: 11),
+      const SizedBox(width: 3),
+      Text(label, style: _caption(color, w: FontWeight.w600)),
+    ]);
   }
 }
 
 // ── Empty state ───────────────────────────────────────────────────────
-class _EmptyContactsCard extends StatelessWidget {
+class _EmptyState extends StatelessWidget {
   final bool isDark;
-  const _EmptyContactsCard({required this.isDark});
+  const _EmptyState({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -529,34 +595,38 @@ class _EmptyContactsCard extends StatelessWidget {
     final border = isDark ? _dBorder   : _lBorder;
     final textClr = isDark ? _dText    : _lText;
     final subClr  = isDark ? _dTextSub : _lTextSub;
-    final accent  = isDark ? _dangerDark : _danger;
+    final accent  = isDark ? _dangerD  : _danger;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: _sp24),
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: _sp24),
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border, width: 1)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border, width: 0.5),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.20 : 0.04),
+                blurRadius: 20, offset: const Offset(0, 4)),
+          ]),
       child: Column(children: [
         Container(
-            width: 56, height: 56,
+            width: 60, height: 60,
             decoration: BoxDecoration(
-                color: accent.withOpacity(0.10),
+                color: accent.withOpacity(0.08),
                 shape: BoxShape.circle),
             child: Icon(Icons.person_add_rounded, color: accent, size: 26)),
         const SizedBox(height: _sp16),
         Text(l.t('sos_add_first'),
-            style: _heading(16, textClr)),
-        const SizedBox(height: _sp8),
+            style: _headline(textClr)),
+        const SizedBox(height: _sp6),
         Text(l.t('sos_add_first_body'), textAlign: TextAlign.center,
-            style: _body(13, subClr)),
+            style: _footnote(subClr)),
       ]),
     );
   }
 }
 
-// ── Contact list ──────────────────────────────────────────────────────
+// ── Contact list (grouped, iOS-style) ────────────────────────────────
 class _ContactList extends StatelessWidget {
   final List<EmergencyContact> contacts;
   final bool isDark;
@@ -569,32 +639,37 @@ class _ContactList extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg     = isDark ? _dSurface  : _lSurface;
     final border = isDark ? _dBorder   : _lBorder;
-    final sep    = isDark ? _dBorderSub : _lBorderSub;
+    final sep    = isDark ? _dSep      : _lBorder;
 
     return Container(
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border, width: 1)),
-      child: Column(children: contacts.asMap().entries.map((e) {
-        final i    = e.key;
-        final c    = e.value;
-        final last = i == contacts.length - 1;
-        return Column(children: [
-          _ContactCell(
-              contact: c, index: i, isDark: isDark,
-              onDelete:     () => onDelete(i),
-              onSetPrimary: () => onSetPrimary(i),
-              onEdit:       () => onEdit(c, i)),
-          if (!last)
-            Divider(indent: 74, height: 1, thickness: 1, color: sep),
-        ]);
-      }).toList()),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border, width: 0.5),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.20 : 0.04),
+                blurRadius: 20, offset: const Offset(0, 4)),
+          ]),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(children: contacts.asMap().entries.map((e) {
+          final i = e.key; final c = e.value;
+          return Column(children: [
+            _ContactCell(contact: c, index: i, isDark: isDark,
+                onDelete:     () => onDelete(i),
+                onSetPrimary: () => onSetPrimary(i),
+                onEdit:       () => onEdit(c, i)),
+            if (i < contacts.length - 1)
+              Divider(indent: 72, endIndent: 0, height: 0.5,
+                  thickness: 0.5, color: sep),
+          ]);
+        }).toList()),
+      ),
     );
   }
 }
 
-class _ContactCell extends StatelessWidget {
+class _ContactCell extends StatefulWidget {
   final EmergencyContact contact;
   final int index;
   final bool isDark;
@@ -602,164 +677,286 @@ class _ContactCell extends StatelessWidget {
   const _ContactCell({required this.contact, required this.index,
     required this.isDark, required this.onDelete,
     required this.onSetPrimary, required this.onEdit});
+  @override
+  State<_ContactCell> createState() => _ContactCellState();
+}
+
+class _ContactCellState extends State<_ContactCell> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
-    final c      = contact;
+    final c      = widget.contact;
+    final isDark = widget.isDark;
     final accent = _accentFor(c.relation, isDark);
     final textClr = isDark ? _dText    : _lText;
     final subClr  = isDark ? _dTextSub : _lTextSub;
     final mutedClr = isDark ? _dTextMuted : _lTextMuted;
+    final pressedBg = isDark ? _dSurface2 : const Color(0xFFF5F5F7);
     final initial = c.name.isNotEmpty ? c.name[0].toUpperCase() : '?';
 
-    return Semantics(
-      label: '${c.name}, ${c.relation}, ${c.phone}',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: _sp16, vertical: _sp12),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        color: _pressed ? pressedBg : Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: _sp16, vertical: _sp12),
         child: Row(children: [
-          // Avatar with relation-color + primary star
+          // Avatar
           Stack(children: [
             Container(
-                width: 48, height: 48,
-                decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
-                    shape: BoxShape.circle),
-                child: Center(child: Text(initial,
-                    style: _heading(20, accent)))),
+              width: 46, height: 46,
+              decoration: BoxDecoration(
+                  color: accent.withOpacity(0.12),
+                  shape: BoxShape.circle),
+              child: Center(child: Text(initial,
+                  style: TextStyle(fontFamily: _fontFamily, fontSize: 18,
+                      fontWeight: FontWeight.w600, color: accent))),
+            ),
             if (c.isPrimary)
               Positioned(right: 0, bottom: 0, child: Container(
-                  width: 16, height: 16,
+                  width: 15, height: 15,
                   decoration: BoxDecoration(
-                      color: isDark ? _dangerDark : _danger,
+                      color: isDark ? _dangerD : _danger,
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: isDark ? _dSurface : _lSurface,
-                          width: 1.5)),
+                          color: isDark ? _dSurface : _lSurface, width: 1.5)),
                   child: const Icon(Icons.star_rounded,
-                      color: Colors.white, size: 9))),
+                      color: Colors.white, size: 8))),
           ]),
-          const SizedBox(width: _sp16),
+          const SizedBox(width: _sp14),
           Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Flexible(child: Text(c.name,
-                      style: _heading(15, textClr),
-                      overflow: TextOverflow.ellipsis)),
-                  const SizedBox(width: _sp8),
-                  // Relation badge — semantic colors
-                  Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: _sp8, vertical: _sp4),
-                      decoration: BoxDecoration(
-                          color: accent.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                              color: accent.withOpacity(0.25), width: 1)),
-                      child: Text(_relationLabel(l, c.relation),
-                          style: _label(10, accent, w: FontWeight.w700))),
-                ]),
-                const SizedBox(height: _sp4),
-                Text(c.phone, style: _body(13, subClr)),
-              ])),
+              crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Flexible(child: Text(c.name,
+                  style: _subhead(textClr, w: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis)),
+              const SizedBox(width: _sp6),
+              _MicroChip(label: _relationLabel(l, c.relation),
+                  color: accent, isDark: isDark),
+            ]),
+            const SizedBox(height: _sp2),
+            Text(c.phone, style: _footnote(subClr)),
+          ])),
 
-          // Context menu — 3-dot
-          PopupMenuButton<String>(
-            tooltip: l.t('isl_options_title'),
-            color: isDark ? _dSurface2 : _lSurface,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                    color: isDark ? _dBorder : _lBorder, width: 1)),
-            elevation: 8,
-            offset: const Offset(0, 8),
-            icon: Icon(Icons.more_horiz_rounded, color: mutedClr, size: 20),
-            onSelected: (v) {
-              if (v == 'edit')    onEdit();
-              if (v == 'primary') onSetPrimary();
-              if (v == 'delete')  onDelete();
-            },
-            itemBuilder: (_) => [
-              if (!c.isPrimary)
-                _popupItem(context, 'primary',
-                    l.t('sos_set_primary'), Icons.star_rounded,
-                    isDark ? _infoDark : _info, isDark),
-              _popupItem(context, 'edit',
-                  l.t('sos_edit_btn'), Icons.edit_rounded,
-                  isDark ? _dText : _lText, isDark),
-              _popupItem(context, 'delete',
-                  l.t('sos_remove_menu'), Icons.delete_rounded,
-                  isDark ? _dangerDark : _danger, isDark),
-            ],
+          // Action menu
+          _TapTarget(
+            onTap: () => _showActionSheet(context, l, isDark),
+            child: Icon(Icons.more_horiz, color: mutedClr, size: 20),
           ),
         ]),
       ),
     );
   }
 
-  PopupMenuItem<String> _popupItem(BuildContext ctx, String value,
-      String lbl, IconData icon, Color color, bool isDark) =>
-      PopupMenuItem(value: value, height: 44,
-          child: Row(children: [
-            Icon(icon, color: color, size: 16),
-            const SizedBox(width: _sp12),
-            Text(lbl, style: _body(14, color, w: FontWeight.w500)),
-          ]));
+  void _showActionSheet(BuildContext ctx, AppLocalizations l, bool isDark) {
+    final bg     = isDark ? _dSurface  : _lSurface;
+    final border = isDark ? _dBorder   : _lBorder;
+    final sep    = isDark ? _dSep      : _lSep;
+    final textClr = isDark ? _dText    : _lText;
+
+    showModalBottomSheet(
+      context: ctx,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (_) => Padding(
+        padding: EdgeInsets.fromLTRB(_sp16, 0, _sp16,
+            MediaQuery.of(ctx).padding.bottom + _sp8),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Actions card
+          Container(
+            decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: border, width: 0.5),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.12),
+                      blurRadius: 24, offset: const Offset(0, 8)),
+                ]),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              if (!widget.contact.isPrimary)
+                _SheetAction(
+                  label: l.t('sos_set_primary'),
+                  icon: Icons.star_rounded,
+                  color: isDark ? _infoD : _info,
+                  isDark: isDark,
+                  onTap: () { Navigator.pop(ctx); widget.onSetPrimary(); },
+                  showDivider: true, sep: sep,
+                ),
+              _SheetAction(
+                label: l.t('sos_edit_btn'),
+                icon: Icons.edit_rounded,
+                color: textClr,
+                isDark: isDark,
+                onTap: () { Navigator.pop(ctx); widget.onEdit(); },
+                showDivider: true, sep: sep,
+              ),
+              _SheetAction(
+                label: l.t('sos_remove_menu'),
+                icon: Icons.delete_outline_rounded,
+                color: isDark ? _dangerD : _danger,
+                isDark: isDark,
+                onTap: () { Navigator.pop(ctx); widget.onDelete(); },
+                showDivider: false, sep: sep,
+              ),
+            ]),
+          ),
+          const SizedBox(height: _sp8),
+          // Cancel
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: border, width: 0.5)),
+            child: _SheetAction(
+              label: l.t('sos_cancel'),
+              icon: null,
+              color: isDark ? _infoD : _info,
+              isDark: isDark,
+              onTap: () => Navigator.pop(ctx),
+              showDivider: false, sep: sep,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
 }
 
-// ── Add contact row ───────────────────────────────────────────────────
-class _AddContactRow extends StatefulWidget {
+// ── Sheet action row ──────────────────────────────────────────────────
+class _SheetAction extends StatefulWidget {
+  final String label;
+  final IconData? icon;
+  final Color color;
+  final bool isDark, showDivider;
+  final Color sep;
+  final VoidCallback onTap;
+  final FontWeight fontWeight;
+  const _SheetAction({required this.label, required this.icon,
+    required this.color, required this.isDark, required this.onTap,
+    required this.showDivider, required this.sep,
+    this.fontWeight = FontWeight.w400});
+  @override State<_SheetAction> createState() => _SheetActionState();
+}
+
+class _SheetActionState extends State<_SheetAction> {
+  bool _pressed = false;
+  @override
+  Widget build(BuildContext context) {
+    final pressedBg = widget.isDark ? _dSurface2 : const Color(0xFFF5F5F7);
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+        onTapCancel: () => setState(() => _pressed = false),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 80),
+          color: _pressed ? pressedBg : Colors.transparent,
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: _sp20),
+          child: Row(children: [
+            Expanded(child: Text(widget.label,
+                style: _callout(widget.color, w: widget.fontWeight),
+                textAlign: widget.icon == null ? TextAlign.center : TextAlign.start)),
+            if (widget.icon != null)
+              Icon(widget.icon, color: widget.color, size: 18),
+          ]),
+        ),
+      ),
+      if (widget.showDivider)
+        Divider(height: 0.5, thickness: 0.5,
+            indent: _sp20, color: widget.sep),
+    ]);
+  }
+}
+
+// ── Micro chip ────────────────────────────────────────────────────────
+class _MicroChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool isDark;
+  const _MicroChip({required this.label, required this.color, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: _sp6, vertical: 2),
+    decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.20), width: 0.5)),
+    child: Text(label, style: _caption(color, w: FontWeight.w600)),
+  );
+}
+
+// ── Add button ────────────────────────────────────────────────────────
+class _AddButton extends StatefulWidget {
   final bool isDark;
   final VoidCallback onTap;
-  const _AddContactRow({required this.isDark, required this.onTap});
-  @override
-  State<_AddContactRow> createState() => _AddContactRowState();
+  const _AddButton({required this.isDark, required this.onTap});
+  @override State<_AddButton> createState() => _AddButtonState();
 }
 
-class _AddContactRowState extends State<_AddContactRow> {
+class _AddButtonState extends State<_AddButton> {
   bool _pressed = false;
-
   @override
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
     final bg     = widget.isDark ? _dSurface : _lSurface;
     final border = widget.isDark ? _dBorder  : _lBorder;
-    final accent = widget.isDark ? _infoDark : _info;
+    final accent = widget.isDark ? _infoD    : _info;
+    final pressedBg = widget.isDark ? _dSurface2 : const Color(0xFFF5F5F7);
 
-    return Semantics(
-      button: true, label: l.t('sos_add_contact'),
-      child: GestureDetector(
-        onTapDown:   (_) => setState(() => _pressed = true),
-        onTapUp:     (_) { setState(() => _pressed = false); widget.onTap(); },
-        onTapCancel: ()  => setState(() => _pressed = false),
-        child: AnimatedOpacity(
-          opacity: _pressed ? 0.7 : 1.0,
-          duration: const Duration(milliseconds: 80),
-          child: Container(
-            decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: border, width: 1)),
-            padding: const EdgeInsets.symmetric(
-                horizontal: _sp16, vertical: _sp16),
-            child: Row(children: [
-              Container(
-                  width: 32, height: 32,
-                  decoration: BoxDecoration(
-                      color: accent, shape: BoxShape.circle),
-                  child: const Icon(Icons.add_rounded,
-                      color: Colors.white, size: 18)),
-              const SizedBox(width: _sp16),
-              Text(l.t('sos_add_contact'),
-                  style: _body(15, accent, w: FontWeight.w500)),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        decoration: BoxDecoration(
+            color: _pressed ? pressedBg : bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border, width: 0.5),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(widget.isDark ? 0.18 : 0.04),
+                  blurRadius: 16, offset: const Offset(0, 3)),
             ]),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: _sp16, vertical: _sp14),
+        child: Row(children: [
+          Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                  color: accent, shape: BoxShape.circle),
+              child: const Icon(Icons.add, color: Colors.white, size: 16)),
+          const SizedBox(width: _sp14),
+          Text(l.t('sos_add_contact'),
+              style: _callout(accent, w: FontWeight.w500)),
+        ]),
       ),
     );
   }
+}
+
+// ── Tap target helper ─────────────────────────────────────────────────
+class _TapTarget extends StatelessWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const _TapTarget({required this.child, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    behavior: HitTestBehavior.opaque,
+    child: Padding(
+      padding: const EdgeInsets.all(_sp8),
+      child: child,
+    ),
+  );
 }
 
 // ── Capabilities card ─────────────────────────────────────────────────
@@ -771,14 +968,12 @@ class _CapabilitiesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l        = AppLocalizations.of(context);
     final isMobile = PlatformHelper.isMobile;
-    final caps = isMobile
-        ? [
-      (_danger,  Icons.sms_rounded,           l.t('sos_cap_mobile_1_title'), l.t('sos_cap_mobile_1_desc')),
+    final caps     = isMobile ? [
+      (_danger,  Icons.message_rounded,        l.t('sos_cap_mobile_1_title'), l.t('sos_cap_mobile_1_desc')),
       (_info,    Icons.vibration_rounded,      l.t('sos_cap_mobile_2_title'), l.t('sos_cap_mobile_2_desc')),
       (_success, Icons.location_on_rounded,    l.t('sos_cap_mobile_3_title'), l.t('sos_cap_mobile_3_desc')),
       (_warning, Icons.notifications_rounded,  l.t('sos_cap_mobile_4_title'), l.t('sos_cap_mobile_4_desc')),
-    ]
-        : [
+    ] : [
       (_info,    Icons.chat_bubble_rounded,    l.t('sos_cap_web_1_title'), l.t('sos_cap_web_1_desc')),
       (_success, Icons.location_on_rounded,    l.t('sos_cap_web_2_title'), l.t('sos_cap_web_2_desc')),
       (_warning, Icons.content_copy_rounded,   l.t('sos_cap_web_3_title'), l.t('sos_cap_web_3_desc')),
@@ -789,15 +984,13 @@ class _CapabilitiesCard extends StatelessWidget {
     final border  = isDark ? _dBorder   : _lBorder;
     final textClr = isDark ? _dText     : _lText;
     final subClr  = isDark ? _dTextSub  : _lTextSub;
-    final header  = isMobile
-        ? (isDark ? _dangerDark : _danger)
-        : (isDark ? _infoDark   : _info);
+    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
 
-    Color dv(Color c) {
-      if (c == _danger)  return isDark ? _dangerDark  : _danger;
-      if (c == _info)    return isDark ? _infoDark    : _info;
-      if (c == _success) return isDark ? _successDark : _success;
-      if (c == _warning) return isDark ? _warningDark : _warning;
+    Color resolve(Color c) {
+      if (c == _danger)  return isDark ? _dangerD  : _danger;
+      if (c == _info)    return isDark ? _infoD    : _info;
+      if (c == _success) return isDark ? _successD : _success;
+      if (c == _warning) return isDark ? _warningD : _warning;
       return c;
     }
 
@@ -805,38 +998,43 @@ class _CapabilitiesCard extends StatelessWidget {
       padding: const EdgeInsets.all(_sp16),
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border, width: 1)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border, width: 0.5),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.18 : 0.04),
+                blurRadius: 16, offset: const Offset(0, 3)),
+          ]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Icon(isMobile ? Icons.smartphone_rounded : Icons.language_rounded,
-              color: header, size: 14),
-          const SizedBox(width: _sp8),
-          Text(isMobile
-              ? l.t('sos_mobile_features')
-              : l.t('sos_web_features'),
-              style: _label(11.5, header, w: FontWeight.w700)),
+          Icon(isMobile ? Icons.phone_iphone_rounded : Icons.language_rounded,
+              color: mutedClr, size: 12),
+          const SizedBox(width: _sp6),
+          Text(isMobile ? l.t('sos_mobile_features') : l.t('sos_web_features'),
+              style: _caption(mutedClr, w: FontWeight.w600)),
         ]),
         const SizedBox(height: _sp16),
         Row(children: caps.asMap().entries.map((e) {
           final i    = e.key;
-          final c    = e.value;
+          final cap  = e.value;
           final last = i == caps.length - 1;
-          final ac   = dv(c.$1);
+          final ac   = resolve(cap.$1);
           return Expanded(child: Padding(
             padding: EdgeInsets.only(right: last ? 0 : _sp8),
             child: Column(children: [
               Container(
                   width: 44, height: 44,
                   decoration: BoxDecoration(
-                      color: ac.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Icon(c.$2, color: ac, size: 20)),
+                      color: ac.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Icon(cap.$2, color: ac, size: 20)),
               const SizedBox(height: _sp8),
-              Text(c.$3, style: _label(10.5, textClr, w: FontWeight.w700),
+              Text(cap.$3,
+                  style: _caption(textClr, w: FontWeight.w600),
                   textAlign: TextAlign.center),
-              Text(c.$4, style: _body(9.5, subClr),
-                  textAlign: TextAlign.center),
+              const SizedBox(height: _sp2),
+              Text(cap.$4, style: _caption(subClr),
+                  textAlign: TextAlign.center, maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
             ]),
           ));
         }).toList()),
@@ -845,7 +1043,7 @@ class _CapabilitiesCard extends StatelessWidget {
   }
 }
 
-// ── Shake info card ───────────────────────────────────────────────────
+// ── Shake card ────────────────────────────────────────────────────────
 class _ShakeInfoCard extends StatelessWidget {
   final bool isDark;
   const _ShakeInfoCard({required this.isDark});
@@ -857,30 +1055,32 @@ class _ShakeInfoCard extends StatelessWidget {
     final border = isDark ? _dBorder   : _lBorder;
     final textClr = isDark ? _dText    : _lText;
     final subClr  = isDark ? _dTextSub : _lTextSub;
-    final accent  = isDark ? _infoDark : _info;
+    final accent  = isDark ? _infoD    : _info;
 
     return Container(
       padding: const EdgeInsets.all(_sp16),
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border, width: 1)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border, width: 0.5),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.16 : 0.04),
+                blurRadius: 14, offset: const Offset(0, 3)),
+          ]),
       child: Row(children: [
         Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-                color: accent.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(10)),
-            child: Icon(Icons.vibration_rounded, color: accent, size: 22)),
-        const SizedBox(width: _sp16),
-        Expanded(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+                color: accent.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.vibration_rounded, color: accent, size: 20)),
+        const SizedBox(width: _sp14),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l.t('sos_shake_active'),
-                  style: _label(14, textClr, w: FontWeight.w700)),
-              const SizedBox(height: _sp4),
-              Text(l.t('sos_shake_body_setup'),
-                  style: _body(12, subClr)),
+                  style: _subhead(textClr, w: FontWeight.w600)),
+              const SizedBox(height: _sp2),
+              Text(l.t('sos_shake_body_setup'), style: _footnote(subClr)),
             ])),
       ]),
     );
@@ -898,43 +1098,35 @@ class _WebPageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l       = AppLocalizations.of(context);
-    final navBlue = isDark ? _infoDark   : _info;
-    final accent  = isDark ? _dangerDark : _danger;
-    final textClr = isDark ? _dText      : _lText;
-    final subClr  = isDark ? _dTextSub   : _lTextSub;
+    final accent  = isDark ? _infoD    : _info;
+    final textClr = isDark ? _dText    : _lText;
+    final subClr  = isDark ? _dTextSub : _lTextSub;
+    final iconBg  = isDark ? _dangerD  : _danger;
 
-    return Semantics(
-      header: true,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(6),
-          onTap: onBack,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: _sp4, horizontal: _sp4),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.chevron_left_rounded, color: navBlue, size: 20),
-              Text(l.t('sos_setup_back'),
-                  style: _body(14, navBlue, w: FontWeight.w500)),
-            ]),
-          ),
-        ),
-        const SizedBox(height: _sp20),
-        Row(children: [
-          Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                  color: accent.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(12)),
-              child: Icon(Icons.contacts_rounded, color: accent, size: 24)),
-          const SizedBox(width: _sp16),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(l.t('sos_setup_title'), style: _display(22, textClr)),
-            Text(l.t('sos_setup_subtitle'), style: _body(13, subClr)),
-          ]),
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _TapTarget(
+        onTap: onBack,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.chevron_left_rounded, color: accent, size: 20),
+          Text(l.t('sos_setup_back'),
+              style: _callout(accent, w: FontWeight.w400)),
+        ]),
+      ),
+      const SizedBox(height: _sp20),
+      Row(children: [
+        Container(
+            width: 50, height: 50,
+            decoration: BoxDecoration(
+                color: iconBg.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(14)),
+            child: Icon(Icons.contacts_rounded, color: iconBg, size: 22)),
+        const SizedBox(width: _sp14),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(l.t('sos_setup_title'), style: _title2(textClr)),
+          Text(l.t('sos_setup_subtitle'), style: _footnote(subClr)),
         ]),
       ]),
-    );
+    ]);
   }
 }
 
@@ -958,25 +1150,30 @@ class _WebContactsPanel extends StatelessWidget {
       Row(children: [
         Text(contacts.isEmpty
             ? l.t('sos_no_contacts_yet')
-            : l.t('sos_contacts_count').replaceAll('{n}', '${contacts.length}'),
-            style: _label(12, subClr, w: FontWeight.w700)),
+            : 'CONTACTS',
+            style: _caption(subClr, w: FontWeight.w600)),
         const Spacer(),
         if (contacts.isNotEmpty)
-          _ContactCountBadge(count: contacts.length,
-              hasPrimary: hasPrimary, isDark: isDark),
+          _PillBadge(
+              label: '${contacts.length}/5',
+              color: hasPrimary
+                  ? (isDark ? _successD : _success)
+                  : (isDark ? _warningD : _warning),
+              isDark: isDark),
       ]),
       const SizedBox(height: _sp12),
 
       if (contacts.isEmpty)
-        _EmptyContactsCard(isDark: isDark)
+        _EmptyState(isDark: isDark)
       else
         _ContactList(
             contacts: contacts, isDark: isDark,
             onDelete: onDelete, onSetPrimary: onSetPrimary, onEdit: onEdit),
 
-      const SizedBox(height: _sp8),
-      if (contacts.length < 5)
+      if (contacts.length < 5) ...[
+        const SizedBox(height: _sp8),
         _WebAddButton(isDark: isDark, onTap: onAdd),
+      ],
     ]);
   }
 }
@@ -985,8 +1182,7 @@ class _WebAddButton extends StatefulWidget {
   final bool isDark;
   final VoidCallback onTap;
   const _WebAddButton({required this.isDark, required this.onTap});
-  @override
-  State<_WebAddButton> createState() => _WebAddButtonState();
+  @override State<_WebAddButton> createState() => _WebAddButtonState();
 }
 
 class _WebAddButtonState extends State<_WebAddButton> {
@@ -994,34 +1190,31 @@ class _WebAddButtonState extends State<_WebAddButton> {
   @override
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
-    final accent = widget.isDark ? _infoDark : _info;
-    final border = widget.isDark ? _dBorder  : _lBorder;
+    final accent = widget.isDark ? _infoD : _info;
+    final border = widget.isDark ? _dBorder : _lBorder;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit:  (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
-      child: Semantics(
-        button: true, label: l.t('sos_add_contact'),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: _sp16),
-            decoration: BoxDecoration(
-                color: _hovered ? accent.withOpacity(0.06) : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: _hovered ? accent.withOpacity(0.35) : border,
-                    width: _hovered ? 1.5 : 1.0)),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Icon(Icons.add_rounded, color: accent, size: 18),
-              const SizedBox(width: _sp8),
-              Text(l.t('sos_add_contact'),
-                  style: _body(14, accent, w: FontWeight.w500)),
-            ]),
-          ),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: _sp14),
+          decoration: BoxDecoration(
+              color: _hovered ? accent.withOpacity(0.05) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: _hovered ? accent.withOpacity(0.30) : border,
+                  width: _hovered ? 1.0 : 0.5)),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(Icons.add_rounded, color: accent, size: 16),
+            const SizedBox(width: _sp6),
+            Text(l.t('sos_add_contact'),
+                style: _subhead(accent, w: FontWeight.w500)),
+          ]),
         ),
       ),
     );
@@ -1029,22 +1222,22 @@ class _WebAddButtonState extends State<_WebAddButton> {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  CONTACT FORM DIALOG
-//  UX4G: clear field labels, danger for errors, relation chips with
-//        semantic colors, accessible cancel/confirm pair
+//  CONTACT FORM — Bottom Sheet (fixes keyboard overflow)
+//  Key: uses Padding + MediaQuery.viewInsets for keyboard avoidance
+//  All content scrollable so nothing overflows
 // ══════════════════════════════════════════════════════════════════════
-class _ContactFormDialog extends StatefulWidget {
+class _ContactFormSheet extends StatefulWidget {
   final EmergencyContact? existing;
   final bool isDark;
   final Function(EmergencyContact) onSave;
-  const _ContactFormDialog({this.existing, required this.isDark,
-    required this.onSave});
-  @override
-  State<_ContactFormDialog> createState() => _ContactFormDialogState();
+  const _ContactFormSheet({this.existing, required this.isDark, required this.onSave});
+  @override State<_ContactFormSheet> createState() => _ContactFormSheetState();
 }
 
-class _ContactFormDialogState extends State<_ContactFormDialog> {
-  final _formKey  = GlobalKey<FormState>();
+class _ContactFormSheetState extends State<_ContactFormSheet> {
+  final _formKey   = GlobalKey<FormState>();
+  final _nameFocus = FocusNode();
+  final _phoneFocus = FocusNode();
   late final TextEditingController _nameCtrl;
   late final TextEditingController _phoneCtrl;
   String _relation = 'Family';
@@ -1064,174 +1257,209 @@ class _ContactFormDialogState extends State<_ContactFormDialog> {
   }
 
   @override
-  void dispose() { _nameCtrl.dispose(); _phoneCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _nameCtrl.dispose(); _phoneCtrl.dispose();
+    _nameFocus.dispose(); _phoneFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
     final isDark = widget.isDark;
-    final bg     = isDark ? _dSurface  : _lSurface;
-    final border = isDark ? _dBorder   : _lBorder;
-    final sep    = isDark ? _dBorderSub : _lBorderSub;
-    final textClr = isDark ? _dText    : _lText;
-    final subClr  = isDark ? _dTextSub : _lTextSub;
-    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
-    final accent  = isDark ? _infoDark : _info;
+
+    // Core colors
+    final bg      = isDark ? _dSurface  : _lSurface;
+    final handle  = isDark ? _dBorder   : const Color(0xFFD1D1D6);
+    final border  = isDark ? _dBorder   : _lBorder;
+    final sep     = isDark ? _dSep      : _lBorder;
+    final textClr = isDark ? _dText     : _lText;
+    final subClr  = isDark ? _dTextSub  : _lTextSub;
+    final accent  = isDark ? _infoD     : _info;
     final isEdit  = widget.existing != null;
 
-    return Dialog(
-      backgroundColor: bg,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: border, width: 1)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: _sp20, vertical: 40),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 440),
-        padding: const EdgeInsets.all(_sp24),
-        child: Form(
-          key: _formKey,
-          child: Column(mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row
-                Row(children: [
-                  Expanded(child: Text(
-                      isEdit
-                          ? l.t('sos_edit_contact')
-                          : l.t('sos_new_contact'),
-                      style: _heading(18, textClr))),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                        width: 32, height: 32,
-                        decoration: BoxDecoration(
-                            color: isDark ? _dSurface2 : _lSurface2,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: border, width: 1)),
-                        child: Icon(Icons.close_rounded,
-                            color: mutedClr, size: 16)),
-                  ),
-                ]),
-                const SizedBox(height: _sp4),
-                Text(l.t('sos_will_notify'),
-                    style: _body(13, subClr)),
-                const SizedBox(height: _sp20),
-                Divider(height: 1, thickness: 1, color: sep),
-                const SizedBox(height: _sp20),
+    // ── KEY FIX: use viewInsets to push content above keyboard ──────
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final safeBottom  = MediaQuery.of(context).padding.bottom;
 
-                // Name field
-                _FieldLabel(text: l.t('sos_full_name'), isDark: isDark),
-                const SizedBox(height: _sp8),
-                _UX4GTextField(
-                    controller: _nameCtrl,
-                    hint: l.t('sos_name_hint'),
-                    isDark: isDark,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? l.t('sos_name_required') : null),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.90,
+          ),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.20),
+                  blurRadius: 40, offset: const Offset(0, -4)),
+            ],
+          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            // Drag handle
+            Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(top: _sp12, bottom: _sp8),
+              decoration: BoxDecoration(
+                  color: handle,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
 
-                const SizedBox(height: _sp16),
-
-                // Phone field
-                _FieldLabel(text: l.t('sos_phone'), isDark: isDark),
-                const SizedBox(height: _sp8),
-                _UX4GTextField(
-                    controller: _phoneCtrl,
-                    hint: l.t('sos_phone_hint'),
-                    keyboardType: TextInputType.phone,
-                    isDark: isDark,
-                    prefixText: '+91  ',
-                    prefixColor: accent,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return l.t('sos_phone_required');
-                      }
-                      final c = v.replaceAll(
-                          RegExp(r'[\s\-\(\)\+]'), '');
-                      if (c.length < 10 ||
-                          !RegExp(r'^\d+$').hasMatch(c)) {
-                        return l.t('sos_phone_invalid10');
-                      }
-                      return null;
-                    }),
-
-                const SizedBox(height: _sp16),
-
-                // Relation chips
-                _FieldLabel(text: l.t('sos_relation'), isDark: isDark),
-                const SizedBox(height: _sp12),
-                Wrap(spacing: _sp8, runSpacing: _sp8,
-                    children: _relations.map((r) {
-                      final selected  = r == _relation;
-                      final chipAccent = _accentFor(r, isDark);
-                      return GestureDetector(
-                        onTap: () => setState(() => _relation = r),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 130),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: _sp12, vertical: _sp8),
-                          decoration: BoxDecoration(
-                              color: selected
-                                  ? chipAccent.withOpacity(0.12)
-                                  : (isDark ? _dSurface2 : _lSurface2),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: selected
-                                      ? chipAccent.withOpacity(0.40)
-                                      : border,
-                                  width: selected ? 1.5 : 1.0)),
-                          child: Text(_relationLabel(l, r),
-                              style: _label(12.5,
-                                  selected ? chipAccent : subClr,
-                                  w: selected
-                                      ? FontWeight.w700 : FontWeight.w400)),
-                        ),
-                      );
-                    }).toList()),
-
-                const SizedBox(height: _sp24),
-
-                // Action buttons — cancel left, confirm right
-                Row(children: [
-                  Expanded(child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 48),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        side: BorderSide(color: border, width: 1)),
-                    child: Text(l.t('sos_cancel'),
-                        style: _body(15, subClr, w: FontWeight.w600)),
-                  )),
-                  const SizedBox(width: _sp12),
-                  Expanded(flex: 2, child: ElevatedButton(
-                    onPressed: _saving ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(0, 48),
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8))),
-                    child: _saving
-                        ? const SizedBox(width: 18, height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2.5, color: Colors.white))
-                        : Text(
-                        isEdit
-                            ? l.t('sos_save_changes')
-                            : l.t('sos_add_btn'),
-                        style: _label(15, Colors.white,
-                            w: FontWeight.w700)),
-                  )),
-                ]),
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_sp20, _sp4, _sp20, _sp16),
+              child: Row(children: [
+                Text(isEdit ? l.t('sos_edit_contact') : l.t('sos_new_contact'),
+                    style: _headline(textClr)),
+                const Spacer(),
+                _TapTarget(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                      width: 28, height: 28,
+                      decoration: BoxDecoration(
+                          color: isDark ? _dSurface2 : const Color(0xFFEEEEF0),
+                          shape: BoxShape.circle),
+                      child: Icon(Icons.close_rounded,
+                          color: isDark ? _dTextMuted : _lTextMuted, size: 14)),
+                ),
               ]),
+            ),
+
+            Divider(height: 0.5, thickness: 0.5, color: sep),
+
+            // Scrollable form content
+            Flexible(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                    _sp20, _sp20, _sp20, safeBottom + _sp20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Name field
+                      _FormLabel(text: l.t('sos_full_name'), isDark: isDark),
+                      const SizedBox(height: _sp8),
+                      _AppleTextField(
+                        controller: _nameCtrl,
+                        focusNode: _nameFocus,
+                        hint: l.t('sos_name_hint'),
+                        isDark: isDark,
+                        textInputAction: TextInputAction.next,
+                        onEditingComplete: () =>
+                            FocusScope.of(context).requestFocus(_phoneFocus),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? l.t('sos_name_required') : null,
+                      ),
+
+                      const SizedBox(height: _sp20),
+
+                      // Phone field
+                      _FormLabel(text: l.t('sos_phone'), isDark: isDark),
+                      const SizedBox(height: _sp8),
+                      _AppleTextField(
+                        controller: _phoneCtrl,
+                        focusNode: _phoneFocus,
+                        hint: l.t('sos_phone_hint'),
+                        keyboardType: TextInputType.phone,
+                        isDark: isDark,
+                        prefixText: '+91  ',
+                        prefixColor: accent,
+                        textInputAction: TextInputAction.done,
+                        onEditingComplete: () => FocusScope.of(context).unfocus(),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return l.t('sos_phone_required');
+                          }
+                          final c = v.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
+                          if (c.length < 10 || !RegExp(r'^\d+$').hasMatch(c)) {
+                            return l.t('sos_phone_invalid10');
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: _sp20),
+
+                      // Relation chips
+                      _FormLabel(text: l.t('sos_relation'), isDark: isDark),
+                      const SizedBox(height: _sp12),
+                      Wrap(
+                        spacing: _sp8,
+                        runSpacing: _sp8,
+                        children: _relations.map((r) {
+                          final selected     = r == _relation;
+                          final chipAccent   = _accentFor(r, isDark);
+                          final unselBg      = isDark ? _dSurface2 : const Color(0xFFF2F2F7);
+                          final unselBorder  = isDark ? _dBorder   : _lBorder;
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _relation = r);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 120),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: _sp12, vertical: _sp8),
+                              decoration: BoxDecoration(
+                                  color: selected
+                                      ? chipAccent.withOpacity(0.10)
+                                      : unselBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: selected
+                                          ? chipAccent.withOpacity(0.35)
+                                          : unselBorder,
+                                      width: selected ? 1.0 : 0.5)),
+                              child: Text(_relationLabel(l, r),
+                                  style: _footnote(
+                                      selected ? chipAccent : subClr,
+                                      w: selected
+                                          ? FontWeight.w600 : FontWeight.w400)),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const SizedBox(height: _sp28),
+
+                      // Buttons
+                      Row(children: [
+                        Expanded(child: _OutlineBtn(
+                          label: l.t('sos_cancel'),
+                          onTap: () => Navigator.pop(context),
+                          isDark: isDark,
+                        )),
+                        const SizedBox(width: _sp12),
+                        Expanded(flex: 2, child: _FilledBtn(
+                          label: isEdit
+                              ? l.t('sos_save_changes')
+                              : l.t('sos_add_btn'),
+                          color: accent,
+                          loading: _saving,
+                          onTap: _saving ? null : _save,
+                        )),
+                      ]),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ]),
         ),
       ),
     );
   }
 
   void _save() async {
+    FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     widget.onSave(EmergencyContact(
@@ -1243,161 +1471,155 @@ class _ContactFormDialogState extends State<_ContactFormDialog> {
   }
 }
 
-// ── Field label ───────────────────────────────────────────────────────
-class _FieldLabel extends StatelessWidget {
+const _sp28 = 28.0;
+
+// ── Form label ────────────────────────────────────────────────────────
+class _FormLabel extends StatelessWidget {
   final String text;
   final bool isDark;
-  const _FieldLabel({required this.text, required this.isDark});
+  const _FormLabel({required this.text, required this.isDark});
   @override
   Widget build(BuildContext context) => Text(text,
-      style: _label(12, isDark ? _dTextSub : _lTextSub,
-          w: FontWeight.w700));
+      style: _caption(isDark ? _dTextMuted : _lTextMuted, w: FontWeight.w600));
 }
 
-// ── UX4G text field ───────────────────────────────────────────────────
-class _UX4GTextField extends StatelessWidget {
+// ── Apple text field ──────────────────────────────────────────────────
+class _AppleTextField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final String hint;
   final TextInputType keyboardType;
   final bool isDark;
   final String? prefixText;
   final Color? prefixColor;
+  final TextInputAction textInputAction;
+  final VoidCallback? onEditingComplete;
   final String? Function(String?)? validator;
-  const _UX4GTextField({
-    required this.controller, required this.hint,
+
+  const _AppleTextField({
+    required this.controller,
+    this.focusNode,
+    required this.hint,
     this.keyboardType = TextInputType.text,
-    required this.isDark, this.prefixText,
-    this.prefixColor, this.validator,
+    required this.isDark,
+    this.prefixText,
+    this.prefixColor,
+    this.textInputAction = TextInputAction.done,
+    this.onEditingComplete,
+    this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg     = isDark ? _dSurface2 : _lSurface2;
-    final border = isDark ? _dBorder   : _lBorder;
-    final textClr = isDark ? _dText    : _lText;
+    final bg      = isDark ? _dSurface2 : const Color(0xFFF2F2F7);
+    final border  = isDark ? _dBorder   : _lBorder;
+    final textClr = isDark ? _dText     : _lText;
     final hintClr = isDark ? _dTextMuted : _lTextMuted;
-    final accent  = isDark ? _infoDark : _info;
-    final radius  = BorderRadius.circular(8);
+    final accent  = isDark ? _infoD     : _info;
+    final errClr  = isDark ? _dangerD   : _danger;
+    final radius  = BorderRadius.circular(10);
 
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onEditingComplete: onEditingComplete,
       validator: validator,
-      style: _body(15, textClr),
+      style: _callout(textClr),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: _body(15, hintClr),
+        hintStyle: _callout(hintClr),
         prefixText: prefixText,
         prefixStyle: prefixText != null
-            ? _label(15, prefixColor ?? accent, w: FontWeight.w600)
+            ? _callout(prefixColor ?? accent, w: FontWeight.w500)
             : null,
         filled: true,
         fillColor: bg,
         contentPadding: const EdgeInsets.symmetric(
-            horizontal: _sp16, vertical: _sp16),
-        border: OutlineInputBorder(
-            borderRadius: radius,
-            borderSide: BorderSide(color: border, width: 1)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: radius,
-            borderSide: BorderSide(color: border, width: 1)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: radius,
-            borderSide: BorderSide(color: accent, width: 2)),
-        errorBorder: OutlineInputBorder(
-            borderRadius: radius,
-            borderSide: BorderSide(
-                color: isDark ? _dangerDark : _danger, width: 1.5)),
-        focusedErrorBorder: OutlineInputBorder(
-            borderRadius: radius,
-            borderSide: BorderSide(
-                color: isDark ? _dangerDark : _danger, width: 2)),
-        errorStyle: _label(11,
-            isDark ? _dangerDark : _danger, w: FontWeight.w600),
+            horizontal: _sp16, vertical: _sp14),
+        border: OutlineInputBorder(borderRadius: radius,
+            borderSide: BorderSide(color: border, width: 0.5)),
+        enabledBorder: OutlineInputBorder(borderRadius: radius,
+            borderSide: BorderSide(color: border, width: 0.5)),
+        focusedBorder: OutlineInputBorder(borderRadius: radius,
+            borderSide: BorderSide(color: accent, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: radius,
+            borderSide: BorderSide(color: errClr, width: 1.0)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: radius,
+            borderSide: BorderSide(color: errClr, width: 1.5)),
+        errorStyle: _caption(errClr, w: FontWeight.w500),
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  UX4G ALERT DIALOG
-//  UX4G: destructive action uses danger color; cancel is neutral
-// ══════════════════════════════════════════════════════════════════════
-class _UX4GAlertDialog extends StatelessWidget {
-  final String title, message, destructiveLabel;
-  final VoidCallback onDestructive;
-  const _UX4GAlertDialog({required this.title, required this.message,
-    required this.destructiveLabel, required this.onDestructive});
+// ── Outline button ────────────────────────────────────────────────────
+class _OutlineBtn extends StatefulWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool isDark;
+  const _OutlineBtn({required this.label, required this.onTap, required this.isDark});
+  @override State<_OutlineBtn> createState() => _OutlineBtnState();
+}
 
+class _OutlineBtnState extends State<_OutlineBtn> {
+  bool _pressed = false;
   @override
   Widget build(BuildContext context) {
-    final isDark  = Theme.of(context).brightness == Brightness.dark;
-    final bg      = isDark ? _dSurface  : _lSurface;
-    final border  = isDark ? _dBorder   : _lBorder;
-    final sep     = isDark ? _dBorderSub : _lBorderSub;
-    final textClr = isDark ? _dText     : _lText;
-    final subClr  = isDark ? _dTextSub  : _lTextSub;
-    final redClr  = isDark ? _dangerDark : _danger;
+    final border  = widget.isDark ? _dBorder : _lBorder;
+    final subClr  = widget.isDark ? _dTextSub : _lTextSub;
+    final pressedBg = widget.isDark ? _dSurface2 : const Color(0xFFF2F2F7);
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        height: 50,
+        decoration: BoxDecoration(
+            color: _pressed ? pressedBg : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: border, width: 0.5)),
+        alignment: Alignment.center,
+        child: Text(widget.label, style: _callout(subClr, w: FontWeight.w500)),
+      ),
+    );
+  }
+}
 
-    return Dialog(
-      backgroundColor: bg,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: border, width: 1)),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                _sp24, _sp24, _sp24, _sp16),
-            child: Column(children: [
-              // Danger icon — prominent
-              Container(
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? _dangerDark.withOpacity(0.12)
-                          : _dangerLight,
-                      shape: BoxShape.circle),
-                  child: Icon(Icons.delete_forever_rounded,
-                      color: redClr, size: 24)),
-              const SizedBox(height: _sp12),
-              Text(title, textAlign: TextAlign.center,
-                  style: _heading(17, textClr)),
-              const SizedBox(height: _sp8),
-              Text(message, textAlign: TextAlign.center,
-                  style: _body(13, subClr)),
-            ]),
-          ),
-          Divider(height: 1, thickness: 1, color: sep),
-          IntrinsicHeight(child: Row(children: [
-            // Cancel
-            Expanded(child: InkWell(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: _sp16),
-                decoration: BoxDecoration(border: Border(
-                    right: BorderSide(color: sep, width: 1))),
-                child: Center(child: Text(
-                    AppLocalizations.of(context).t('sos_cancel'),
-                    style: _body(16, isDark ? _infoDark : _info,
-                        w: FontWeight.w500))),
-              ),
-            )),
-            // Destructive
-            Expanded(child: InkWell(
-              onTap: () {
-                Navigator.pop(context);
-                onDestructive();
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: _sp16),
-                child: Center(child: Text(destructiveLabel,
-                    style: _body(16, redClr, w: FontWeight.w700))),
-              ),
-            )),
-          ])),
-        ]),
+// ── Filled button ─────────────────────────────────────────────────────
+class _FilledBtn extends StatefulWidget {
+  final String label;
+  final Color color;
+  final bool loading;
+  final VoidCallback? onTap;
+  const _FilledBtn({required this.label, required this.color,
+    required this.loading, this.onTap});
+  @override State<_FilledBtn> createState() => _FilledBtnState();
+}
+
+class _FilledBtnState extends State<_FilledBtn> {
+  bool _pressed = false;
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onTap != null && !widget.loading;
+    return GestureDetector(
+      onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: enabled ? (_) { setState(() => _pressed = false); widget.onTap!(); } : null,
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        height: 50,
+        decoration: BoxDecoration(
+            color: widget.color.withOpacity(_pressed ? 0.80 : 1.0),
+            borderRadius: BorderRadius.circular(10)),
+        alignment: Alignment.center,
+        child: widget.loading
+            ? const SizedBox(width: 18, height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            : Text(widget.label,
+            style: _callout(Colors.white, w: FontWeight.w600)),
       ),
     );
   }

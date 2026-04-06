@@ -1,12 +1,18 @@
 // lib/screens/HomeScreen.dart
 //
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║  VANI — UX4G Redesign v2  · Premium Web + Refined Mobile          ║
+// ║  VANI — HomeScreen  · Fintech Premium v3                          ║
 // ║                                                                    ║
-// ║  Web: Apple/Linear-level premium aesthetics                        ║
-// ║  Mobile: Refined ISL Assistant card post quick-actions             ║
+// ║  Design language: Deep navy · Electric blue · Cyan accents        ║
+// ║  • Mesh gradient backgrounds with arc/circle decorations          ║
+// ║  • Glassmorphism cards                                            ║
+// ║  • Animated stat counters                                         ║
+// ║  • Marquee feature strip                                          ║
+// ║  • Dense, filled layouts — no empty space                         ║
+// ║  • Full light + dark theme                                        ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,109 +26,119 @@ import 'TranslateScreen.dart';
 import 'TwoWayScreen.dart';
 import 'EmergencyScreen.dart';
 import 'Signspage.dart';
-import 'ISLAssistantScreen.dart';
+import 'Islassistantscreen.dart';
 import 'objectives/AccessibilityPage.dart';
 import 'objectives/BridgingGapsPage.dart';
+import 'objectives/LocalizationPage.dart';
 import 'objectives/InclusivityPage.dart';
 import 'objectives/PrivacyPage.dart';
 import 'objectives/EducationPage.dart';
 
 // ─────────────────────────────────────────────────────────────────────
-//  DESIGN TOKENS
+//  DESIGN TOKENS — Fintech palette
 // ─────────────────────────────────────────────────────────────────────
-const _primary = Color(0xFF1A56DB);
-const _primaryDark = Color(0xFF4A8EFF);
-const _primarySurface = Color(0xFFE8F0FE);
+const _ff = 'Google Sans';
 
-const _secondary = Color(0xFF00796B);
-const _secondaryDark = Color(0xFF26A69A);
+// Electric blue family
+const _elBlue = Color(0xFF2563EB);
+const _elBlueD = Color(0xFF60A5FA);
+const _elBlue2 = Color(0xFF1D4ED8);
+// Cyan accent
+const _cyan = Color(0xFF06B6D4);
+const _cyanD = Color(0xFF22D3EE);
+// Teal
+const _teal = Color(0xFF0D9488);
+const _tealD = Color(0xFF2DD4BF);
+// Purple/violet
+const _violet = Color(0xFF7C3AED);
+const _violetD = Color(0xFFA78BFA);
+// Emerald
+const _emerald = Color(0xFF059669);
+const _emeraldD = Color(0xFF34D399);
+// Amber
+const _amber = Color(0xFFD97706);
+const _amberD = Color(0xFFFBBF24);
+// Danger
+const _red = Color(0xFFEF4444);
+const _redD = Color(0xFFFCA5A5);
+// Deep navy backgrounds (dark)
+const _navy1 = Color(0xFF060E1F);
+const _navy3 = Color(0xFF0D1628);
+const _navy4 = Color(0xFF111E35);
+const _navy5 = Color(0xFF152440);
+const _navyB = Color(0xFF1A2D4F); // borders
+// Light backgrounds
+const _lBg = Color(0xFFF0F4FF);
+const _lSurf = Color(0xFFFFFFFF);
+const _lSurf2 = Color(0xFFF1F5FC);
+const _lBorder = Color(0xFFD1DCF0);
+const _lBorderSub = Color(0xFFE8EFF9);
+const _lText = Color(0xFF0B1426);
+const _lTextSub = Color(0xFF2D4270);
+const _lTextMuted = Color(0xFF647BA8);
+// Dark text
+const _dText = Color(0xFFE2EAFF);
+const _dTextSub = Color(0xFF8BA3CC);
+const _dTextMuted = Color(0xFF4A6091);
 
-const _success = Color(0xFF1B7340);
-const _successDark = Color(0xFF27AE60);
-const _warning = Color(0xFF7A4800);
-const _warningDark = Color(0xFFFFB300);
-const _danger = Color(0xFFB71C1C);
-const _dangerLight = Color(0xFFFFEBEE);
-const _dangerDark = Color(0xFFEF5350);
-const _info = Color(0xFF0D47A1);
+// Spacing
+const _s4 = 4.0;
+const _s6 = 6.0;
+const _s8 = 8.0;
+const _s10 = 10.0;
+const _s12 = 12.0;
+const _s14 = 14.0;
+const _s16 = 16.0;
+const _s20 = 20.0;
+const _s24 = 24.0;
+const _s32 = 32.0;
+const _s48 = 48.0;
 
-const _purple = Color(0xFF6200EA);
-const _purpleDark = Color(0xFF9C6BFF);
-const _purpleSurface = Color(0xFFF3E5F5);
-const _purpleSurfD = Color(0xFF2A1047);
-const _purpleDeep = Color(0xFF4C1D95);
-
-const _lBg = Color(0xFFF8F9FC);
-const _lSurface = Color(0xFFFFFFFF);
-const _lSurface2 = Color(0xFFF0F4F8);
-const _lSurface3 = Color(0xFFEAEEF4);
-const _lBorder = Color(0xFFDDE3ED);
-const _lBorderSub = Color(0xFFEDF0F5);
-const _lText = Color(0xFF0D1117);
-const _lTextSub = Color(0xFF374151);
-const _lTextMuted = Color(0xFF6B7280);
-
-const _dBg = Color(0xFF080C12);
-const _dSurface = Color(0xFF0F1520);
-const _dSurface2 = Color(0xFF161D2A);
-const _dSurface3 = Color(0xFF1C2535);
-const _dBorder = Color(0xFF252F40);
-const _dBorderSub = Color(0xFF1C2535);
-const _dText = Color(0xFFECF0F7);
-const _dTextSub = Color(0xFFB0BEC5);
-const _dTextMuted = Color(0xFF6B7A90);
-
-const _fontFamily = 'Google Sans';
-
-TextStyle _display(double size, Color c) => TextStyle(
-  fontFamily: _fontFamily,
-  fontSize: size,
+// ── Typography ────────────────────────────────────────────────────────
+TextStyle _disp(double sz, Color c) => TextStyle(
+  fontFamily: _ff,
+  fontSize: sz,
   fontWeight: FontWeight.w700,
   color: c,
-  height: 1.2,
-  letterSpacing: -0.5,
+  height: 1.15,
+  letterSpacing: -0.6,
 );
-
-TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+TextStyle _h(double sz, Color c, {FontWeight w = FontWeight.w600}) => TextStyle(
+  fontFamily: _ff,
+  fontSize: sz,
+  fontWeight: w,
+  color: c,
+  height: 1.3,
+  letterSpacing: -0.2,
+);
+TextStyle _b(double sz, Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
+  fontFamily: _ff,
+  fontSize: sz,
+  fontWeight: w,
+  color: c,
+  height: 1.65,
+);
+TextStyle _lbl(double sz, Color c, {FontWeight w = FontWeight.w500}) =>
     TextStyle(
-      fontFamily: _fontFamily,
-      fontSize: size,
-      fontWeight: w,
-      color: c,
-      height: 1.3,
-      letterSpacing: -0.2,
-    );
-
-TextStyle _body(double size, Color c, {FontWeight w = FontWeight.w400}) =>
-    TextStyle(
-      fontFamily: _fontFamily,
-      fontSize: size,
-      fontWeight: w,
-      color: c,
-      height: 1.6,
-    );
-
-TextStyle _label(double size, Color c, {FontWeight w = FontWeight.w500}) =>
-    TextStyle(
-      fontFamily: _fontFamily,
-      fontSize: size,
+      fontFamily: _ff,
+      fontSize: sz,
       fontWeight: w,
       color: c,
       height: 1.4,
       letterSpacing: 0.1,
     );
 
-const _sp4 = 4.0;
-const _sp6 = 6.0;
-const _sp8 = 8.0;
-const _sp10 = 10.0;
-const _sp12 = 12.0;
-const _sp14 = 14.0;
-const _sp16 = 16.0;
-const _sp20 = 20.0;
-const _sp24 = 24.0;
-const _sp32 = 32.0;
-const _sp48 = 48.0;
+// ── Token helpers ─────────────────────────────────────────────────────
+Color _bg(bool d) => d ? _navy1 : _lBg;
+Color _surf(bool d) => d ? _navy3 : _lSurf;
+Color _surf2(bool d) => d ? _navy4 : _lSurf2;
+Color _bord(bool d) => d ? _navyB : _lBorder;
+Color _bordS(bool d) => d ? _navy4 : _lBorderSub;
+Color _txt(bool d) => d ? _dText : _lText;
+Color _txts(bool d) => d ? _dTextSub : _lTextSub;
+Color _txtm(bool d) => d ? _dTextMuted : _lTextMuted;
+Color _acc(bool d) => d ? _elBlueD : _elBlue;
+Color _accV(bool d) => d ? _violetD : _violet;
 
 // ══════════════════════════════════════════════════════════════════════
 //  HOME SCREEN
@@ -140,41 +156,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late AnimationController _entranceCtrl;
-  late Animation<double> _fade;
+  late AnimationController _entCtrl,
+      _pulseCtrl,
+      _tabCtrl,
+      _floatCtrl,
+      _shimCtrl;
+  late Animation<double> _fade, _pulse, _tabFade, _float, _shim;
   late Animation<Offset> _slide;
-
-  late AnimationController _pulseCtrl;
-  late Animation<double> _pulse;
-
   int _tab = 0;
-  late AnimationController _tabCtrl;
-  late Animation<double> _tabFade;
-
-  final ScrollController _scrollCtrl = ScrollController();
-  // For web hero subtle animation
-  late AnimationController _floatCtrl;
-  late Animation<double> _float;
+  final _scrollCtrl = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _entranceCtrl = AnimationController(
+
+    _entCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 700),
     );
-    _fade = CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOutCubic),
-        );
+    _fade = CurvedAnimation(parent: _entCtrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _entCtrl, curve: Curves.easeOutCubic));
 
     _pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
     _pulse = Tween<double>(
-      begin: 0.4,
+      begin: 0.35,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
@@ -186,14 +197,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _floatCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(seconds: 6),
     )..repeat(reverse: true);
     _float = Tween<double>(
       begin: 0.0,
-      end: 8.0,
+      end: 10.0,
     ).animate(CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut));
 
-    _entranceCtrl.forward();
+    _shimCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+    _shim = Tween<double>(begin: 0.0, end: 1.0).animate(_shimCtrl);
+
+    _entCtrl.forward();
     _tabCtrl.forward();
   }
 
@@ -210,38 +227,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _entranceCtrl.dispose();
+    _entCtrl.dispose();
     _pulseCtrl.dispose();
     _tabCtrl.dispose();
-    _scrollCtrl.dispose();
     _floatCtrl.dispose();
+    _shimCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return w < 700
-        ? _buildMobile(context, isDark)
-        : _buildWeb(context, isDark, w);
+    final d = Theme.of(context).brightness == Brightness.dark;
+    return w < 700 ? _buildMobile(context, d) : _buildWeb(context, d, w);
   }
 
   // ══════════════════════════════════════════════════════════════════
-  //  MOBILE LAYOUT — unchanged structure, refined ISL card
+  //  MOBILE
   // ══════════════════════════════════════════════════════════════════
-  Widget _buildMobile(BuildContext ctx, bool isDark) {
+  Widget _buildMobile(BuildContext ctx, bool d) {
     final l = AppLocalizations.of(ctx);
-    final bg = isDark ? _dBg : _lBg;
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: _bg(d),
       extendBody: true,
       body: SafeArea(
         bottom: false,
-        child: FadeTransition(
-          opacity: _tabFade,
-          child: _mobileBody(ctx, l, isDark),
-        ),
+        child: FadeTransition(opacity: _tabFade, child: _mobileBody(ctx, l, d)),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 72),
@@ -251,8 +263,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      bottomNavigationBar: _UX4GTabBar(
-        isDark: isDark,
+      bottomNavigationBar: _FinTechTabBar(
+        isDark: d,
         tab: _tab,
         onTap: _switchTab,
         l: l,
@@ -260,27 +272,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _mobileBody(BuildContext ctx, AppLocalizations l, bool isDark) {
+  Widget _mobileBody(BuildContext ctx, AppLocalizations l, bool d) {
     switch (_tab) {
       case 0:
         return _MobileHomeFeed(
-          isDark: isDark,
+          isDark: d,
           fade: _fade,
           slide: _slide,
           pulse: _pulse,
+          shim: _shim,
           l: l,
           toggleTheme: widget.toggleTheme,
           setLocale: widget.setLocale,
         );
       case 1:
-        return _FeatureDetail(
-          isDark: isDark,
+        return _MobFeatureDetail(
+          isDark: d,
           l: l,
           icon: Icons.translate_rounded,
           title: l.t('nav_terminal'),
           subtitle: l.t('home_terminal_sub'),
-          accentLight: _primary,
-          accentDark: _primaryDark,
+          aL: _elBlue,
+          aD: _elBlueD,
           launchLabel: l.t('get_started'),
           onLaunch: () => _push(
             ctx,
@@ -313,14 +326,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         );
       case 2:
-        return _FeatureDetail(
-          isDark: isDark,
+        return _MobFeatureDetail(
+          isDark: d,
           l: l,
           icon: Icons.back_hand_rounded,
           title: l.t('nav_signs'),
           subtitle: l.t('home_signs_sub'),
-          accentLight: _secondary,
-          accentDark: _secondaryDark,
+          aL: _teal,
+          aD: _tealD,
           launchLabel: l.t('home_browse_signs'),
           onLaunch: () => _push(
             ctx,
@@ -353,14 +366,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         );
       case 3:
-        return _FeatureDetail(
-          isDark: isDark,
+        return _MobFeatureDetail(
+          isDark: d,
           l: l,
           icon: Icons.compare_arrows_rounded,
           title: l.t('nav_bridge'),
           subtitle: l.t('home_bridge_sub'),
-          accentLight: _success,
-          accentDark: _successDark,
+          aL: _emerald,
+          aD: _emeraldD,
           launchLabel: l.t('home_open_bridge'),
           onLaunch: () => _push(
             ctx,
@@ -393,14 +406,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         );
       case 4:
-        return _FeatureDetail(
-          isDark: isDark,
+        return _MobFeatureDetail(
+          isDark: d,
           l: l,
           icon: Icons.sign_language_rounded,
           title: l.t('assistant_title'),
           subtitle: l.t('assistant_feature_sub'),
-          accentLight: _purple,
-          accentDark: _purpleDark,
+          aL: _violet,
+          aD: _violetD,
           launchLabel: l.t('assistant_open'),
           onLaunch: () => _push(
             ctx,
@@ -437,156 +450,602 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _push(BuildContext ctx, Widget page) => Navigator.push(
+  void _push(BuildContext ctx, Widget p) => Navigator.push(
     ctx,
     PageRouteBuilder(
-      pageBuilder: (_, __, ___) => page,
+      pageBuilder: (_, __, ___) => p,
       transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
       transitionDuration: const Duration(milliseconds: 260),
     ),
   );
 
   // ══════════════════════════════════════════════════════════════════
-  //  WEB LAYOUT — Premium, Apple-inspired
+  //  WEB
   // ══════════════════════════════════════════════════════════════════
-  Widget _buildWeb(BuildContext ctx, bool isDark, double w) {
-    final isDesktop = w > 1100;
-    final hPad = isDesktop ? 88.0 : 44.0;
+  Widget _buildWeb(BuildContext ctx, bool d, double w) {
+    final desktop = w > 1100;
+    final hPad = desktop ? 88.0 : 44.0;
     final l = AppLocalizations.of(ctx);
-    final bg = isDark ? _dBg : _lBg;
 
     return Scaffold(
-      backgroundColor: bg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          controller: _scrollCtrl,
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              // ── Navbar ────────────────────────────────────────────────
-              GlobalNavbar(
-                toggleTheme: widget.toggleTheme,
-                setLocale: widget.setLocale,
-                activeRoute: 'home',
-              ),
-
-              // ── Hero Section ──────────────────────────────────────────
-              _WebHeroSection(
-                isDesktop: isDesktop,
-                isDark: isDark,
-                l: l,
-                fade: _fade,
-                slide: _slide,
-                pulse: _pulse,
-                float: _float,
-                hPad: hPad,
-                onCTA: () => _push(
-                  ctx,
-                  TranslateScreen(
-                    toggleTheme: widget.toggleTheme,
-                    setLocale: widget.setLocale,
+      backgroundColor: _bg(d),
+      body: Stack(
+        children: [
+          // ── Mesh background orbs ──────────────────────────────────
+          Positioned(
+            top: -200,
+            left: -200,
+            child: _Orb(color: _elBlue.withOpacity(d ? 0.18 : 0.12), size: 680),
+          ),
+          Positioned(
+            top: 200,
+            right: -150,
+            child: _Orb(color: _violet.withOpacity(d ? 0.14 : 0.09), size: 560),
+          ),
+          Positioned(
+            bottom: 100,
+            left: w * 0.26,
+            child: _Orb(color: _cyan.withOpacity(d ? 0.12 : 0.08), size: 460),
+          ),
+          Positioned(
+            top: 132,
+            left: w * 0.34,
+            child: _AmbientBeam(
+              width: 420,
+              height: 180,
+              color: _elBlue,
+              dark: d,
+            ),
+          ),
+          Positioned(
+            bottom: 180,
+            right: w * 0.22,
+            child: _AmbientBeam(
+              width: 360,
+              height: 150,
+              color: _cyan,
+              dark: d,
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: d
+                        ? [
+                            Colors.white.withOpacity(0.02),
+                            Colors.transparent,
+                            _elBlue.withOpacity(0.02),
+                          ]
+                        : [
+                            _elBlue.withOpacity(0.04),
+                            Colors.transparent,
+                            _cyan.withOpacity(0.025),
+                          ],
                   ),
                 ),
               ),
-
-              // ── Stats Row ─────────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                child: _WebStatsRow(isDesktop: isDesktop, isDark: isDark, l: l),
+            ),
+          ),
+          // ── Grid dot pattern ──────────────────────────────────────
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _DotGridPainter(
+                color: d
+                    ? Colors.white.withOpacity(0.025)
+                    : _elBlue.withOpacity(0.04),
               ),
-              SizedBox(height: isDesktop ? 80 : 60),
+            ),
+          ),
+          // ── Arc decorations ───────────────────────────────────────
+          Positioned(
+            top: 0,
+            left: 0,
+            child: _ArcDecor(size: 300, color: _elBlue, dark: d, flip: false),
+          ),
+          Positioned(
+            top: 14,
+            right: 180,
+            child: _ArcDecor(size: 220, color: _cyan, dark: d, flip: true),
+          ),
+          Positioned(
+            bottom: 170,
+            left: -42,
+            child: _ArcDecor(size: 190, color: _elBlue, dark: d, flip: false),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: _ArcDecor(size: 360, color: _violet, dark: d, flip: true),
+          ),
+          // ── Border ring circles ───────────────────────────────────
+          Positioned(
+            top: 86,
+            right: 28,
+            child: _BorderCircle(
+              size: 154,
+              color: _elBlue,
+              dark: d,
+              stroke: 1.0,
+            ),
+          ),
+          Positioned(
+            bottom: 120,
+            right: 58,
+            child: _BorderCircle(
+              size: 118,
+              color: _cyan,
+              dark: d,
+              stroke: 0.9,
+            ),
+          ),
+          Positioned(
+            top: 268,
+            left: -38,
+            child: _BorderCircle(
+              size: 152,
+              color: _violet,
+              dark: d,
+              stroke: 0.95,
+            ),
+          ),
+          // ── Content ───────────────────────────────────────────────
+          SafeArea(
+            child: SingleChildScrollView(
+              controller: _scrollCtrl,
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  GlobalNavbar(
+                    toggleTheme: widget.toggleTheme,
+                    setLocale: widget.setLocale,
+                    activeRoute: 'home',
+                  ),
 
-              // ── Features Section ──────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                child: Column(
-                  children: [
-                    _WebSectionLabel(
-                      text: l.t('home_features_label'),
-                      isDark: isDark,
+                  // Hero
+                  _WebHero(
+                    desktop: desktop,
+                    dark: d,
+                    l: l,
+                    fade: _fade,
+                    slide: _slide,
+                    pulse: _pulse,
+                    float: _float,
+                    shim: _shim,
+                    hPad: hPad,
+                    onCTA: () => _push(
+                      ctx,
+                      TranslateScreen(
+                        toggleTheme: widget.toggleTheme,
+                        setLocale: widget.setLocale,
+                      ),
                     ),
-                    SizedBox(height: isDesktop ? 16 : 12),
-                    _WebSectionTitle(
-                      title: l.t('home_features_title'),
-                      sub: l.t('home_features_sub'),
-                      isDark: isDark,
-                      isDesktop: isDesktop,
+                    onAssistant: () => _push(
+                      ctx,
+                      ISLAssistantScreen(
+                        toggleTheme: widget.toggleTheme,
+                        setLocale: widget.setLocale,
+                      ),
                     ),
-                    SizedBox(height: isDesktop ? 56 : 40),
-                    _WebFeaturesGrid(
-                      isDesktop: isDesktop,
-                      isDark: isDark,
+                  ),
+
+                  // Marquee strip
+                  _MarqueeStrip(dark: d),
+
+                  // Stats
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: _WebStats(desktop: desktop, dark: d, l: l),
+                  ),
+                  SizedBox(height: desktop ? 80 : 60),
+
+                  // Features
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: _WebFeatures(
+                      desktop: desktop,
+                      dark: d,
                       l: l,
                       toggleTheme: widget.toggleTheme,
                       setLocale: widget.setLocale,
                       push: (p) => _push(ctx, p),
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(height: isDesktop ? 80 : 60),
+                  ),
+                  SizedBox(height: desktop ? 80 : 60),
 
-              // ── ISL Assistant Banner ──────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                child: _WebAssistantSection(
-                  isDesktop: isDesktop,
-                  isDark: isDark,
-                  l: l,
-                  float: _float,
-                  onTap: () => _push(
-                    ctx,
-                    ISLAssistantScreen(
-                      toggleTheme: widget.toggleTheme,
-                      setLocale: widget.setLocale,
+                  // AI Assistant Banner
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: _WebAIBanner(
+                      desktop: desktop,
+                      dark: d,
+                      l: l,
+                      float: _float,
+                      onTap: () => _push(
+                        ctx,
+                        ISLAssistantScreen(
+                          toggleTheme: widget.toggleTheme,
+                          setLocale: widget.setLocale,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(height: isDesktop ? 80 : 60),
+                  SizedBox(height: desktop ? 80 : 60),
 
-              // ── Objectives ───────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                child: Column(
-                  children: [
-                    _WebSectionLabel(
-                      text: l.t('home_mission_label'),
-                      isDark: isDark,
-                    ),
-                    SizedBox(height: isDesktop ? 16 : 12),
-                    _WebSectionTitle(
-                      title: l.t('obj_heading'),
-                      sub: l.t('obj_sub'),
-                      isDark: isDark,
-                      isDesktop: isDesktop,
-                    ),
-                    SizedBox(height: isDesktop ? 48 : 36),
-                    _WebObjectivesGrid(
-                      isDesktop: isDesktop,
-                      isDark: isDark,
+                  // Objectives
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: _WebObjectives(
+                      desktop: desktop,
+                      dark: d,
                       l: l,
                       toggleTheme: widget.toggleTheme,
                       setLocale: widget.setLocale,
                     ),
-                  ],
+                  ),
+                  SizedBox(height: desktop ? 80 : 60),
+
+                  // Vision
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: desktop ? hPad * 0.55 : hPad * 0.8,
+                    ),
+                    child: _WebVision(dark: d, l: l),
+                  ),
+                  SizedBox(height: desktop ? 56 : 40),
+
+                  // Footer
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: _WebFooter(dark: d),
+                  ),
+                  const SizedBox(height: _s48),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  BACKGROUND PAINTER HELPERS
+// ══════════════════════════════════════════════════════════════════════
+class _Orb extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _Orb({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: [color, Colors.transparent]),
+      ),
+    );
+  }
+}
+
+class _BorderCircle extends StatelessWidget {
+  final double size;
+  final Color color;
+  final bool dark;
+  final double stroke;
+  const _BorderCircle({
+    required this.size,
+    required this.color,
+    required this.dark,
+    this.stroke = 1.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: color.withOpacity(dark ? 0.20 : 0.14),
+          width: stroke,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(dark ? 0.06 : 0.04),
+            blurRadius: 14,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AmbientBeam extends StatelessWidget {
+  final double width;
+  final double height;
+  final Color color;
+  final bool dark;
+  const _AmbientBeam({
+    required this.width,
+    required this.height,
+    required this.color,
+    required this.dark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: -0.20,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Colors.transparent,
+              color.withOpacity(dark ? 0.06 : 0.05),
+              Colors.transparent,
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(dark ? 0.07 : 0.05),
+              blurRadius: 28,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DotGridPainter extends CustomPainter {
+  final Color color;
+  const _DotGridPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..color = color;
+    const sp = 32.0;
+    for (double x = 0; x < size.width; x += sp) {
+      for (double y = 0; y < size.height; y += sp) {
+        canvas.drawCircle(Offset(x, y), 1.0, p);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotGridPainter old) => old.color != color;
+}
+
+class _ArcDecor extends StatelessWidget {
+  final double size;
+  final Color color;
+  final bool dark;
+  final bool flip;
+  const _ArcDecor({
+    required this.size,
+    required this.color,
+    required this.dark,
+    required this.flip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform(
+      transform: flip
+          ? (Matrix4.identity()..rotateZ(math.pi))
+          : Matrix4.identity(),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(
+          painter: _ArcPainter(color: color, dark: dark),
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcPainter extends CustomPainter {
+  final Color color;
+  final bool dark;
+  const _ArcPainter({required this.color, required this.dark});
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    void arc(double r, double op) {
+      final glow = Paint()
+        ..color = color.withOpacity(dark ? op * 0.05 : op * 0.034)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: r),
+        0,
+        math.pi / 2,
+        false,
+        glow,
+      );
+
+      final p = Paint()
+        ..color = color.withOpacity(dark ? op * 0.38 : op * 0.29)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.92;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: r),
+        0,
+        math.pi / 2,
+        false,
+        p,
+      );
+    }
+
+    arc(s.width * 0.34, 0.32);
+    arc(s.width * 0.66, 0.20);
+    arc(s.width * 0.88, 0.11);
+  }
+
+  @override
+  bool shouldRepaint(_ArcPainter old) => false;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  WEB HERO
+// ══════════════════════════════════════════════════════════════════════
+class _WebHero extends StatelessWidget {
+  final bool desktop, dark;
+  final AppLocalizations l;
+  final Animation<double> fade, pulse, float, shim;
+  final Animation<Offset> slide;
+  final double hPad;
+  final VoidCallback onCTA, onAssistant;
+
+  const _WebHero({
+    required this.desktop,
+    required this.dark,
+    required this.l,
+    required this.fade,
+    required this.slide,
+    required this.pulse,
+    required this.float,
+    required this.shim,
+    required this.hPad,
+    required this.onCTA,
+    required this.onAssistant,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final acc = _acc(dark);
+    final sub = _txts(dark);
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: hPad,
+        right: hPad,
+        top: desktop ? 90 : 60,
+        bottom: desktop ? 80 : 56,
+      ),
+      child: FadeTransition(
+        opacity: fade,
+        child: SlideTransition(
+          position: slide,
+          child: Column(
+            children: [
+              // ── Status pill ─────────────────────────────────────────
+              AnimatedBuilder(
+                animation: pulse,
+                builder: (_, __) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _surf(dark),
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(color: _bord(dark), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: acc.withOpacity(dark ? 0.12 : 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF22C55E),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF22C55E,
+                              ).withOpacity(pulse.value * 0.60),
+                              blurRadius: 7,
+                              spreadRadius: 1.5,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(l.t('badge'), style: _b(12.5, sub)),
+                      const SizedBox(width: 10),
+                      Container(width: 1, height: 14, color: _bord(dark)),
+                      const SizedBox(width: 10),
+                      Icon(Icons.auto_awesome_rounded, size: 12, color: acc),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Vani AI',
+                        style: _lbl(12, acc, w: FontWeight.w700),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              SizedBox(height: isDesktop ? 80 : 60),
+              SizedBox(height: desktop ? 32 : 22),
 
-              // ── Vision ───────────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                child: _WebVisionSection(isDark: isDark, l: l),
+              // ── Headline ─────────────────────────────────────────────
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: desktop ? 860 : 680),
+                child: _HeroText(desktop: desktop, dark: dark, l: l),
               ),
-              SizedBox(height: isDesktop ? 56 : 40),
+              SizedBox(height: desktop ? 20 : 14),
 
-              // ── Footer ───────────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPad),
-                child: _WebFooter(isDark: isDark),
+              // ── Sub ──────────────────────────────────────────────────
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: desktop ? 520 : 440),
+                child: Text(
+                  l.t('hero_sub'),
+                  textAlign: TextAlign.center,
+                  style: _b(desktop ? 17 : 15, sub),
+                ),
               ),
-              const SizedBox(height: _sp48),
+              SizedBox(height: desktop ? 40 : 28),
+
+              // ── CTAs ──────────────────────────────────────────────────
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _GlowBtn(
+                    label: l.t('get_started'),
+                    icon: Icons.arrow_forward_rounded,
+                    grad: [_elBlue, _elBlue2],
+                    onTap: onCTA,
+                  ),
+                  _OutlineBtn(
+                    label: l.t('assistant_open'),
+                    icon: Icons.auto_awesome_rounded,
+                    accent: _accV(dark),
+                    dark: dark,
+                    onTap: onAssistant,
+                  ),
+                ],
+              ),
+              SizedBox(height: desktop ? 56 : 44),
+
+              // ── Trust strip ──────────────────────────────────────────
+              _TrustStrip(dark: dark, desktop: desktop, l: l),
             ],
           ),
         ),
@@ -595,349 +1054,191 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  WEB HERO SECTION — Premium immersive design
-// ══════════════════════════════════════════════════════════════════════
-class _WebHeroSection extends StatelessWidget {
-  final bool isDesktop, isDark;
+class _HeroText extends StatelessWidget {
+  final bool desktop, dark;
   final AppLocalizations l;
-  final Animation<double> fade, pulse, float;
-  final Animation<Offset> slide;
-  final double hPad;
-  final VoidCallback onCTA;
-
-  const _WebHeroSection({
-    required this.isDesktop,
-    required this.isDark,
-    required this.l,
-    required this.fade,
-    required this.slide,
-    required this.pulse,
-    required this.float,
-    required this.hPad,
-    required this.onCTA,
-  });
-
+  const _HeroText({required this.desktop, required this.dark, required this.l});
   @override
   Widget build(BuildContext context) {
-    final accent = isDark ? _primaryDark : _primary;
-    final textClr = isDark ? _dText : _lText;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
-    final bgGrad1 = isDark ? Color(0xFF080C12) : Color(0xFFF8F9FC);
-    final bgGrad2 = isDark ? Color(0xFF0A1020) : Color(0xFFEDF2FF);
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [bgGrad1, bgGrad2],
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: hPad,
-          right: hPad,
-          top: isDesktop ? 80 : 56,
-          bottom: isDesktop ? 80 : 56,
-        ),
-        child: FadeTransition(
-          opacity: fade,
-          child: SlideTransition(
-            position: slide,
-            child: Column(
-              children: [
-                // ── Status pill ─────────────────────────────────────────
-                _StatusPill(isDark: isDark, accent: accent, pulse: pulse, l: l),
-                SizedBox(height: isDesktop ? 28 : 20),
-
-                // ── Hero headline ────────────────────────────────────────
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: isDesktop ? 820 : 680),
-                  child: _HeroHeadline(
-                    isDesktop: isDesktop,
-                    isDark: isDark,
-                    l: l,
-                    accent: accent,
-                  ),
-                ),
-                SizedBox(height: isDesktop ? 20 : 14),
-
-                // ── Subtext ─────────────────────────────────────────────
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: isDesktop ? 520 : 440),
-                  child: Text(
-                    l.t('hero_sub'),
-                    textAlign: TextAlign.center,
-                    style: _body(isDesktop ? 17 : 15, subClr),
-                  ),
-                ),
-                SizedBox(height: isDesktop ? 36 : 28),
-
-                // ── CTA row ─────────────────────────────────────────────
-                Align(
-                  alignment: Alignment.center,
-                  child: _WebPrimaryBtn(
-                    label: l.t('get_started'),
-                    icon: Icons.arrow_forward_rounded,
-                    bgColor: accent,
-                    textColor: Colors.white,
-                    onTap: onCTA,
-                  ),
-                ),
-                SizedBox(height: isDesktop ? 56 : 40),
-
-                // ── Trust indicators ─────────────────────────────────────
-                _HeroTrustRow(isDark: isDark, l: l, isDesktop: isDesktop),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  final bool isDark;
-  final Color accent;
-  final Animation<double> pulse;
-  final AppLocalizations l;
-  const _StatusPill({
-    required this.isDark,
-    required this.accent,
-    required this.pulse,
-    required this.l,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder : _lBorder;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-
-    return AnimatedBuilder(
-      animation: pulse,
-      builder: (_, __) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: _sp16, vertical: _sp8),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: border, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.20 : 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF22C55E),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xFF22C55E).withOpacity(pulse.value * 0.55),
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: _sp8),
-            Text(l.t('badge'), style: _body(12.5, subClr)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroHeadline extends StatelessWidget {
-  final bool isDesktop, isDark;
-  final AppLocalizations l;
-  final Color accent;
-  const _HeroHeadline({
-    required this.isDesktop,
-    required this.isDark,
-    required this.l,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textClr = isDark ? _dText : _lText;
-    final fs = isDesktop ? 60.0 : 44.0;
-
+    final t = _txt(dark);
+    final a = _acc(dark);
+    final fs = desktop ? 62.0 : 44.0;
     return LayoutBuilder(
-      builder: (_, constraints) {
-        final w = constraints.maxWidth;
-        final title1 = l.t('hero_title_1').replaceAll('\n', ' ');
-        final titleH = l.t('hero_title_highlight').replaceAll('\n', ' ');
-        final title2 = l.t('hero_title_2').replaceAll('\n', ' ');
-
-        TextSpan spanFor(double size) => TextSpan(
+      builder: (_, c) {
+        final w = c.maxWidth;
+        final t1 = l.t('hero_title_1').replaceAll('\n', ' ');
+        final tH = l.t('hero_title_highlight').replaceAll('\n', ' ');
+        final t2 = l.t('hero_title_2').replaceAll('\n', ' ');
+        TextSpan s(double sz) => TextSpan(
           children: [
-            if (title1.isNotEmpty)
-              TextSpan(text: '$title1 ', style: _display(size, textClr)),
-            TextSpan(text: titleH, style: _display(size, accent)),
-            if (title2.isNotEmpty)
-              TextSpan(text: ' $title2', style: _display(size, textClr)),
+            if (t1.isNotEmpty) TextSpan(text: '$t1 ', style: _disp(sz, t)),
+            TextSpan(text: tH, style: _disp(sz, a)),
+            if (t2.isNotEmpty) TextSpan(text: ' $t2', style: _disp(sz, t)),
           ],
         );
-
-        double size = fs;
+        double sz = fs;
         for (int i = 0; i < 20; i++) {
           final tp = TextPainter(
-            text: spanFor(size),
+            text: s(sz),
             textDirection: TextDirection.ltr,
             maxLines: 2,
           )..layout(maxWidth: w);
           if (!tp.didExceedMaxLines) break;
-          size -= 1;
-          if (size <= (isDesktop ? 38 : 28)) break;
+          sz -= 1;
+          if (sz <= (desktop ? 38 : 28)) break;
         }
         return RichText(
           textAlign: TextAlign.center,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          text: spanFor(size),
+          text: s(sz),
         );
       },
     );
   }
 }
 
-class _HeroTrustRow extends StatelessWidget {
-  final bool isDark, isDesktop;
+class _TrustStrip extends StatelessWidget {
+  final bool dark, desktop;
   final AppLocalizations l;
-  const _HeroTrustRow({
-    required this.isDark,
+  const _TrustStrip({
+    required this.dark,
+    required this.desktop,
     required this.l,
-    required this.isDesktop,
   });
-
   @override
   Widget build(BuildContext context) {
-    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
-    final divClr = isDark ? _dBorder : _lBorder;
     final items = [
-      ('63M+', l.t('home_trust_deaf_community')),
-      ('10', l.t('home_trust_indian_languages')),
-      ('ISL', l.t('home_trust_certified_signs')),
-      ('AI', l.t('home_trust_powered')),
+      ('63M+', l.t('stat_mute_label')),
+      ('3', l.t('home_trust_indian_languages')),
+      ('ISL', 'Certified Signs'),
+      ('AI', 'Powered'),
     ];
-
+    final a = _acc(dark);
+    final m = _txtm(dark);
+    final d = _bord(dark);
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: _sp24,
-      runSpacing: _sp12,
-      children: items.asMap().entries.map((e) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Column(
+      spacing: _s24,
+      runSpacing: _s12,
+      children: items
+          .asMap()
+          .entries
+          .map(
+            (e) => Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  e.value.$1,
-                  style: _heading(
-                    isDesktop ? 18 : 15,
-                    isDark ? _primaryDark : _primary,
-                    w: FontWeight.w700,
+                Column(
+                  children: [
+                    Text(
+                      e.value.$1,
+                      style: _h(desktop ? 20 : 16, a, w: FontWeight.w700),
+                    ),
+                    Text(e.value.$2, style: _lbl(11, m, w: FontWeight.w400)),
+                  ],
+                ),
+                if (e.key < items.length - 1)
+                  Padding(
+                    padding: const EdgeInsets.only(left: _s24),
+                    child: Container(width: 1, height: 30, color: d),
                   ),
-                ),
-                Text(
-                  e.value.$2,
-                  style: _label(10.5, mutedClr, w: FontWeight.w400),
-                ),
               ],
             ),
-            if (e.key < items.length - 1)
-              Padding(
-                padding: const EdgeInsets.only(left: _sp24),
-                child: Container(width: 1, height: 28, color: divClr),
-              ),
-          ],
-        );
-      }).toList(),
+          )
+          .toList(),
     );
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  WEB STATS ROW — Animated counters
+//  MARQUEE STRIP
 // ══════════════════════════════════════════════════════════════════════
-class _WebStatsRow extends StatelessWidget {
-  final bool isDesktop, isDark;
-  final AppLocalizations l;
-  const _WebStatsRow({
-    required this.isDesktop,
-    required this.isDark,
-    required this.l,
-  });
+class _MarqueeStrip extends StatefulWidget {
+  final bool dark;
+  const _MarqueeStrip({required this.dark});
+  @override
+  State<_MarqueeStrip> createState() => _MarqueeStripState();
+}
+
+class _MarqueeStripState extends State<_MarqueeStrip>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder : _lBorder;
-    final sep = isDark ? _dBorderSub : _lBorderSub;
-    final stats = [
-      (
-        '63000000',
-        '+',
-        l.t('stat_mute_label'),
-        isDark ? _primaryDark : _primary,
-      ),
-      ('8435000', '+', l.t('stat_isl_label'), isDark ? _purpleDark : _purple),
-      (
-        '250',
-        '',
-        l.t('stat_translators_label'),
-        isDark ? _dangerDark : _danger,
-      ),
+    final items = [
+      '✦ On-Device AI',
+      '✦ 3 Languages',
+      '✦ ISL Certified',
+      '✦ Real-Time Translation',
+      '✦ Emergency SOS',
+      '✦ 63M+ Users',
+      '✦ ISLRTC Approved',
+      '✦ Voice I/O',
+      '✦ Privacy First',
+      '✦ 98% Accuracy',
     ];
+    final bg = widget.dark ? _navy4 : _lSurf2;
+    final bd = widget.dark ? _navyB : _lBorder;
+    final a = _acc(widget.dark);
+    final m = _txtm(widget.dark);
 
-    return Semantics(
-      label: l.t('common_statistics'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: border, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.15 : 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              for (int i = 0; i < stats.length; i++) ...[
-                Expanded(
-                  child: _WebStatCell(
-                    value: stats[i].$1,
-                    suffix: stats[i].$2,
-                    label: stats[i].$3,
-                    color: stats[i].$4,
-                    isDark: isDark,
-                    isDesktop: isDesktop,
+    final stripItems = [...items, ...items, ...items];
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: _s24),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border.symmetric(horizontal: BorderSide(color: bd, width: 1)),
+      ),
+      child: ClipRect(
+        child: SizedBox(
+          height: 24,
+          width: double.infinity,
+          child: AnimatedBuilder(
+            animation: _ctrl,
+            builder: (_, __) {
+              final offset = -_ctrl.value * 360;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                child: Transform.translate(
+                  offset: Offset(offset, 0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: stripItems
+                        .map(
+                          (s) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              s,
+                              style: _lbl(
+                                12,
+                                s.contains('✦') ? a.withOpacity(0.70) : m,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
-                if (i < stats.length - 1) Container(width: 1, color: sep),
-              ],
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -945,32 +1246,70 @@ class _WebStatsRow extends StatelessWidget {
   }
 }
 
-class _WebStatCell extends StatefulWidget {
+// ══════════════════════════════════════════════════════════════════════
+//  WEB STATS
+// ══════════════════════════════════════════════════════════════════════
+class _WebStats extends StatelessWidget {
+  final bool desktop, dark;
+  final AppLocalizations l;
+  const _WebStats({required this.desktop, required this.dark, required this.l});
+  @override
+  Widget build(BuildContext context) {
+    final stats = [
+      ('63000000', '+', l.t('stat_mute_label'), _acc(dark), 0),
+      ('8435000', '+', l.t('stat_isl_label'), dark ? _violetD : _violet, 200),
+      ('250', '', l.t('stat_translators_label'), dark ? _cyanD : _cyan, 400),
+    ];
+    return Row(
+      children: stats.asMap().entries.map((e) {
+        final i = e.key;
+        final s = e.value;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: i < stats.length - 1 ? _s16 : 0),
+            child: _StatCard(
+              value: s.$1,
+              suffix: s.$2,
+              label: s.$3,
+              color: s.$4,
+              delay: s.$5,
+              dark: dark,
+              desktop: desktop,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _StatCard extends StatefulWidget {
   final String value, suffix, label;
   final Color color;
-  final bool isDark, isDesktop;
-  const _WebStatCell({
+  final int delay;
+  final bool dark, desktop;
+  const _StatCard({
     required this.value,
     required this.suffix,
     required this.label,
     required this.color,
-    required this.isDark,
-    required this.isDesktop,
+    required this.delay,
+    required this.dark,
+    required this.desktop,
   });
   @override
-  State<_WebStatCell> createState() => _WebStatCellState();
+  State<_StatCard> createState() => _StatCardState();
 }
 
-class _WebStatCellState extends State<_WebStatCell>
+class _StatCardState extends State<_StatCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
   late int _target;
-
   @override
   void initState() {
     super.initState();
-    _target = int.parse(widget.value.replaceAll(',', ''));
+    _target = int.parse(widget.value);
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -979,7 +1318,7 @@ class _WebStatCellState extends State<_WebStatCell>
       begin: 0,
       end: _target.toDouble(),
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutExpo));
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _ctrl.forward();
     });
   }
@@ -996,112 +1335,96 @@ class _WebStatCellState extends State<_WebStatCell>
   );
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _anim,
-    builder: (_, __) => Padding(
-      padding: EdgeInsets.symmetric(
-        vertical: widget.isDesktop ? 40 : 28,
-        horizontal: 24,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '${_fmt(_anim.value.toInt())}${widget.suffix}',
-            style: _heading(
-              widget.isDesktop ? 44 : 32,
-              widget.color,
-              w: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: _sp8),
-          Text(
-            widget.label,
-            textAlign: TextAlign.center,
-            style: _body(13, widget.isDark ? _dTextSub : _lTextSub),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════
-//  WEB SECTION HELPERS
-// ══════════════════════════════════════════════════════════════════════
-class _WebSectionLabel extends StatelessWidget {
-  final String text;
-  final bool isDark;
-  const _WebSectionLabel({required this.text, required this.isDark});
-
-  @override
   Widget build(BuildContext context) {
-    final accent = isDark ? _primaryDark : _primary;
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: _sp14, vertical: _sp6),
-        decoration: BoxDecoration(
-          color: accent.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: accent.withOpacity(0.20), width: 1),
+    final bg = _surf(widget.dark);
+    final bd = _bord(widget.dark);
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(
+        padding: EdgeInsets.symmetric(
+          vertical: widget.desktop ? 36 : 24,
+          horizontal: 20,
         ),
-        child: Text(
-          text,
-          style: _label(
-            10.5,
-            accent,
-            w: FontWeight.w700,
-          ).copyWith(letterSpacing: 1.5),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              bg,
+              widget.dark
+                  ? _navy4.withOpacity(0.92)
+                  : _lSurf2.withOpacity(0.72),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: bd.withOpacity(widget.dark ? 0.88 : 0.96), width: 1.1),
+          boxShadow: [
+            BoxShadow(
+              color: widget.color.withOpacity(widget.dark ? 0.12 : 0.09),
+              blurRadius: 24,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(widget.dark ? 0.26 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Compact accent capsule for a cleaner premium header detail.
+            Container(
+              width: widget.desktop ? 92 : 74,
+              height: 6,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [widget.color.withOpacity(0.95), widget.color.withOpacity(0.42)],
+                ),
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withOpacity(widget.dark ? 0.28 : 0.16),
+                    blurRadius: 14,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '${_fmt(_anim.value.toInt())}${widget.suffix}',
+              style: _h(
+                widget.desktop ? 42 : 28,
+                widget.color,
+                w: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: _s8),
+            Text(
+              widget.label,
+              textAlign: TextAlign.center,
+              style: _b(13, _txts(widget.dark)),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _WebSectionTitle extends StatelessWidget {
-  final String title, sub;
-  final bool isDark, isDesktop;
-  const _WebSectionTitle({
-    required this.title,
-    required this.sub,
-    required this.isDark,
-    required this.isDesktop,
-  });
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Text(
-        title,
-        textAlign: TextAlign.center,
-        style: _heading(isDesktop ? 36 : 28, isDark ? _dText : _lText),
-      ),
-      const SizedBox(height: _sp12),
-      ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Text(
-          sub,
-          textAlign: TextAlign.center,
-          style: _body(15, isDark ? _dTextSub : _lTextSub),
-        ),
-      ),
-    ],
-  );
-}
-
 // ══════════════════════════════════════════════════════════════════════
-//  WEB FEATURES GRID — Premium cards
+//  WEB FEATURES GRID
 // ══════════════════════════════════════════════════════════════════════
-class _WebFeaturesGrid extends StatelessWidget {
-  final bool isDesktop, isDark;
+class _WebFeatures extends StatelessWidget {
+  final bool desktop, dark;
   final AppLocalizations l;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
   final void Function(Widget) push;
-
-  const _WebFeaturesGrid({
-    required this.isDesktop,
-    required this.isDark,
+  const _WebFeatures({
+    required this.desktop,
+    required this.dark,
     required this.l,
     required this.toggleTheme,
     required this.setLocale,
@@ -1110,180 +1433,260 @@ class _WebFeaturesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final features = [
+    final feats = [
       (
         Icons.translate_rounded,
-        _primary,
-        _primaryDark,
+        _elBlue,
+        _elBlueD,
         l.t('nav_terminal'),
         l.t('home_terminal_sub'),
         TranslateScreen(toggleTheme: toggleTheme, setLocale: setLocale),
-        [l.t('home_terminal_b1_title'), l.t('home_terminal_b2_title')],
+        ['On-device AI', 'Real-time'],
       ),
       (
         Icons.back_hand_rounded,
-        _secondary,
-        _secondaryDark,
+        _teal,
+        _tealD,
         l.t('nav_signs'),
         l.t('home_signs_sub'),
         SignsPage(toggleTheme: toggleTheme, setLocale: setLocale),
-        [l.t('home_signs_b1_title'), l.t('home_signs_b2_title')],
+        ['1000+ Signs', 'ISLRTC'],
       ),
       (
         Icons.compare_arrows_rounded,
-        _success,
-        _successDark,
+        _emerald,
+        _emeraldD,
         l.t('nav_bridge'),
         l.t('home_bridge_sub'),
         TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale),
-        [l.t('home_bridge_b1_title'), l.t('home_bridge_b2_title')],
+        ['Bidirectional', 'Voice + Signs'],
       ),
       (
         Icons.emergency_rounded,
-        _danger,
-        _dangerDark,
+        _red,
+        _red,
         l.t('nav_emergency'),
-        l.t('home_bridge_sub'),
+        'Life-saving signs and one-tap SOS for critical moments.',
         EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale),
-        [l.t('home_tag_life_saving_signs'), l.t('home_tag_one_tap_sos')],
+        ['SOS Alerts', 'Emergency Signs'],
       ),
     ];
-
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: isDesktop ? 2 : 1,
-      mainAxisSpacing: _sp16,
-      crossAxisSpacing: _sp16,
-      childAspectRatio: isDesktop ? 2.0 : 2.8,
-      children: features.map((f) {
-        final accent = isDark ? f.$3 : f.$2;
-        return _WebFeatureCard(
-          icon: f.$1,
-          accent: accent,
-          title: f.$4,
-          desc: f.$5,
-          tags: f.$7,
-          page: f.$6,
-          isDark: isDark,
-          push: push,
-        );
-      }).toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: _acc(dark).withOpacity(0.10),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: _acc(dark).withOpacity(0.22),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'FEATURES',
+                style: _lbl(
+                  10.5,
+                  _acc(dark),
+                  w: FontWeight.w700,
+                ).copyWith(letterSpacing: 1.5),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: _s14),
+        Text('Everything you need', style: _h(desktop ? 36 : 26, _txt(dark))),
+        const SizedBox(height: _s8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Text(
+            'Powerful tools for India\'s 63 million deaf and mute community',
+            style: _b(15, _txts(dark)),
+          ),
+        ),
+        SizedBox(height: desktop ? 48 : 36),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: desktop ? 2 : 1,
+          mainAxisSpacing: _s16,
+          crossAxisSpacing: _s16,
+          childAspectRatio: desktop ? 2.1 : 3.2,
+          children: feats.map((f) {
+            final a = dark ? f.$3 : f.$2;
+            return _WebFeatCard(
+              icon: f.$1,
+              accent: a,
+              title: f.$4,
+              desc: f.$5,
+              tags: f.$7,
+              page: f.$6,
+              dark: dark,
+              push: push,
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }
 
-class _WebFeatureCard extends StatefulWidget {
+class _WebFeatCard extends StatefulWidget {
   final IconData icon;
   final Color accent;
   final String title, desc;
   final List<String> tags;
   final Widget page;
-  final bool isDark;
+  final bool dark;
   final void Function(Widget) push;
-
-  const _WebFeatureCard({
+  const _WebFeatCard({
     required this.icon,
     required this.accent,
     required this.title,
     required this.desc,
     required this.tags,
     required this.page,
-    required this.isDark,
+    required this.dark,
     required this.push,
   });
-
   @override
-  State<_WebFeatureCard> createState() => _WebFeatureCardState();
+  State<_WebFeatCard> createState() => _WebFeatCardState();
 }
 
-class _WebFeatureCardState extends State<_WebFeatureCard> {
-  bool _hovered = false;
-
+class _WebFeatCardState extends State<_WebFeatCard> {
+  bool _hov = false;
   @override
   Widget build(BuildContext context) {
-    final bg = widget.isDark ? _dSurface : _lSurface;
-    final bgHov = widget.isDark ? _dSurface2 : _lSurface2;
-    final textClr = widget.isDark ? _dText : _lText;
-    final subClr = widget.isDark ? _dTextSub : _lTextSub;
-    final border = widget.isDark ? _dBorder : _lBorder;
-
+    final bg = _surf(widget.dark);
+    final bgH = _surf2(widget.dark);
+    final t = _txt(widget.dark);
+    final s = _txts(widget.dark);
+    final bd = _bord(widget.dark);
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => widget.push(widget.page),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(_sp24),
+          padding: const EdgeInsets.all(_s24),
           decoration: BoxDecoration(
-            color: _hovered ? bgHov : bg,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _hov
+                  ? [
+                      bgH,
+                      widget.dark
+                          ? _navy5.withOpacity(0.92)
+                          : _lSurf2.withOpacity(0.84),
+                    ]
+                  : [
+                      bg,
+                      widget.dark
+                          ? _navy4.withOpacity(0.88)
+                          : _lSurf2.withOpacity(0.58),
+                    ],
+            ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: _hovered ? widget.accent.withOpacity(0.40) : border,
-              width: _hovered ? 1.5 : 1.0,
+              color: _hov ? widget.accent.withOpacity(0.46) : bd,
+              width: _hov ? 1.5 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: _hovered
-                    ? widget.accent.withOpacity(0.10)
-                    : Colors.black.withOpacity(widget.isDark ? 0.15 : 0.04),
-                blurRadius: _hovered ? 24 : 12,
+                color: _hov
+                    ? widget.accent.withOpacity(0.12)
+                    : Colors.black.withOpacity(widget.dark ? 0.15 : 0.04),
+                blurRadius: _hov ? 28 : 12,
                 offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: widget.accent.withOpacity(_hov ? 0.10 : 0.05),
+                blurRadius: _hov ? 36 : 18,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Row(
             children: [
-              // Icon
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 3,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      widget.accent.withOpacity(0.96),
+                      widget.accent.withOpacity(0.24),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: _s16),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: widget.accent.withOpacity(_hovered ? 0.18 : 0.10),
+                  gradient: LinearGradient(
+                    colors: [
+                      widget.accent.withOpacity(_hov ? 0.20 : 0.12),
+                      widget.accent.withOpacity(_hov ? 0.08 : 0.04),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: widget.accent.withOpacity(_hov ? 0.30 : 0.18),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(widget.icon, color: widget.accent, size: 28),
+                child: Icon(widget.icon, color: widget.accent, size: 26),
               ),
-              const SizedBox(width: _sp20),
-              // Content
+              const SizedBox(width: _s20),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(widget.title, style: _heading(17, textClr)),
-                    const SizedBox(height: _sp6),
+                    Text(widget.title, style: _h(17, t)),
+                    const SizedBox(height: _s6),
                     Text(
                       widget.desc,
-                      style: _body(13, subClr),
+                      style: _b(13, s),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: _sp12),
+                    const SizedBox(height: _s12),
                     Wrap(
-                      spacing: _sp6,
-                      runSpacing: _sp6,
+                      spacing: _s6,
+                      runSpacing: _s6,
                       children: widget.tags
                           .map(
-                            (t) => Container(
+                            (tg) => Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: _sp8,
-                                vertical: _sp4,
+                                horizontal: _s8,
+                                vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: widget.accent.withOpacity(0.08),
+                                color: widget.accent.withOpacity(0.09),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: widget.accent.withOpacity(0.20),
+                                  color: widget.accent.withOpacity(0.22),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                t,
-                                style: _label(
+                                tg,
+                                style: _lbl(
                                   11,
                                   widget.accent,
                                   w: FontWeight.w600,
@@ -1296,16 +1699,19 @@ class _WebFeatureCardState extends State<_WebFeatureCard> {
                   ],
                 ),
               ),
-              // Arrow
               AnimatedOpacity(
-                opacity: _hovered ? 1.0 : 0.0,
+                opacity: _hov ? 1.0 : 0.85,
                 duration: const Duration(milliseconds: 180),
                 child: Container(
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: widget.accent.withOpacity(0.10),
+                    color: widget.accent.withOpacity(_hov ? 0.16 : 0.10),
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: widget.accent.withOpacity(_hov ? 0.26 : 0.18),
+                      width: 1,
+                    ),
                   ),
                   child: Icon(
                     Icons.arrow_forward_rounded,
@@ -1323,42 +1729,34 @@ class _WebFeatureCardState extends State<_WebFeatureCard> {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  WEB ASSISTANT SECTION — Premium showcase
+//  WEB AI BANNER
 // ══════════════════════════════════════════════════════════════════════
-class _WebAssistantSection extends StatefulWidget {
-  final bool isDesktop, isDark;
+class _WebAIBanner extends StatefulWidget {
+  final bool desktop, dark;
   final AppLocalizations l;
   final Animation<double> float;
   final VoidCallback onTap;
-
-  const _WebAssistantSection({
-    required this.isDesktop,
-    required this.isDark,
+  const _WebAIBanner({
+    required this.desktop,
+    required this.dark,
     required this.l,
     required this.float,
     required this.onTap,
   });
-
   @override
-  State<_WebAssistantSection> createState() => _WebAssistantSectionState();
+  State<_WebAIBanner> createState() => _WebAIBannerState();
 }
 
-class _WebAssistantSectionState extends State<_WebAssistantSection> {
-  bool _hovered = false;
-
+class _WebAIBannerState extends State<_WebAIBanner> {
+  bool _hov = false;
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final accent = isDark ? _purpleDark : _purple;
-    final bg = isDark ? _dSurface : _lSurface;
-    final textClr = isDark ? _dText : _lText;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-    final border = isDark ? _dBorder : _lBorder;
-    final l = widget.l;
-
+    final a = widget.dark ? _violetD : _violet;
+    final t = _txt(widget.dark);
+    final s = _txts(widget.dark);
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
@@ -1368,327 +1766,293 @@ class _WebAssistantSectionState extends State<_WebAssistantSection> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
-                  ? [Color(0xFF130B25), Color(0xFF1A0D35)]
-                  : [Color(0xFFF5F0FF), Color(0xFFEDE8FF)],
+              colors: widget.dark
+                  ? [
+                      const Color(0xFF0F1B33),
+                      const Color(0xFF111E38),
+                      const Color(0xFF0D172B),
+                    ]
+                  : [
+                      const Color(0xFFFFFFFF),
+                      const Color(0xFFF6F9FF),
+                      const Color(0xFFEEF4FF),
+                    ],
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: _hovered
-                  ? accent.withOpacity(0.50)
-                  : accent.withOpacity(0.20),
-              width: _hovered ? 1.5 : 1.0,
+              color: _hov ? a.withOpacity(0.32) : a.withOpacity(0.16),
+              width: _hov ? 1.25 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: accent.withOpacity(_hovered ? 0.15 : 0.06),
-                blurRadius: _hovered ? 40 : 20,
-                offset: const Offset(0, 8),
+                color: a.withOpacity(_hov ? 0.10 : 0.04),
+                blurRadius: _hov ? 30 : 18,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(widget.dark ? 0.16 : 0.04),
+                blurRadius: _hov ? 36 : 24,
+                offset: const Offset(0, 16),
               ),
             ],
           ),
           child: Padding(
-            padding: EdgeInsets.all(widget.isDesktop ? 44 : 28),
-            child: widget.isDesktop
-                ? _assistantDesktop(l, accent, textClr, subClr)
-                : _assistantMobile(l, accent, textClr, subClr),
+            padding: EdgeInsets.all(widget.desktop ? 48 : 28),
+            child: widget.desktop
+                ? _bannerDesktop(widget.l, a, t, s)
+                : _bannerMobile(widget.l, a, t, s),
           ),
         ),
       ),
     );
   }
 
-  Widget _assistantDesktop(
-    AppLocalizations l,
-    Color accent,
-    Color textClr,
-    Color subClr,
-  ) {
-    return Row(
-      children: [
-        // Left content
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _sp12,
-                  vertical: _sp6,
-                ),
-                decoration: BoxDecoration(
-                  color: accent.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: accent.withOpacity(0.25), width: 1),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.auto_awesome_rounded, size: 12, color: accent),
-                    const SizedBox(width: _sp6),
-                    Text(
-                      l.t('assistant_ai_powered_isl'),
-                      style: _label(11, accent, w: FontWeight.w700),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: _sp20),
-              Text(l.t('assistant_banner_title'), style: _display(32, textClr)),
-              const SizedBox(height: _sp12),
-              Text(l.t('assistant_banner_desc'), style: _body(15, subClr)),
-              const SizedBox(height: _sp24),
-              // Language count badge
-              Row(
-                children: [
-                  Icon(Icons.language_rounded, size: 14, color: accent),
-                  const SizedBox(width: _sp8),
-                  Text(
-                    l.t('assistant_supports_10_languages'),
-                    style: _label(13, accent, w: FontWeight.w600),
-                  ),
-                ],
-              ),
-              const SizedBox(height: _sp24),
-              _WebPrimaryBtn(
-                label: l.t('assistant_open'),
-                icon: Icons.arrow_forward_rounded,
-                bgColor: accent,
-                textColor: Colors.white,
-                onTap: widget.onTap,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: _sp48),
-        // Right — decorative card cluster
-        Expanded(
-          flex: 2,
-          child: _AssistantDecorPanel(
-            accent: accent,
-            isDark: widget.isDark,
-            float: widget.float,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _assistantMobile(
-    AppLocalizations l,
-    Color accent,
-    Color textClr,
-    Color subClr,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [accent, accent.withOpacity(0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: accent.withOpacity(0.30),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.sign_language_rounded,
-                color: Colors.white,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: _sp16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l.t('assistant_title'), style: _heading(20, textClr)),
-                  Text(
-                    l.t('assistant_10_languages'),
-                    style: _label(12, accent, w: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: _sp16),
-        Text(l.t('assistant_banner_desc'), style: _body(14, subClr)),
-        const SizedBox(height: _sp20),
-        _WebPrimaryBtn(
-          label: l.t('assistant_open'),
-          icon: Icons.arrow_forward_rounded,
-          bgColor: accent,
-          textColor: Colors.white,
-          onTap: widget.onTap,
-        ),
-      ],
-    );
-  }
-}
-
-class _AssistantDecorPanel extends StatelessWidget {
-  final Color accent;
-  final bool isDark;
-  final Animation<double> float;
-  const _AssistantDecorPanel({
-    required this.accent,
-    required this.isDark,
-    required this.float,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final bg = isDark ? Color(0xFF1C1430) : Color(0xFFEDE8FF);
-    final bg2 = isDark ? Color(0xFF150F25) : Color(0xFFF0EBFF);
-    final textClr = isDark ? _dText : _lText;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-
-    return AnimatedBuilder(
-      animation: float,
-      builder: (_, __) => Transform.translate(
-        offset: Offset(0, -float.value * 0.5),
+  Widget _bannerDesktop(AppLocalizations l, Color a, Color t, Color s) => Row(
+    children: [
+      Expanded(
+        flex: 3,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Mock chat bubble 1
-            Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _sp16,
-                  vertical: _sp12,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_primary, Color(0xFF4338CA)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(4),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _primary.withOpacity(0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  l.t('assistant_mock_user_message'),
-                  style: _body(13, Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(height: _sp12),
-            // Mock AI response bubble
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _sp16,
-                  vertical: _sp14,
-                ),
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                    bottomLeft: Radius.circular(4),
-                    bottomRight: Radius.circular(16),
-                  ),
-                  border: Border.all(color: accent.withOpacity(0.20), width: 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: accent,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.sign_language_rounded,
-                            color: Colors.white,
-                            size: 11,
-                          ),
-                        ),
-                        const SizedBox(width: _sp8),
-                        Text(
-                          l.t('app_title_short'),
-                          style: _label(11, accent, w: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: _sp8),
-                    Text(
-                      l.t('assistant_mock_ai_message'),
-                      style: _body(12, subClr),
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: _sp8),
-                    Wrap(
-                      spacing: _sp6,
-                      children: [
-                        _MiniChip(l.t('assistant_mock_chip_help'), accent),
-                        _MiniChip(l.t('assistant_mock_chip_emergency'), accent),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: _sp12),
-            // Language row
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _sp12,
-                vertical: _sp10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: bg2,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: accent.withOpacity(0.15), width: 1),
+                color: a.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: a.withOpacity(0.18), width: 1),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['EN', 'हि', 'म', 'বাং', 'தமி']
-                    .map(
-                      (lang) => Text(
-                        lang,
-                        style: _label(12, accent, w: FontWeight.w700),
-                      ),
-                    )
-                    .toList(),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_awesome_rounded, size: 12, color: a),
+                  const SizedBox(width: 6),
+                  Text(
+                    'AI-Powered ISL Assistant',
+                    style: _lbl(11, a, w: FontWeight.w700),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: _s20),
+            Text(l.t('assistant_banner_title'), style: _disp(30, t)),
+            const SizedBox(height: _s12),
+            Text(
+              l.t('assistant_banner_desc'),
+              style: _b(15, s).copyWith(height: 1.55),
+            ),
+            const SizedBox(height: _s20),
+            Row(
+              children: [
+                Icon(Icons.language_rounded, size: 14, color: a),
+                const SizedBox(width: 8),
+                Text(
+                  'Supports 3 Languages',
+                  style: _lbl(13, a, w: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: _s24),
+            _GlowBtn(
+              label: l.t('assistant_open'),
+              icon: Icons.arrow_forward_rounded,
+              grad: [_elBlue, _cyan.withOpacity(0.85)],
+              onTap: widget.onTap,
             ),
           ],
         ),
       ),
+      const SizedBox(width: _s48),
+      Expanded(
+        flex: 2,
+        child: AnimatedBuilder(
+          animation: widget.float,
+          builder: (_, __) => Transform.translate(
+            offset: Offset(0, -widget.float.value * 0.5),
+            child: _AIChatMockup(accent: a, dark: widget.dark),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _bannerMobile(AppLocalizations l, Color a, Color t, Color s) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [a, _cyan.withOpacity(0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: a.withOpacity(0.30),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.sign_language_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: _s16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.t('assistant_title'), style: _h(20, t)),
+                Text(
+                  '3 Languages',
+                  style: _lbl(12, a, w: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: _s16),
+      Text(l.t('assistant_banner_desc'), style: _b(14, s)),
+      const SizedBox(height: _s20),
+      _GlowBtn(
+        label: l.t('assistant_open'),
+        icon: Icons.arrow_forward_rounded,
+        grad: [a, _cyan.withOpacity(0.7)],
+        onTap: widget.onTap,
+      ),
+    ],
+  );
+}
+
+class _AIChatMockup extends StatelessWidget {
+  final Color accent;
+  final bool dark;
+  const _AIChatMockup({required this.accent, required this.dark});
+  @override
+  Widget build(BuildContext context) {
+    final bg1 = dark ? const Color(0xFF15223D) : const Color(0xFFF6F9FF);
+    final bg2 = dark ? const Color(0xFF111B32) : const Color(0xFFF3F7FF);
+    final s = _txts(dark);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [_elBlue, Color(0xFF4338CA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(4),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _elBlue.withOpacity(0.16),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Text('How do I sign "HELP"?', style: _b(13, Colors.white)),
+          ),
+        ),
+        const SizedBox(height: _s12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: bg1,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(16),
+              ),
+              border: Border.all(color: accent.withOpacity(0.14), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(
+                        Icons.sign_language_rounded,
+                        color: Colors.white,
+                        size: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('VANI', style: _lbl(11, accent, w: FontWeight.w700)),
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF22C55E),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sign HELP: Extend both hands flat,\npalms facing up, raise twice.',
+                  style: _b(12, s),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    _MiniChip('HELP', accent),
+                    _MiniChip('EMERGENCY', accent),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: _s12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg2,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: accent.withOpacity(0.12), width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: ['EN', 'हि', 'म']
+                .map(
+                  (la) => Text(la, style: _lbl(12, accent, w: FontWeight.w700)),
+                )
+                .toList(),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1697,13 +2061,12 @@ class _MiniChip extends StatelessWidget {
   final String label;
   final Color accent;
   const _MiniChip(this.label, this.accent);
-
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: _sp8, vertical: 3),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
       color: accent.withOpacity(0.12),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       border: Border.all(color: accent.withOpacity(0.25), width: 1),
     ),
     child: Row(
@@ -1711,179 +2074,94 @@ class _MiniChip extends StatelessWidget {
       children: [
         Icon(Icons.front_hand_rounded, size: 10, color: accent),
         const SizedBox(width: 4),
-        Text(label, style: _label(10, accent, w: FontWeight.w700)),
+        Text(label, style: _lbl(10, accent, w: FontWeight.w700)),
       ],
     ),
   );
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  WEB CTA BUTTONS
-// ══════════════════════════════════════════════════════════════════════
-class _WebPrimaryBtn extends StatefulWidget {
-  final String label;
-  final IconData icon;
-  final Color bgColor, textColor;
-  final VoidCallback onTap;
-  const _WebPrimaryBtn({
-    required this.label,
-    required this.icon,
-    required this.bgColor,
-    required this.textColor,
-    required this.onTap,
-  });
-  @override
-  State<_WebPrimaryBtn> createState() => _WebPrimaryBtnState();
-}
-
-class _WebPrimaryBtnState extends State<_WebPrimaryBtn> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) => MouseRegion(
-    onEnter: (_) => setState(() => _hovered = true),
-    onExit: (_) => setState(() => _hovered = false),
-    cursor: SystemMouseCursors.click,
-    child: GestureDetector(
-      onTap: widget.onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: _sp24),
-        decoration: BoxDecoration(
-          color: widget.bgColor,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: widget.bgColor.withOpacity(_hovered ? 0.40 : 0.25),
-              blurRadius: _hovered ? 20 : 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.label,
-              style: _label(14.5, widget.textColor, w: FontWeight.w700),
-            ),
-            const SizedBox(width: _sp8),
-            Icon(widget.icon, color: widget.textColor, size: 16),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _WebSecondaryBtn extends StatefulWidget {
-  final String label;
-  final IconData icon;
-  final Color accent;
-  final bool isDark;
-  final VoidCallback onTap;
-  const _WebSecondaryBtn({
-    required this.label,
-    required this.icon,
-    required this.accent,
-    required this.isDark,
-    required this.onTap,
-  });
-  @override
-  State<_WebSecondaryBtn> createState() => _WebSecondaryBtnState();
-}
-
-class _WebSecondaryBtnState extends State<_WebSecondaryBtn> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = widget.isDark ? _dSurface : _lSurface;
-    final border = widget.isDark ? _dBorder : _lBorder;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: _sp24),
-          decoration: BoxDecoration(
-            color: _hovered ? widget.accent.withOpacity(0.08) : bg,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: _hovered ? widget.accent.withOpacity(0.40) : border,
-              width: _hovered ? 1.5 : 1.0,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(widget.icon, color: widget.accent, size: 16),
-              const SizedBox(width: _sp8),
-              Text(
-                widget.label,
-                style: _label(14.5, widget.accent, w: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════
 //  WEB OBJECTIVES GRID
 // ══════════════════════════════════════════════════════════════════════
-class _WebObjectivesGrid extends StatelessWidget {
-  final bool isDesktop, isDark;
+class _WebObjectives extends StatelessWidget {
+  final bool desktop, dark;
   final AppLocalizations l;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
-  const _WebObjectivesGrid({
-    required this.isDesktop,
-    required this.isDark,
+  const _WebObjectives({
+    required this.desktop,
+    required this.dark,
     required this.l,
     required this.toggleTheme,
     required this.setLocale,
   });
-
   @override
   Widget build(BuildContext context) {
     final cards = _objCards(l, toggleTheme, setLocale);
     final accents = [
-      [_primary, _primaryDark],
-      [_secondary, _secondaryDark],
-      [_success, _successDark],
-      [_warning, _warningDark],
-      [_purple, _purpleDark],
+      [_elBlue, _elBlueD],
+      [_teal, _tealD],
+      [_emerald, _emeraldD],
+      [_cyan, _cyanD],
+      [_amber, _amberD],
+      [_violet, _violetD],
     ];
-
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: isDesktop ? 3 : 2,
-      mainAxisSpacing: _sp14,
-      crossAxisSpacing: _sp14,
-      childAspectRatio: isDesktop ? 1.55 : 1.35,
-      children: cards.asMap().entries.map((e) {
-        final i = e.key;
-        final c = e.value;
-        final accent = isDark ? accents[i][1] : accents[i][0];
-        return _WebObjCard(
-          icon: c.$2,
-          title: c.$3,
-          desc: c.$4,
-          accent: accent,
-          page: c.$5,
-          isDark: isDark,
-        );
-      }).toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: _acc(dark).withOpacity(0.10),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: _acc(dark).withOpacity(0.22),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'OUR MISSION',
+                style: _lbl(
+                  10.5,
+                  _acc(dark),
+                  w: FontWeight.w700,
+                ).copyWith(letterSpacing: 1.5),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: _s14),
+        Text(l.t('obj_heading'), style: _h(desktop ? 36 : 26, _txt(dark))),
+        const SizedBox(height: _s8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Text(l.t('obj_sub'), style: _b(15, _txts(dark))),
+        ),
+        SizedBox(height: desktop ? 48 : 36),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: desktop ? 3 : 2,
+          mainAxisSpacing: _s14,
+          crossAxisSpacing: _s14,
+          childAspectRatio: desktop ? 1.55 : 1.35,
+          children: cards.asMap().entries.map((e) {
+            final i = e.key;
+            final c = e.value;
+            final a = dark ? accents[i][1] : accents[i][0];
+            return _WebObjCard(
+              icon: c.$2,
+              title: c.$3,
+              desc: c.$4,
+              accent: a,
+              page: c.$5,
+              dark: dark,
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }
@@ -1893,116 +2171,154 @@ class _WebObjCard extends StatefulWidget {
   final String title, desc;
   final Color accent;
   final Widget page;
-  final bool isDark;
+  final bool dark;
   const _WebObjCard({
     required this.icon,
     required this.title,
     required this.desc,
     required this.accent,
     required this.page,
-    required this.isDark,
+    required this.dark,
   });
   @override
   State<_WebObjCard> createState() => _WebObjCardState();
 }
 
 class _WebObjCardState extends State<_WebObjCard> {
-  bool _hovered = false;
+  bool _hov = false;
   @override
   Widget build(BuildContext context) {
-    final bg = widget.isDark ? _dSurface : _lSurface;
-    final bgHov = widget.isDark ? _dSurface2 : _lSurface2;
-    final textClr = widget.isDark ? _dText : _lText;
-    final subClr = widget.isDark ? _dTextSub : _lTextSub;
-    final border = widget.isDark ? _dBorder : _lBorder;
-
+    final bg = _surf(widget.dark);
+    final bgH = _surf2(widget.dark);
+    final t = _txt(widget.dark);
+    final s = _txts(widget.dark);
+    final bd = _bord(widget.dark);
     return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
       cursor: SystemMouseCursors.click,
-      child: Semantics(
-        label: widget.title,
-        button: true,
-        child: GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => widget.page,
-              transitionsBuilder: (_, a, __, c) =>
-                  FadeTransition(opacity: a, child: c),
-              transitionDuration: const Duration(milliseconds: 240),
-            ),
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => widget.page,
+            transitionsBuilder: (_, a, __, c) =>
+                FadeTransition(opacity: a, child: c),
+            transitionDuration: const Duration(milliseconds: 240),
           ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.all(_sp20),
-            decoration: BoxDecoration(
-              color: _hovered ? bgHov : bg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _hovered ? widget.accent.withOpacity(0.40) : border,
-                width: _hovered ? 1.5 : 1.0,
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(_s20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _hov
+                  ? [
+                      bgH,
+                      widget.dark
+                          ? _navy5.withOpacity(0.90)
+                          : _lSurf2.withOpacity(0.82),
+                    ]
+                  : [
+                      bg,
+                      widget.dark
+                          ? _navy4.withOpacity(0.86)
+                          : _lSurf2.withOpacity(0.56),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: _hov ? widget.accent.withOpacity(0.46) : bd,
+              width: _hov ? 1.5 : 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _hov
+                    ? widget.accent.withOpacity(0.12)
+                    : Colors.black.withOpacity(widget.dark ? 0.12 : 0.03),
+                blurRadius: _hov ? 22 : 8,
+                offset: const Offset(0, 4),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: _hovered
-                      ? widget.accent.withOpacity(0.10)
-                      : Colors.black.withOpacity(widget.isDark ? 0.12 : 0.03),
-                  blurRadius: _hovered ? 20 : 8,
-                  offset: const Offset(0, 4),
+              BoxShadow(
+                color: widget.accent.withOpacity(_hov ? 0.08 : 0.04),
+                blurRadius: _hov ? 30 : 14,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: 3,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  gradient: LinearGradient(
+                    colors: [
+                      widget.accent.withOpacity(0.92),
+                      widget.accent.withOpacity(0.30),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
+              ),
+              const SizedBox(height: _s12),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.accent.withOpacity(_hov ? 0.22 : 0.14),
+                          widget.accent.withOpacity(_hov ? 0.10 : 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.accent.withOpacity(_hov ? 0.30 : 0.20),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(widget.icon, color: widget.accent, size: 18),
+                  ),
+                  const Spacer(),
+                  AnimatedOpacity(
+                    opacity: _hov ? 1.0 : 0.85,
+                    duration: const Duration(milliseconds: 150),
+                    child: Container(
+                      width: 26,
+                      height: 26,
                       decoration: BoxDecoration(
-                        color: widget.accent.withOpacity(
-                          _hovered ? 0.15 : 0.10,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(widget.icon, color: widget.accent, size: 18),
-                    ),
-                    const Spacer(),
-                    AnimatedOpacity(
-                      opacity: _hovered ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 150),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: widget.accent.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          color: widget.accent,
-                          size: 14,
+                        color: widget.accent.withOpacity(_hov ? 0.15 : 0.09),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: widget.accent.withOpacity(_hov ? 0.25 : 0.17),
+                          width: 1,
                         ),
                       ),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        color: widget.accent,
+                        size: 13,
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: _sp14),
-                Text(
-                  widget.title,
-                  style: _label(14.5, textClr, w: FontWeight.w700),
-                ),
-                const SizedBox(height: _sp6),
-                Text(
-                  widget.desc,
-                  style: _body(12, subClr),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: _s14),
+              Text(widget.title, style: _lbl(14.5, t, w: FontWeight.w700)),
+              const SizedBox(height: _s6),
+              Text(
+                widget.desc,
+                style: _b(12, s),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),
@@ -2011,97 +2327,191 @@ class _WebObjCardState extends State<_WebObjCard> {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  WEB VISION SECTION — Refined
+//  WEB VISION
 // ══════════════════════════════════════════════════════════════════════
-class _WebVisionSection extends StatelessWidget {
-  final bool isDark;
+class _WebVision extends StatelessWidget {
+  final bool dark;
   final AppLocalizations l;
-  const _WebVisionSection({required this.isDark, required this.l});
-
+  const _WebVision({required this.dark, required this.l});
   @override
   Widget build(BuildContext context) {
-    final accent = isDark ? _primaryDark : _primary;
-    final bg = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder : _lBorder;
-    final textClr = isDark ? _dText : _lText;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-
+    final a = _acc(dark);
+    final t = _txt(dark);
+    final s = _txts(dark);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 52, horizontal: 44),
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 48),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border, width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: dark
+              ? [
+                  const Color(0xFF101A30),
+                  const Color(0xFF0D172A),
+                  const Color(0xFF111B31),
+                ]
+              : [
+                  const Color(0xFFFFFFFF),
+                  const Color(0xFFF8FBFF),
+                  const Color(0xFFF2F7FF),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: a.withOpacity(dark ? 0.24 : 0.16), width: 1.05),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.15 : 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: a.withOpacity(dark ? 0.10 : 0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(dark ? 0.16 : 0.04),
+            blurRadius: 32,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            width: 76,
+            height: 3,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.10),
-              shape: BoxShape.circle,
-              border: Border.all(color: accent.withOpacity(0.20), width: 1),
-            ),
-            child: Icon(
-              Icons.volunteer_activism_rounded,
-              color: accent,
-              size: 24,
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                colors: [a.withOpacity(0.90), a.withOpacity(0.30)],
+              ),
             ),
           ),
-          const SizedBox(height: _sp20),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: a.withOpacity(dark ? 0.12 : 0.08),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: a.withOpacity(dark ? 0.24 : 0.16), width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.insights_rounded, color: a, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  l.t('home_mission_label'),
+                  style: _lbl(11.5, a, w: FontWeight.w700).copyWith(letterSpacing: 1.0),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [a.withOpacity(0.16), a.withOpacity(0.06)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: a.withOpacity(dark ? 0.30 : 0.20), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: a.withOpacity(dark ? 0.18 : 0.10),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Icon(Icons.volunteer_activism_rounded, color: a, size: 24),
+          ),
+          const SizedBox(height: 14),
           Text(
             l.t('vision_title'),
             textAlign: TextAlign.center,
-            style: _heading(24, textClr),
+            style: _h(30, t, w: FontWeight.w700),
           ),
-          const SizedBox(height: _sp12),
+          const SizedBox(height: 10),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
+            constraints: const BoxConstraints(maxWidth: 880),
             child: Text(
               l.t('vision_body'),
               textAlign: TextAlign.center,
-              style: _body(15, subClr),
+              style: _b(14.5, s).copyWith(height: 1.58),
             ),
           ),
-          const SizedBox(height: _sp24),
+          const SizedBox(height: 16),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _VisionChip(
+                dark: dark,
+                accent: a,
+                icon: Icons.groups_rounded,
+                text: l.t('home_trust_deaf_community'),
+              ),
+              _VisionChip(
+                dark: dark,
+                accent: a,
+                icon: Icons.language_rounded,
+                text: l.t('home_trust_indian_languages'),
+              ),
+              _VisionChip(
+                dark: dark,
+                accent: a,
+                icon: Icons.verified_rounded,
+                text: l.t('home_trust_certified_signs'),
+              ),
+              _VisionChip(
+                dark: dark,
+                accent: a,
+                icon: Icons.bolt_rounded,
+                text: l.t('home_trust_powered'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: _sp16,
-              vertical: _sp10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
-              color: isDark ? _dangerDark.withOpacity(0.12) : _dangerLight,
-              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                colors: dark
+                    ? [
+                        _red.withOpacity(0.16),
+                        const Color(0xFF451C26).withOpacity(0.20),
+                      ]
+                    : [
+                        const Color(0xFFFFEEF0),
+                        const Color(0xFFFFF6F7),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark
-                    ? _dangerDark.withOpacity(0.28)
-                    : _danger.withOpacity(0.28),
+                color: _red.withOpacity(dark ? 0.30 : 0.20),
                 width: 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: _red.withOpacity(dark ? 0.14 : 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.warning_amber_rounded,
-                  color: isDark ? _dangerDark : _danger,
-                  size: 15,
+                  color: dark ? _redD : _red,
+                  size: 18,
                 ),
-                const SizedBox(width: _sp8),
+                const SizedBox(width: 8),
                 Text(
                   l.t('obj_crisis_stat'),
-                  style: _label(
-                    12.5,
-                    isDark ? _dangerDark : _danger,
-                    w: FontWeight.w600,
-                  ),
+                  style: _lbl(13, dark ? _redD : _red, w: FontWeight.w700),
                 ),
               ],
             ),
@@ -2112,56 +2522,116 @@ class _WebVisionSection extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  WEB FOOTER — Refined minimal
-// ══════════════════════════════════════════════════════════════════════
-class _WebFooter extends StatelessWidget {
-  final bool isDark;
-  const _WebFooter({required this.isDark});
+class _VisionChip extends StatelessWidget {
+  final bool dark;
+  final Color accent;
+  final IconData icon;
+  final String text;
+  const _VisionChip({
+    required this.dark,
+    required this.accent,
+    required this.icon,
+    required this.text,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final accent = isDark ? _primaryDark : _primary;
-    final sub = isDark ? _dTextMuted : _lTextMuted;
-    final div = isDark ? _dBorderSub : _lBorderSub;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: accent.withOpacity(dark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withOpacity(dark ? 0.24 : 0.16), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: accent),
+          const SizedBox(width: 6),
+          Text(text, style: _lbl(12, accent, w: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
 
+// ══════════════════════════════════════════════════════════════════════
+//  WEB FOOTER
+// ══════════════════════════════════════════════════════════════════════
+class _WebFooter extends StatelessWidget {
+  final bool dark;
+  const _WebFooter({required this.dark});
+  @override
+  Widget build(BuildContext context) {
+    final a = _acc(dark);
+    final m = _txtm(dark);
+    final d = _bordS(dark);
     return Column(
       children: [
-        Divider(height: 1, thickness: 1, color: div),
-        const SizedBox(height: _sp24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Brand
-            Row(
-              children: [
-                Container(
-                  width: 3,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: _sp8),
-                Text(
-                  'VANI',
-                  style: _label(
-                    16,
-                    isDark ? _dText : _lText,
-                    w: FontWeight.w800,
-                  ).copyWith(letterSpacing: 3.0),
-                ),
+        Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.transparent,
+                d.withOpacity(0.85),
+                Colors.transparent,
               ],
             ),
-            // Center
-            Text(
-              '© 2026 — ${AppLocalizations.of(context).t('home_footer')}',
-              style: _body(12, sub),
+          ),
+        ),
+        const SizedBox(height: 18),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    'VANI',
+                    style: _lbl(
+                      22,
+                      _txt(dark),
+                      w: FontWeight.w800,
+                    ).copyWith(letterSpacing: 1.7),
+                  ),
+                ],
+              ),
             ),
-            // Right
-            Text(
-              'Built for India 🇮🇳',
-              style: _label(12, sub, w: FontWeight.w500),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '© 2026 — ${AppLocalizations.of(context).t('home_footer')}',
+                    textAlign: TextAlign.center,
+                    style: _b(12, m),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Final year project 2025-26',
+                    textAlign: TextAlign.center,
+                    style: _lbl(12, m, w: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: a.withOpacity(dark ? 0.08 : 0.06),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: a.withOpacity(dark ? 0.18 : 0.14), width: 1),
+                  ),
+                  child: Text(
+                    'Built for India 🇮🇳',
+                    style: _lbl(12, m, w: FontWeight.w600),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -2171,41 +2641,143 @@ class _WebFooter extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  SKIP TO MAIN CONTENT
+//  CTA BUTTONS
 // ══════════════════════════════════════════════════════════════════════
-class _SkipToMainContent extends StatelessWidget {
-  final bool isDark;
-  const _SkipToMainContent({required this.isDark});
+class _GlowBtn extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final List<Color> grad;
+  final VoidCallback onTap;
+  const _GlowBtn({
+    required this.label,
+    required this.icon,
+    required this.grad,
+    required this.onTap,
+  });
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: AppLocalizations.of(context).t('home_skip_main_content'),
-    button: true,
-    child: const SizedBox.shrink(),
+  State<_GlowBtn> createState() => _GlowBtnState();
+}
+
+class _GlowBtnState extends State<_GlowBtn> {
+  bool _hov = false;
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+    onEnter: (_) => setState(() => _hov = true),
+    onExit: (_) => setState(() => _hov = false),
+    cursor: SystemMouseCursors.click,
+    child: GestureDetector(
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: widget.grad,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: widget.grad.first.withOpacity(_hov ? 0.50 : 0.30),
+              blurRadius: _hov ? 22 : 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.label,
+              style: _lbl(14.5, Colors.white, w: FontWeight.w700),
+            ),
+            const SizedBox(width: _s8),
+            Icon(widget.icon, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    ),
   );
 }
 
+class _OutlineBtn extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final Color accent;
+  final bool dark;
+  final VoidCallback onTap;
+  const _OutlineBtn({
+    required this.label,
+    required this.icon,
+    required this.accent,
+    required this.dark,
+    required this.onTap,
+  });
+  @override
+  State<_OutlineBtn> createState() => _OutlineBtnState();
+}
+
+class _OutlineBtnState extends State<_OutlineBtn> {
+  bool _hov = false;
+  @override
+  Widget build(BuildContext context) {
+    final bg = _surf(widget.dark);
+    final bd = _bord(widget.dark);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          decoration: BoxDecoration(
+            color: _hov ? widget.accent.withOpacity(0.08) : bg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _hov ? widget.accent.withOpacity(0.42) : bd,
+              width: _hov ? 1.5 : 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.icon, color: widget.accent, size: 16),
+              const SizedBox(width: _s8),
+              Text(
+                widget.label,
+                style: _lbl(14.5, widget.accent, w: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════
-//  UX4G TAB BAR — unchanged from original
+//  MOBILE COMPONENTS
 // ══════════════════════════════════════════════════════════════════════
-class _UX4GTabBar extends StatelessWidget {
+class _FinTechTabBar extends StatelessWidget {
   final bool isDark;
   final int tab;
   final ValueChanged<int> onTap;
   final AppLocalizations l;
-  const _UX4GTabBar({
+  const _FinTechTabBar({
     required this.isDark,
     required this.tab,
     required this.onTap,
     required this.l,
   });
-
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder : _lBorder;
-    final activeClr = isDark ? _primaryDark : _primary;
-    final inactiveClr = isDark ? _dTextMuted : _lTextMuted;
-
+    final bg = _surf(isDark);
+    final bd = _bord(isDark);
     final items = [
       (Icons.home_outlined, Icons.home_rounded, l.t('nav_home')),
       (Icons.translate_outlined, Icons.translate_rounded, l.t('nav_terminal')),
@@ -2216,34 +2788,32 @@ class _UX4GTabBar extends StatelessWidget {
         l.t('nav_bridge'),
       ),
       (
-        Icons.sign_language_outlined,
-        Icons.sign_language_rounded,
+        Icons.auto_awesome_outlined,
+        Icons.auto_awesome_rounded,
         l.t('assistant_tab_label'),
       ),
     ];
+    final accents = [_acc(isDark), _acc(isDark), _tealD, _emeraldD, _violetD];
 
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        border: Border(top: BorderSide(color: border, width: 1.0)),
+        border: Border(top: BorderSide(color: bd, width: 1)),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 52,
+          height: 54,
           child: Row(
             children: items.asMap().entries.map((e) {
               final i = e.key;
-              final item = e.value;
+              final it = e.value;
               final active = tab == i;
-              final tabAccent = (i == 4)
-                  ? (isDark ? _purpleDark : _purple)
-                  : activeClr;
-              final color = active ? tabAccent : inactiveClr;
-
+              final ca = isDark ? accents[i] : accents[i];
+              final col = active ? ca : _txtm(isDark);
               return Expanded(
                 child: Semantics(
-                  label: item.$3,
+                  label: it.$3,
                   selected: active,
                   button: true,
                   child: InkWell(
@@ -2254,29 +2824,31 @@ class _UX4GTabBar extends StatelessWidget {
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           height: 2,
-                          width: active ? 24 : 0,
+                          width: active ? 28 : 0,
                           decoration: BoxDecoration(
-                            color: tabAccent,
+                            gradient: active
+                                ? LinearGradient(colors: [ca, _cyan])
+                                : null,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        const SizedBox(height: _sp4),
+                        const SizedBox(height: _s4),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 180),
                           child: Icon(
-                            active ? item.$2 : item.$1,
+                            active ? it.$2 : it.$1,
                             key: ValueKey(active),
                             size: 22,
-                            color: color,
+                            color: col,
                           ),
                         ),
-                        const SizedBox(height: _sp4),
+                        const SizedBox(height: _s4),
                         Text(
-                          item.$3,
+                          it.$3,
                           overflow: TextOverflow.ellipsis,
-                          style: _label(
+                          style: _lbl(
                             active ? 10.5 : 10,
-                            color,
+                            col,
                             w: active ? FontWeight.w700 : FontWeight.w400,
                           ),
                         ),
@@ -2293,22 +2865,20 @@ class _UX4GTabBar extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE HOME FEED — refined ISL card placement
-// ══════════════════════════════════════════════════════════════════════
+// ── Mobile Home Feed ──────────────────────────────────────────────────
 class _MobileHomeFeed extends StatelessWidget {
   final bool isDark;
-  final Animation<double> fade, pulse;
+  final Animation<double> fade, pulse, shim;
   final Animation<Offset> slide;
   final AppLocalizations l;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
-
   const _MobileHomeFeed({
     required this.isDark,
     required this.fade,
     required this.slide,
     required this.pulse,
+    required this.shim,
     required this.l,
     required this.toggleTheme,
     required this.setLocale,
@@ -2316,624 +2886,618 @@ class _MobileHomeFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 100),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _MobileTopBar(
-            isDark: isDark,
-            l: l,
-            pulse: pulse,
-            toggleTheme: toggleTheme,
-            setLocale: setLocale,
+    return Stack(
+      children: [
+        // bg orbs
+        Positioned(
+          top: -80,
+          left: -80,
+          child: _Orb(
+            color: _elBlue.withOpacity(isDark ? 0.10 : 0.06),
+            size: 280,
           ),
+        ),
+        Positioned(
+          top: 200,
+          right: -60,
+          child: _Orb(
+            color: _violet.withOpacity(isDark ? 0.08 : 0.05),
+            size: 220,
+          ),
+        ),
+        // grid
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _DotGridPainter(
+              color: isDark
+                  ? Colors.white.withOpacity(0.02)
+                  : _elBlue.withOpacity(0.03),
+            ),
+          ),
+        ),
+        // arcs
+        Positioned(
+          top: 0,
+          left: 0,
+          child: _ArcDecor(
+            size: 200,
+            color: _elBlue,
+            dark: isDark,
+            flip: false,
+          ),
+        ),
+        Positioned(
+          top: 164,
+          right: -42,
+          child: _BorderCircle(
+            size: 108,
+            color: _cyan,
+            dark: isDark,
+            stroke: 1.0,
+          ),
+        ),
+        Positioned(
+          bottom: 120,
+          left: -22,
+          child: _BorderCircle(
+            size: 84,
+            color: _violet,
+            dark: isDark,
+            stroke: 0.9,
+          ),
+        ),
 
-          FadeTransition(
-            opacity: fade,
-            child: SlideTransition(
-              position: slide,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(_sp16, _sp8, _sp16, 0),
-                child: _MobileHeroCard(
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _MobTopBar(
+                isDark: isDark,
+                l: l,
+                pulse: pulse,
+                toggleTheme: toggleTheme,
+                setLocale: setLocale,
+              ),
+
+              // Hero
+              FadeTransition(
+                opacity: fade,
+                child: SlideTransition(
+                  position: slide,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: _MobHeroCard(
+                      isDark: isDark,
+                      l: l,
+                      toggleTheme: toggleTheme,
+                      setLocale: setLocale,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: _s24),
+
+              // Stats strip
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _MobStatsStrip(isDark: isDark, l: l),
+              ),
+
+              const SizedBox(height: _s32),
+
+              // Marquee-style feature chips
+              _MobFeatureMarquee(isDark: isDark),
+
+              const SizedBox(height: _s32),
+
+              // Quick actions
+              _MobSectionHeader(
+                text: l.t('home_quick_access'),
+                isDark: isDark,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              ),
+              _MobQuickAccess(
+                isDark: isDark,
+                l: l,
+                toggleTheme: toggleTheme,
+                setLocale: setLocale,
+              ),
+
+              const SizedBox(height: _s32),
+
+              // AI Card
+              _MobSectionHeader(
+                text: l.t('assistant_title'),
+                isDark: isDark,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _MobAICard(
                   isDark: isDark,
-                  l: l,
                   toggleTheme: toggleTheme,
                   setLocale: setLocale,
                 ),
               ),
-            ),
+
+              const SizedBox(height: _s32),
+
+              // Objectives
+              _MobSectionHeader(
+                text: l.t('obj_heading'),
+                isDark: isDark,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              ),
+              _MobObjScroll(
+                isDark: isDark,
+                l: l,
+                toggleTheme: toggleTheme,
+                setLocale: setLocale,
+              ),
+
+              const SizedBox(height: _s32),
+
+              // Mission
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _MobMissionCard(isDark: isDark, l: l),
+              ),
+
+              const SizedBox(height: 12),
+            ],
           ),
+        ),
+      ],
+    );
+  }
+}
 
-          const SizedBox(height: _sp24),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _sp16),
-            child: _MobileStatsStrip(isDark: isDark, l: l),
+class _MobTopBar extends StatelessWidget {
+  final bool isDark;
+  final AppLocalizations l;
+  final Animation<double> pulse;
+  final VoidCallback toggleTheme;
+  final Function(Locale) setLocale;
+  const _MobTopBar({
+    required this.isDark,
+    required this.l,
+    required this.pulse,
+    required this.toggleTheme,
+    required this.setLocale,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final t = _txt(isDark);
+    final m = _txtm(isDark);
+    final locale = Localizations.localeOf(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'VANI',
+                    style: _h(19, t, w: FontWeight.w800).copyWith(
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedBuilder(
+                    animation: pulse,
+                    builder: (_, __) => Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF22C55E),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF22C55E,
+                            ).withOpacity(pulse.value * 0.60),
+                            blurRadius: 6,
+                            spreadRadius: 1.5,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Text(l.t('home_tagline'), style: _lbl(10.5, m)),
+            ],
           ),
-
-          const SizedBox(height: _sp32),
-
-          _SectionHeader(
-            text: l.t('home_quick_access'),
-            isDark: isDark,
-            padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp12),
-          ),
-          _QuickAccessRow(
-            isDark: isDark,
-            l: l,
-            toggleTheme: toggleTheme,
-            setLocale: setLocale,
-          ),
-
-          const SizedBox(height: _sp32),
-
-          // ── ISL ASSISTANT — Premium refined card ─────────────────────
-          _SectionHeader(
-            text: l.t('assistant_title'),
-            isDark: isDark,
-            padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp12),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _sp16),
-            child: _MobileAssistantCardPremium(
-              isDark: isDark,
-              toggleTheme: toggleTheme,
-              setLocale: setLocale,
-            ),
-          ),
-
-          const SizedBox(height: _sp32),
-
-          _SectionHeader(
-            text: l.t('obj_heading'),
-            isDark: isDark,
-            padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp16),
-          ),
-          _MobileObjectivesScroll(
-            isDark: isDark,
-            l: l,
-            toggleTheme: toggleTheme,
-            setLocale: setLocale,
-          ),
-
-          const SizedBox(height: _sp32),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _sp16),
-            child: _MobileMissionCard(isDark: isDark, l: l),
-          ),
-
-          const SizedBox(height: _sp12),
+          const Spacer(),
+          _MobLangMenuBtn(isDark: isDark, locale: locale, setLocale: setLocale),
+          const SizedBox(width: 8),
+          _MobThemeBtn(isDark: isDark, onTap: toggleTheme),
+          const SizedBox(width: 8),
+          _MobMenuBtn(isDark: isDark),
         ],
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE TOP BAR
-// ══════════════════════════════════════════════════════════════════════
-class _MobileTopBar extends StatelessWidget {
+class _MobLangMenuBtn extends StatelessWidget {
   final bool isDark;
-  final AppLocalizations l;
-  final Animation<double> pulse;
-  final VoidCallback toggleTheme;
+  final Locale locale;
   final Function(Locale) setLocale;
-
-  const _MobileTopBar({
+  const _MobLangMenuBtn({
     required this.isDark,
-    required this.l,
-    required this.pulse,
-    required this.toggleTheme,
+    required this.locale,
     required this.setLocale,
   });
-
   @override
   Widget build(BuildContext context) {
-    final accent = isDark ? _primaryDark : _primary;
-    final locale = Localizations.localeOf(context);
-    final textClr = isDark ? _dText : _lText;
-    final mutedClr = isDark ? _dTextMuted : _lTextMuted;
-
-    return Semantics(
-      header: true,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(_sp16, _sp16, _sp12, _sp12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      l.t('app_title_short'),
-                      style: _display(22, textClr).copyWith(letterSpacing: 3),
+    final langs = [
+      {'code': 'en', 'flag': '🇬🇧', 'name': 'EN'},
+      {'code': 'hi', 'flag': '🇮🇳', 'name': 'हि'},
+      {'code': 'mr', 'flag': '🇮🇳', 'name': 'म'},
+    ];
+    final cur = langs.firstWhere(
+      (l) => l['code'] == locale.languageCode,
+      orElse: () => langs[0],
+    );
+    final a = _acc(isDark);
+    final bd = _bord(isDark);
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 44),
+      elevation: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: bd, width: 1),
+      ),
+      color: _surf(isDark),
+      onSelected: (code) => setLocale(Locale(code)),
+      itemBuilder: (_) => langs
+          .map(
+            (lang) => PopupMenuItem<String>(
+              value: lang['code'],
+              height: 44,
+              child: Row(
+                children: [
+                  Text(lang['flag']!, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 10),
+                  Text(
+                    lang['name']!,
+                    style: _lbl(
+                      13,
+                      lang['code'] == locale.languageCode ? a : _txt(isDark),
+                      w: lang['code'] == locale.languageCode
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
-                    const SizedBox(width: _sp8),
-                    Semantics(
-                      label: l.t('home_service_active'),
-                      child: AnimatedBuilder(
-                        animation: pulse,
-                        builder: (_, __) => Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _success,
-                            boxShadow: [
-                              BoxShadow(
-                                color: _success.withOpacity(pulse.value * 0.55),
-                                blurRadius: 6,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                  ),
+                  if (lang['code'] == locale.languageCode) ...[
+                    const Spacer(),
+                    Icon(Icons.check_rounded, color: a, size: 14),
                   ],
-                ),
-                Text(l.t('home_tagline'), style: _label(11, mutedClr)),
-              ],
-            ),
-            const Spacer(),
-            _LangButton(
-              locale: locale,
-              setLocale: setLocale,
-              isDark: isDark,
-              accent: accent,
-              l: l,
-            ),
-            const SizedBox(width: _sp8),
-            Tooltip(
-              message: l.t(
-                isDark
-                    ? 'common_switch_to_light_mode'
-                    : 'common_switch_to_dark_mode',
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: toggleTheme,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDark ? _dSurface2 : _lSurface2,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isDark ? _dBorderSub : _lBorderSub,
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    isDark
-                        ? Icons.wb_sunny_outlined
-                        : Icons.nights_stay_outlined,
-                    size: 18,
-                    color: isDark ? _dTextSub : _lTextSub,
-                  ),
-                ),
+                ],
               ),
             ),
-            const SizedBox(width: _sp8),
-            _TopLogoutMenu(isDark: isDark),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE HERO CARD
-// ══════════════════════════════════════════════════════════════════════
-class _MobileHeroCard extends StatelessWidget {
-  final bool isDark;
-  final AppLocalizations l;
-  final VoidCallback toggleTheme;
-  final Function(Locale) setLocale;
-  const _MobileHeroCard({
-    required this.isDark,
-    required this.l,
-    required this.toggleTheme,
-    required this.setLocale,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label:
-          '${l.t('hero_title_line1')} ${l.t('hero_title_line2')}. ${l.t('hero_sub')}',
+          )
+          .toList(),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(_sp24),
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [Color(0xFF0F1A30), Color(0xFF1A2540)]
-                : [_primary, Color(0xFF0D47A1)],
-          ),
+          color: a.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: a.withOpacity(0.25), width: 1),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _sp12,
-                vertical: _sp5,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.16),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                l.t('home_mobile_badge'),
-                style: _label(11, Colors.white),
-              ),
-            ),
-
-            const SizedBox(height: _sp16),
-            Text(l.t('hero_title_line1'), style: _display(26, Colors.white)),
-            Text(
-              l.t('hero_title_line2'),
-              style: _display(26, Colors.white.withOpacity(0.85)),
-            ),
-            const SizedBox(height: _sp12),
-            Text(
-              l.t('hero_sub'),
-              style: _body(13.5, Colors.white.withOpacity(0.80)),
-            ),
-            const SizedBox(height: _sp24),
-            _PrimaryButton(
-              label: l.t('get_started'),
-              icon: Icons.arrow_forward_rounded,
-              onTap: () => Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => TranslateScreen(
-                    toggleTheme: toggleTheme,
-                    setLocale: setLocale,
-                  ),
-                  transitionsBuilder: (_, a, __, c) =>
-                      FadeTransition(opacity: a, child: c),
-                  transitionDuration: const Duration(milliseconds: 260),
-                ),
-              ),
-              bgColor: Colors.white,
-              textColor: isDark ? _lText : _primary,
-              fullWidth: true,
-            ),
-          ],
+        child: Center(
+          child: Text(cur['flag']!, style: const TextStyle(fontSize: 18)),
         ),
       ),
     );
   }
 }
 
-const _sp5 = 5.0;
-
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE ISL ASSISTANT CARD — PREMIUM REDESIGN
-// ══════════════════════════════════════════════════════════════════════
-class _MobileAssistantCardPremium extends StatefulWidget {
+class _MobThemeBtn extends StatelessWidget {
   final bool isDark;
-  final VoidCallback toggleTheme;
-  final Function(Locale) setLocale;
-  const _MobileAssistantCardPremium({
-    required this.isDark,
-    required this.toggleTheme,
-    required this.setLocale,
-  });
+  final VoidCallback onTap;
+  const _MobThemeBtn({required this.isDark, required this.onTap});
   @override
-  State<_MobileAssistantCardPremium> createState() =>
-      _MobileAssistantCardPremiumState();
+  Widget build(BuildContext context) => InkWell(
+    borderRadius: BorderRadius.circular(10),
+    onTap: onTap,
+    child: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: _surf2(isDark),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _bord(isDark), width: 1),
+      ),
+      child: Icon(
+        isDark ? Icons.wb_sunny_outlined : Icons.nights_stay_outlined,
+        size: 18,
+        color: _txtm(isDark),
+      ),
+    ),
+  );
 }
 
-class _MobileAssistantCardPremiumState
-    extends State<_MobileAssistantCardPremium>
-    with SingleTickerProviderStateMixin {
-  bool _pressed = false;
-  late AnimationController _pulseCtrl;
-  late Animation<double> _pulseAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
-
+class _MobMenuBtn extends StatelessWidget {
+  final bool isDark;
+  const _MobMenuBtn({required this.isDark});
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final isDark = widget.isDark;
-    final accent = isDark ? _purpleDark : _purple;
-    final accentSurf = isDark ? _purpleSurfD : _purpleSurface;
-    final bg1 = isDark ? Color(0xFF130B25) : Color(0xFFF7F3FF);
-    final bg2 = isDark ? Color(0xFF1A0D35) : Color(0xFFEFE8FF);
-    final textClr = isDark ? _dText : _lText;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-
-    return Semantics(
-      label: l.t('assistant_title'),
-      button: true,
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) {
-          setState(() => _pressed = false);
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => ISLAssistantScreen(
-                toggleTheme: widget.toggleTheme,
-                setLocale: widget.setLocale,
+    final sub = _txts(isDark);
+    final red = _red;
+    final bg = _surf(isDark);
+    final bd = _bord(isDark);
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 44),
+      elevation: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: bd, width: 1),
+      ),
+      color: bg,
+      icon: Icon(Icons.more_vert_rounded, color: _txtm(isDark), size: 20),
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(
+          value: 'logout',
+          height: 44,
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, color: red, size: 18),
+              const SizedBox(width: 12),
+              Text(
+                l.t('menu_sign_out'),
+                style: _b(14, red, w: FontWeight.w600),
               ),
-              transitionsBuilder: (_, a, __, c) =>
-                  FadeTransition(opacity: a, child: c),
-              transitionDuration: const Duration(milliseconds: 260),
-            ),
-          );
-        },
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedScale(
-          scale: _pressed ? 0.97 : 1.0,
-          duration: const Duration(milliseconds: 80),
-          curve: Curves.easeOutBack,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [bg1, bg2],
-              ),
-              border: Border.all(color: accent.withOpacity(0.30), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withOpacity(0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // ── Header ───────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.all(_sp16),
-                  child: Row(
-                    children: [
-                      // Glowing avatar
-                      AnimatedBuilder(
-                        animation: _pulseAnim,
-                        builder: (_, __) => Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [accent, accent.withOpacity(0.7)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: accent.withOpacity(
-                                  _pulseAnim.value * 0.40,
-                                ),
-                                blurRadius: 16,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.sign_language_rounded,
-                            color: Colors.white,
-                            size: 26,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: _sp14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  l.t('assistant_title'),
-                                  style: _heading(16, textClr),
-                                ),
-                                const SizedBox(width: _sp8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: _sp6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: accentSurf,
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: Text(
-                                    'AI',
-                                    style: _label(
-                                      9,
-                                      accent,
-                                      w: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: _sp6),
-                                // Live pulse dot
-                                AnimatedBuilder(
-                                  animation: _pulseAnim,
-                                  builder: (_, __) => Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF22C55E),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Color(
-                                            0xFF22C55E,
-                                          ).withOpacity(_pulseAnim.value * 0.5),
-                                          blurRadius: 5,
-                                          spreadRadius: 1,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: _sp4),
-                            Text(
-                              l.t('assistant_card_subtitle'),
-                              style: _body(12, subClr),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: accent.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.chevron_right_rounded,
-                          color: accent,
-                          size: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ── Divider ──────────────────────────────────────────────
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: accent.withOpacity(0.12),
-                ),
-
-                // ── Feature chips ────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.all(_sp12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _AssistantFeatureChipSmall(
-                          Icons.mic_rounded,
-                          l.t('assistant_chip_voice_io'),
-                          accent,
-                          isDark,
-                        ),
-                      ),
-                      const SizedBox(width: _sp8),
-                      Expanded(
-                        child: _AssistantFeatureChipSmall(
-                          Icons.front_hand_rounded,
-                          l.t('assistant_chip_sign_guides'),
-                          _secondary,
-                          isDark,
-                        ),
-                      ),
-                      const SizedBox(width: _sp8),
-                      Expanded(
-                        child: _AssistantFeatureChipSmall(
-                          Icons.auto_awesome_rounded,
-                          'Vani AI',
-                          _info,
-                          isDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
+      ],
+      onSelected: (v) {
+        if (v != 'logout') return;
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: bg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            title: Text(
+              l.t('menu_sign_out_confirm_title'),
+              style: _h(17, _txt(isDark)),
+            ),
+            content: Text(
+              l.t('menu_sign_out_confirm_body'),
+              style: _b(14, sub),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  l.t('menu_cancel'),
+                  style: _b(14, sub, w: FontWeight.w600),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    final b = Hive.box<EmergencyContact>('emergency_contacts');
+                    await b.clear();
+                  } catch (_) {}
+                  await Supabase.instance.client.auth.signOut();
+                },
+                child: Text(
+                  l.t('menu_sign_out'),
+                  style: _b(14, red, w: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Mobile Hero Card ──────────────────────────────────────────────────
+class _MobHeroCard extends StatelessWidget {
+  final bool isDark;
+  final AppLocalizations l;
+  final VoidCallback toggleTheme;
+  final Function(Locale) setLocale;
+  const _MobHeroCard({
+    required this.isDark,
+    required this.l,
+    required this.toggleTheme,
+    required this.setLocale,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(_s24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0C162B), Color(0xFF13274A)],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2F6BFF), Color(0xFF1748C8)],
+              ),
+        border: Border.all(
+          color: isDark ? _navyB : Colors.white.withOpacity(0.18),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _elBlue.withOpacity(isDark ? 0.20 : 0.24),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Subtle arc keeps depth while maintaining a clean minimalist look.
+          Positioned(
+            right: -20,
+            top: -20,
+            child: _ArcDecor(
+              size: 106,
+              color: Colors.white,
+              dark: true,
+              flip: true,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF22C55E),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l.t('home_mobile_badge'),
+                      style: _lbl(11, Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: _s16),
+              Text(l.t('hero_title_line1'), style: _disp(26, Colors.white)),
+              Text(
+                l.t('hero_title_line2'),
+                style: _disp(26, Colors.white.withOpacity(0.80)),
+              ),
+              const SizedBox(height: _s10),
+              Text(
+                l.t('hero_sub'),
+                style: _b(13.5, Colors.white.withOpacity(0.79)),
+              ),
+              const SizedBox(height: _s24),
+              // Mini stats row
+              Row(
+                children: [
+                  _MobHeroStat('63M+', 'Deaf Users'),
+                  const SizedBox(width: _s20),
+                  _MobHeroStat('3', 'Languages'),
+                  const SizedBox(width: _s20),
+                  _MobHeroStat('AI', 'Powered'),
+                ],
+              ),
+              const SizedBox(height: _s20),
+              // CTA
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => TranslateScreen(
+                      toggleTheme: toggleTheme,
+                      setLocale: setLocale,
+                    ),
+                    transitionsBuilder: (_, a, __, c) =>
+                        FadeTransition(opacity: a, child: c),
+                    transitionDuration: const Duration(milliseconds: 260),
+                  ),
+                ),
+                child: Container(
+                  height: 48,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.96),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.18),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l.t('get_started'),
+                        style: _lbl(15, _elBlue, w: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: _elBlue,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _AssistantFeatureChipSmall extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool isDark;
-  const _AssistantFeatureChipSmall(
-    this.icon,
-    this.label,
-    this.color,
-    this.isDark,
-  );
-
+class _MobHeroStat extends StatelessWidget {
+  final String val, lab;
+  const _MobHeroStat(this.val, this.lab);
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: _sp8, horizontal: _sp6),
-    decoration: BoxDecoration(
-      color: color.withOpacity(isDark ? 0.10 : 0.07),
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: color.withOpacity(0.20), width: 1),
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(height: _sp4),
-        Text(
-          label,
-          style: _label(9.5, color, w: FontWeight.w600),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(val, style: _h(18, Colors.white, w: FontWeight.w800)),
+      Text(lab, style: _lbl(10, Colors.white.withOpacity(0.65))),
+    ],
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE STATS STRIP (animated)
-// ══════════════════════════════════════════════════════════════════════
-class _MobileStatsStrip extends StatefulWidget {
+// ── Mobile Stats Strip ────────────────────────────────────────────────
+class _MobStatsStrip extends StatefulWidget {
   final bool isDark;
   final AppLocalizations l;
-  const _MobileStatsStrip({required this.isDark, required this.l});
+  const _MobStatsStrip({required this.isDark, required this.l});
   @override
-  State<_MobileStatsStrip> createState() => _MobileStatsStripState();
+  State<_MobStatsStrip> createState() => _MobStatsStripState();
 }
 
-class _MobileStatsStripState extends State<_MobileStatsStrip>
+class _MobStatsStripState extends State<_MobStatsStrip>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
-
   @override
   void initState() {
     super.initState();
@@ -2953,46 +3517,45 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
     super.dispose();
   }
 
-  String _fmt(int n) => n >= 1000000
+  String _f(int n) => n >= 1000000
       ? '${(n / 1000000).toStringAsFixed(0)}M'
       : n >= 1000
       ? '${(n / 1000).toStringAsFixed(0)}K'
       : '$n';
-
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final bg = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder : _lBorder;
-    final sep = isDark ? _dBorderSub : _lBorderSub;
+    final bg = _surf(widget.isDark);
+    final bd = _bord(widget.isDark);
+    final sep = _bordS(widget.isDark);
     final stats = [
-      (
-        63000000,
-        '+',
-        widget.l.t('stat_mute_label'),
-        isDark ? _primaryDark : _primary,
-      ),
+      (63000000, '+', widget.l.t('stat_mute_label'), _acc(widget.isDark)),
       (
         8435000,
         '+',
         widget.l.t('stat_isl_label'),
-        isDark ? _purpleDark : _purple,
+        widget.isDark ? _violetD : _violet,
       ),
       (
         250,
         '',
         widget.l.t('stat_translators_label'),
-        isDark ? _dangerDark : _danger,
+        widget.isDark ? _cyanD : _cyan,
       ),
     ];
-
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, __) => Container(
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: border, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: bd, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(widget.isDark ? 0.18 : 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -3002,8 +3565,8 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
               return Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    vertical: _sp16,
-                    horizontal: _sp8,
+                    vertical: _s16,
+                    horizontal: 8,
                   ),
                   decoration: BoxDecoration(
                     border: i < stats.length - 1
@@ -3014,16 +3577,16 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '${_fmt((s.$1 * _anim.value).toInt())}${s.$2}',
-                        style: _heading(19, s.$4, w: FontWeight.w700),
+                        '${_f((s.$1 * _anim.value).toInt())}${s.$2}',
+                        style: _h(19, s.$4, w: FontWeight.w700),
                       ),
-                      const SizedBox(height: _sp4),
+                      const SizedBox(height: _s4),
                       Text(
                         s.$3,
                         textAlign: TextAlign.center,
-                        style: _label(
+                        style: _lbl(
                           9.5,
-                          isDark ? _dTextMuted : _lTextMuted,
+                          _txtm(widget.isDark),
                           w: FontWeight.w400,
                         ),
                       ),
@@ -3039,14 +3602,51 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  SECTION HEADER
-// ══════════════════════════════════════════════════════════════════════
-class _SectionHeader extends StatelessWidget {
+// ── Mobile Feature Marquee ────────────────────────────────────────────
+class _MobFeatureMarquee extends StatelessWidget {
+  final bool isDark;
+  const _MobFeatureMarquee({required this.isDark});
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      '✦ On-Device AI',
+      '✦ 3 Languages',
+      '✦ ISL Certified',
+      '✦ Voice I/O',
+      '✦ Emergency SOS',
+      '✦ ISLRTC Approved',
+      '✦ Privacy First',
+    ];
+    final bg = _surf2(isDark);
+    final bd = _bord(isDark);
+    final a = _acc(isDark);
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border.symmetric(horizontal: BorderSide(color: bd, width: 1)),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: items.length,
+        itemBuilder: (_, i) => Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: Text(items[i], style: _lbl(12, a.withOpacity(0.70))),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Mobile Quick Access ───────────────────────────────────────────────
+class _MobSectionHeader extends StatelessWidget {
   final String text;
   final bool isDark;
   final EdgeInsets padding;
-  const _SectionHeader({
+  const _MobSectionHeader({
     required this.text,
     required this.isDark,
     required this.padding,
@@ -3056,63 +3656,55 @@ class _SectionHeader extends StatelessWidget {
     header: true,
     child: Padding(
       padding: padding,
-      child: Text(
-        text,
-        style: _heading(18, isDark ? _dText : _lText, w: FontWeight.w700),
-      ),
+      child: Text(text, style: _h(18, _txt(isDark), w: FontWeight.w700)),
     ),
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  QUICK ACCESS ROW
-// ══════════════════════════════════════════════════════════════════════
-class _QuickAccessRow extends StatelessWidget {
+class _MobQuickAccess extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
-  const _QuickAccessRow({
+  const _MobQuickAccess({
     required this.isDark,
     required this.l,
     required this.toggleTheme,
     required this.setLocale,
   });
-
   @override
   Widget build(BuildContext ctx) {
     final cards = [
       (
-        _secondary,
-        _secondaryDark,
+        _teal,
+        _tealD,
         Icons.compare_arrows_rounded,
         l.t('nav_bridge'),
         l.t('home_open_bridge'),
       ),
       (
-        _danger,
-        _dangerDark,
+        _red,
+        _redD,
         Icons.emergency_share_rounded,
         l.t('nav_emergency'),
         l.t('sos_screen_title'),
       ),
       (
-        _success,
-        _successDark,
+        _emerald,
+        _emeraldD,
         Icons.back_hand_rounded,
         l.t('nav_signs'),
         l.t('home_browse_signs'),
       ),
     ];
-
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _sp16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: cards.asMap().entries.map((e) {
           final i = e.key;
           final c = e.value;
-          final accent = isDark ? c.$2 : c.$1;
-          Widget dest() {
+          final a = isDark ? c.$2 : c.$1;
+          Widget d() {
             switch (i) {
               case 0:
                 return TwoWayScreen(
@@ -3134,9 +3726,9 @@ class _QuickAccessRow extends StatelessWidget {
 
           return Expanded(
             child: Padding(
-              padding: EdgeInsets.only(right: i < cards.length - 1 ? _sp12 : 0),
-              child: _QuickTile(
-                accent: accent,
+              padding: EdgeInsets.only(right: i < cards.length - 1 ? 12 : 0),
+              child: _MobQuickTile(
+                a: a,
                 icon: c.$3,
                 label: c.$4,
                 sub: c.$5,
@@ -3144,7 +3736,7 @@ class _QuickAccessRow extends StatelessWidget {
                 onTap: () => Navigator.push(
                   ctx,
                   PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => dest(),
+                    pageBuilder: (_, __, ___) => d(),
                     transitionsBuilder: (_, a, __, ch) =>
                         FadeTransition(opacity: a, child: ch),
                     transitionDuration: const Duration(milliseconds: 240),
@@ -3159,14 +3751,14 @@ class _QuickAccessRow extends StatelessWidget {
   }
 }
 
-class _QuickTile extends StatefulWidget {
-  final Color accent;
+class _MobQuickTile extends StatefulWidget {
+  final Color a;
   final IconData icon;
   final String label, sub;
   final bool isDark;
   final VoidCallback onTap;
-  const _QuickTile({
-    required this.accent,
+  const _MobQuickTile({
+    required this.a,
     required this.icon,
     required this.label,
     required this.sub,
@@ -3174,63 +3766,73 @@ class _QuickTile extends StatefulWidget {
     required this.onTap,
   });
   @override
-  State<_QuickTile> createState() => _QuickTileState();
+  State<_MobQuickTile> createState() => _MobQuickTileState();
 }
 
-class _QuickTileState extends State<_QuickTile> {
-  bool _pressed = false;
+class _MobQuickTileState extends State<_MobQuickTile> {
+  bool _p = false;
   @override
   Widget build(BuildContext context) {
-    final bg = widget.isDark ? _dSurface : _lSurface;
-    final label = widget.isDark ? _dText : _lText;
-    final sub = widget.isDark ? _dTextSub : _lTextSub;
-    final border = widget.isDark ? _dBorder : _lBorder;
-
+    final bg = _surf(widget.isDark);
+    final t = _txt(widget.isDark);
+    final s = _txts(widget.isDark);
+    final bd = _bord(widget.isDark);
     return Semantics(
       label: widget.label,
       button: true,
       child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
+        onTapDown: (_) => setState(() => _p = true),
         onTapUp: (_) {
-          setState(() => _pressed = false);
+          setState(() => _p = false);
           widget.onTap();
         },
-        onTapCancel: () => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _p = false),
         child: AnimatedScale(
-          scale: _pressed ? 0.96 : 1.0,
+          scale: _p ? 0.97 : 1.0,
           duration: const Duration(milliseconds: 80),
           curve: Curves.easeOutBack,
           child: Container(
-            padding: const EdgeInsets.all(_sp14),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: border, width: 1),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: bd, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(widget.isDark ? 0.22 : 0.05),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: widget.accent.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(12),
+                    color: widget.a.withOpacity(widget.isDark ? 0.16 : 0.10),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: widget.a.withOpacity(0.24),
+                      width: 1,
+                    ),
                   ),
-                  child: Icon(widget.icon, color: widget.accent, size: 20),
+                  child: Icon(widget.icon, color: widget.a, size: 20),
                 ),
-                const SizedBox(height: _sp12),
+                const SizedBox(height: 12),
                 Text(
                   widget.label,
-                  style: _label(12, label, w: FontWeight.w700),
+                  style: _lbl(12, t, w: FontWeight.w700),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: _sp4),
+                const SizedBox(height: _s4),
                 Text(
                   widget.sub,
-                  style: _label(10, sub, w: FontWeight.w400),
+                  style: _lbl(10, s, w: FontWeight.w400),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3243,50 +3845,311 @@ class _QuickTileState extends State<_QuickTile> {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE OBJECTIVES SCROLL
-// ══════════════════════════════════════════════════════════════════════
-class _MobileObjectivesScroll extends StatelessWidget {
+// ── Mobile AI Card ────────────────────────────────────────────────────
+class _MobAICard extends StatefulWidget {
+  final bool isDark;
+  final VoidCallback toggleTheme;
+  final Function(Locale) setLocale;
+  const _MobAICard({
+    required this.isDark,
+    required this.toggleTheme,
+    required this.setLocale,
+  });
+  @override
+  State<_MobAICard> createState() => _MobAICardState();
+}
+
+class _MobAICardState extends State<_MobAICard>
+    with SingleTickerProviderStateMixin {
+  bool _p = false;
+  late AnimationController _pc;
+  late Animation<double> _pa;
+  @override
+  void initState() {
+    super.initState();
+    _pc = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+      ..repeat(reverse: true);
+    _pa = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pc, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _pc.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final d = widget.isDark;
+    final a = d ? _violetD : _violet;
+    final bg1 = d ? const Color(0xFF141C31) : const Color(0xFFF7F9FF);
+    final bg2 = d ? const Color(0xFF1B2743) : const Color(0xFFEEF3FF);
+    final t = _txt(d);
+    final s = _txts(d);
+    return Semantics(
+      label: l.t('assistant_title'),
+      button: true,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _p = true),
+        onTapUp: (_) {
+          setState(() => _p = false);
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => ISLAssistantScreen(
+                toggleTheme: widget.toggleTheme,
+                setLocale: widget.setLocale,
+              ),
+              transitionsBuilder: (_, a, __, c) =>
+                  FadeTransition(opacity: a, child: c),
+              transitionDuration: const Duration(milliseconds: 260),
+            ),
+          );
+        },
+        onTapCancel: () => setState(() => _p = false),
+        child: AnimatedScale(
+          scale: _p ? 0.97 : 1.0,
+          duration: const Duration(milliseconds: 80),
+          curve: Curves.easeOutBack,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [bg1, bg2],
+              ),
+              border: Border.all(color: a.withOpacity(0.22), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(d ? 0.24 : 0.06),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Glowing avatar
+                      AnimatedBuilder(
+                        animation: _pa,
+                        builder: (_, __) => Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [a, _cyan.withOpacity(0.7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: a.withOpacity(_pa.value * 0.36),
+                                blurRadius: 14,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.sign_language_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(l.t('assistant_title'), style: _h(16, t)),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: a.withOpacity(0.14),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  child: Text(
+                                    'AI',
+                                    style: _lbl(9, a, w: FontWeight.w800),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                AnimatedBuilder(
+                                  animation: _pa,
+                                  builder: (_, __) => Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFF22C55E),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF22C55E,
+                                          ).withOpacity(_pa.value * 0.6),
+                                          blurRadius: 5,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l.t('assistant_card_subtitle'),
+                              style: _b(12, s),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: a.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.chevron_right_rounded,
+                          color: a,
+                          size: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, thickness: 1, color: a.withOpacity(0.10)),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _MobAIChip(
+                          Icons.mic_rounded,
+                          l.t('assistant_chip_voice_io'),
+                          a,
+                          d,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MobAIChip(
+                          Icons.front_hand_rounded,
+                          l.t('assistant_chip_sign_guides'),
+                          _teal,
+                          d,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MobAIChip(
+                          Icons.auto_awesome_rounded,
+                          'VANI AI',
+                          _elBlue,
+                          d,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MobAIChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool dark;
+  const _MobAIChip(this.icon, this.label, this.color, this.dark);
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+    decoration: BoxDecoration(
+      color: color.withOpacity(dark ? 0.10 : 0.07),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: color.withOpacity(0.20), width: 1),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(height: _s4),
+        Text(
+          label,
+          style: _lbl(9.5, color, w: FontWeight.w600),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    ),
+  );
+}
+
+// ── Mobile Objectives Scroll ──────────────────────────────────────────
+class _MobObjScroll extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l;
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
-  const _MobileObjectivesScroll({
+  const _MobObjScroll({
     required this.isDark,
     required this.l,
     required this.toggleTheme,
     required this.setLocale,
   });
-
   @override
   Widget build(BuildContext context) {
     final cards = _objCards(l, toggleTheme, setLocale);
-    final accents = [
-      [_primary, _primaryDark],
-      [_secondary, _secondaryDark],
-      [_success, _successDark],
-      [_warning, _warningDark],
-      [_purple, _purpleDark],
-      [_danger, _dangerDark],
+    final accs = [
+      [_elBlue, _elBlueD],
+      [_teal, _tealD],
+      [_emerald, _emeraldD],
+      [_cyan, _cyanD],
+      [_amber, _amberD],
+      [_violet, _violetD],
     ];
-
     return SizedBox(
-      height: 160,
+      height: 165,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: _sp16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         physics: const BouncingScrollPhysics(),
         itemCount: cards.length,
         itemBuilder: (ctx, i) {
           final c = cards[i];
-          final accent = isDark ? accents[i][1] : accents[i][0];
+          final a = isDark ? accs[i][1] : accs[i][0];
           return Padding(
-            padding: EdgeInsets.only(right: i < cards.length - 1 ? _sp12 : 0),
-            child: _ObjCard(
+            padding: EdgeInsets.only(right: i < cards.length - 1 ? 12 : 0),
+            child: _MobObjCard(
               icon: c.$2,
               title: c.$3,
               desc: c.$4,
-              accent: accent,
+              accent: a,
               page: c.$5,
               isDark: isDark,
             ),
@@ -3297,55 +4160,13 @@ class _MobileObjectivesScroll extends StatelessWidget {
   }
 }
 
-List<(Color, IconData, String, String, Widget)> _objCards(
-  AppLocalizations l,
-  VoidCallback toggleTheme,
-  Function(Locale) setLocale,
-) => [
-  (
-    _primary,
-    Icons.accessibility_new_rounded,
-    l.t('obj_accessibility'),
-    l.t('obj_accessibility_desc'),
-    AccessibilityPage(toggleTheme: toggleTheme, setLocale: setLocale),
-  ),
-  (
-    _secondary,
-    Icons.connecting_airports_rounded,
-    l.t('obj_bridging'),
-    l.t('obj_bridging_desc'),
-    BridgingGapsPage(toggleTheme: toggleTheme, setLocale: setLocale),
-  ),
-  (
-    _success,
-    Icons.people_outline_rounded,
-    l.t('obj_inclusivity'),
-    l.t('obj_inclusivity_desc'),
-    InclusivityPage(toggleTheme: toggleTheme, setLocale: setLocale),
-  ),
-  (
-    _warning,
-    Icons.shield_outlined,
-    l.t('obj_privacy'),
-    l.t('obj_privacy_desc'),
-    PrivacyPage(toggleTheme: toggleTheme, setLocale: setLocale),
-  ),
-  (
-    _danger,
-    Icons.school_rounded,
-    l.t('obj_education'),
-    l.t('obj_education_desc'),
-    EducationPage(toggleTheme: toggleTheme, setLocale: setLocale),
-  ),
-];
-
-class _ObjCard extends StatefulWidget {
+class _MobObjCard extends StatefulWidget {
   final IconData icon;
   final String title, desc;
   final Color accent;
   final Widget page;
   final bool isDark;
-  const _ObjCard({
+  const _MobObjCard({
     required this.icon,
     required this.title,
     required this.desc,
@@ -3354,25 +4175,24 @@ class _ObjCard extends StatefulWidget {
     required this.isDark,
   });
   @override
-  State<_ObjCard> createState() => _ObjCardState();
+  State<_MobObjCard> createState() => _MobObjCardState();
 }
 
-class _ObjCardState extends State<_ObjCard> {
-  bool _pressed = false;
+class _MobObjCardState extends State<_MobObjCard> {
+  bool _p = false;
   @override
   Widget build(BuildContext context) {
-    final bg = widget.isDark ? _dSurface : _lSurface;
-    final label = widget.isDark ? _dText : _lText;
-    final sub = widget.isDark ? _dTextSub : _lTextSub;
-    final border = widget.isDark ? _dBorder : _lBorder;
-
+    final bg = _surf(widget.isDark);
+    final t = _txt(widget.isDark);
+    final s = _txts(widget.isDark);
+    final bd = _bord(widget.isDark);
     return Semantics(
       label: widget.title,
       button: true,
       child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
+        onTapDown: (_) => setState(() => _p = true),
         onTapUp: (_) {
-          setState(() => _pressed = false);
+          setState(() => _p = false);
           Navigator.push(
             context,
             PageRouteBuilder(
@@ -3383,18 +4203,25 @@ class _ObjCardState extends State<_ObjCard> {
             ),
           );
         },
-        onTapCancel: () => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _p = false),
         child: AnimatedScale(
-          scale: _pressed ? 0.95 : 1.0,
+          scale: _p ? 0.95 : 1.0,
           duration: const Duration(milliseconds: 80),
           curve: Curves.easeOutBack,
           child: Container(
-            width: 144,
-            padding: const EdgeInsets.all(_sp14),
+            width: 148,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: border, width: 1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: bd, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.accent.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3403,23 +4230,32 @@ class _ObjCardState extends State<_ObjCard> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: widget.accent.withOpacity(0.10),
+                    gradient: LinearGradient(
+                      colors: [
+                        widget.accent.withOpacity(0.14),
+                        widget.accent.withOpacity(0.05),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: widget.accent.withOpacity(0.20),
+                      width: 1,
+                    ),
                   ),
                   child: Icon(widget.icon, color: widget.accent, size: 18),
                 ),
-                const SizedBox(height: _sp10),
+                const SizedBox(height: 10),
                 Text(
                   widget.title,
-                  style: _label(12.5, label, w: FontWeight.w700),
+                  style: _lbl(12.5, t, w: FontWeight.w700),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: _sp4),
+                const SizedBox(height: _s4),
                 Expanded(
                   child: Text(
                     widget.desc,
-                    style: _body(10.5, sub),
+                    style: _b(10.5, s),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -3433,77 +4269,71 @@ class _ObjCardState extends State<_ObjCard> {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  MOBILE MISSION CARD
-// ══════════════════════════════════════════════════════════════════════
-class _MobileMissionCard extends StatelessWidget {
+// ── Mission Card ──────────────────────────────────────────────────────
+class _MobMissionCard extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l;
-  const _MobileMissionCard({required this.isDark, required this.l});
-
+  const _MobMissionCard({required this.isDark, required this.l});
   @override
   Widget build(BuildContext context) {
-    final bg = isDark ? _dSurface : _primarySurface;
-    final border = isDark ? _dBorder : _primary.withOpacity(0.20);
-    final accent = isDark ? _primaryDark : _primary;
-    final textClr = isDark ? _dText : _info;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-
+    final a = _acc(isDark);
+    final bg = _surf(isDark);
+    final t = _txt(isDark);
+    final s = _txts(isDark);
     return Container(
-      padding: const EdgeInsets.all(_sp20),
+      padding: const EdgeInsets.all(_s20),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: border, width: 1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: a.withOpacity(0.20), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: a.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.volunteer_activism_rounded, color: accent, size: 18),
-              const SizedBox(width: _sp8),
+              Icon(Icons.volunteer_activism_rounded, color: a, size: 18),
+              const SizedBox(width: 8),
               Text(
                 l.t('home_our_mission'),
-                style: _label(11.5, accent, w: FontWeight.w700),
+                style: _lbl(12, a, w: FontWeight.w700),
               ),
             ],
           ),
-          const SizedBox(height: _sp12),
-          Text(l.t('vision_title'), style: _heading(17, textClr)),
-          const SizedBox(height: _sp8),
-          Text(l.t('home_mission_body'), style: _body(13, subClr)),
-          const SizedBox(height: _sp16),
+          const SizedBox(height: 12),
+          Text(l.t('vision_title'), style: _h(17, t)),
+          const SizedBox(height: 8),
+          Text(l.t('home_mission_body'), style: _b(13, s)),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: _sp12,
-              vertical: _sp8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isDark ? _dangerDark.withOpacity(0.12) : _dangerLight,
+              color: _red.withOpacity(isDark ? 0.12 : 0.07),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isDark
-                    ? _dangerDark.withOpacity(0.30)
-                    : _danger.withOpacity(0.30),
-                width: 1,
-              ),
+              border: Border.all(color: _red.withOpacity(0.25), width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.warning_amber_rounded,
-                  color: isDark ? _dangerDark : _danger,
+                  color: isDark ? _redD : _red,
                   size: 14,
                 ),
-                const SizedBox(width: _sp8),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     l.t('obj_crisis_stat'),
-                    style: _label(
+                    style: _lbl(
                       11.5,
-                      isDark ? _dangerDark : _danger,
+                      isDark ? _redD : _red,
                       w: FontWeight.w600,
                     ),
                   ),
@@ -3517,61 +4347,61 @@ class _MobileMissionCard extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  FEATURE DETAIL (mobile tabs)
-// ══════════════════════════════════════════════════════════════════════
-class _FeatureDetail extends StatelessWidget {
+// ── Feature Detail (mobile tabs) ──────────────────────────────────────
+class _MobFeatureDetail extends StatelessWidget {
   final bool isDark;
   final AppLocalizations l;
   final IconData icon;
   final String title, subtitle, launchLabel;
-  final Color accentLight, accentDark;
+  final Color aL, aD;
   final VoidCallback onLaunch;
   final List<(IconData, String, String)> bullets;
-
-  const _FeatureDetail({
+  const _MobFeatureDetail({
     required this.isDark,
     required this.l,
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.accentLight,
-    required this.accentDark,
+    required this.aL,
+    required this.aD,
     required this.launchLabel,
     required this.onLaunch,
     required this.bullets,
   });
-
-  Color get _accent => isDark ? accentDark : accentLight;
-
+  Color get _a => isDark ? aD : aL;
   @override
   Widget build(BuildContext context) {
-    final textClr = isDark ? _dText : _lText;
-    final subClr = isDark ? _dTextSub : _lTextSub;
-    final bg = isDark ? _dSurface : _lSurface;
-    final border = isDark ? _dBorder : _lBorder;
-
+    final t = _txt(isDark);
+    final s = _txts(isDark);
+    final bg = _surf(isDark);
+    final bd = _bord(isDark);
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Semantics(
             header: true,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, _sp24, 0, _sp20),
-              child: Text(title, style: _display(26, textClr)),
+              padding: const EdgeInsets.fromLTRB(0, 24, 0, 20),
+              child: Text(title, style: _disp(26, t)),
             ),
           ),
-
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(_sp20),
+            padding: const EdgeInsets.all(_s20),
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _accent.withOpacity(0.30), width: 1.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _a.withOpacity(0.32), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: _a.withOpacity(0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3580,42 +4410,43 @@ class _FeatureDetail extends StatelessWidget {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: _accent.withOpacity(0.10),
+                    gradient: LinearGradient(
+                      colors: [_a.withOpacity(0.15), _a.withOpacity(0.05)],
+                    ),
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: _a.withOpacity(0.25), width: 1),
                   ),
-                  child: Icon(icon, color: _accent, size: 26),
+                  child: Icon(icon, color: _a, size: 26),
                 ),
-                const SizedBox(width: _sp16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: _heading(17, textClr)),
-                      const SizedBox(height: _sp4),
-                      Text(subtitle, style: _body(13, subClr)),
+                      Text(title, style: _h(17, t)),
+                      const SizedBox(height: 4),
+                      Text(subtitle, style: _b(13, s)),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: _sp24),
+          const SizedBox(height: 24),
           Text(
-            l.t('page_section_header').toUpperCase(),
-            style: _label(
+            'FEATURES',
+            style: _lbl(
               10.5,
-              isDark ? _dTextMuted : _lTextMuted,
+              _txtm(isDark),
               w: FontWeight.w700,
-            ).copyWith(letterSpacing: 1.2),
+            ).copyWith(letterSpacing: 1.5),
           ),
-          const SizedBox(height: _sp12),
-
+          const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: border, width: 1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: bd, width: 1),
             ),
             child: Column(
               children: bullets.asMap().entries.map((e) {
@@ -3625,8 +4456,8 @@ class _FeatureDetail extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: _sp16,
-                        vertical: _sp14,
+                        horizontal: 16,
+                        vertical: 14,
                       ),
                       child: Row(
                         children: [
@@ -3634,33 +4465,38 @@ class _FeatureDetail extends StatelessWidget {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: _accent.withOpacity(0.10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  _a.withOpacity(0.14),
+                                  _a.withOpacity(0.05),
+                                ],
+                              ),
                               borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _a.withOpacity(0.22),
+                                width: 1,
+                              ),
                             ),
-                            child: Icon(f.$1, color: _accent, size: 18),
+                            child: Icon(f.$1, color: _a, size: 18),
                           ),
-                          const SizedBox(width: _sp16),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   f.$2,
-                                  style: _label(
-                                    13.5,
-                                    textClr,
-                                    w: FontWeight.w700,
-                                  ),
+                                  style: _lbl(13.5, t, w: FontWeight.w700),
                                 ),
-                                const SizedBox(height: _sp4),
-                                Text(f.$3, style: _body(12, subClr)),
+                                const SizedBox(height: 4),
+                                Text(f.$3, style: _b(12, s)),
                               ],
                             ),
                           ),
                           Icon(
                             Icons.arrow_forward_ios_rounded,
                             size: 13,
-                            color: isDark ? _dTextMuted : _lTextMuted,
+                            color: _txtm(isDark),
                           ),
                         ],
                       ),
@@ -3670,94 +4506,81 @@ class _FeatureDetail extends StatelessWidget {
                         indent: 72,
                         height: 1,
                         thickness: 1,
-                        color: isDark ? _dBorderSub : _lBorderSub,
+                        color: _bordS(isDark),
                       ),
                   ],
                 );
               }).toList(),
             ),
           ),
-
-          const SizedBox(height: _sp24),
-          _PrimaryButton(
-            label: launchLabel,
-            icon: Icons.arrow_forward_rounded,
-            onTap: onLaunch,
-            bgColor: _accent,
-            textColor: Colors.white,
-            fullWidth: true,
-          ),
+          const SizedBox(height: 24),
+          _MobCTABtn(label: launchLabel, acc: _a, onTap: onLaunch),
         ],
       ),
     );
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  PRIMARY BUTTON
-// ══════════════════════════════════════════════════════════════════════
-class _PrimaryButton extends StatefulWidget {
+class _MobCTABtn extends StatefulWidget {
   final String label;
-  final IconData icon;
+  final Color acc;
   final VoidCallback onTap;
-  final Color bgColor, textColor;
-  final bool fullWidth;
-  const _PrimaryButton({
+  const _MobCTABtn({
     required this.label,
-    required this.icon,
+    required this.acc,
     required this.onTap,
-    required this.bgColor,
-    required this.textColor,
-    this.fullWidth = false,
   });
   @override
-  State<_PrimaryButton> createState() => _PrimaryButtonState();
+  State<_MobCTABtn> createState() => _MobCTABtnState();
 }
 
-class _PrimaryButtonState extends State<_PrimaryButton> {
-  bool _pressed = false;
+class _MobCTABtnState extends State<_MobCTABtn> {
+  bool _p = false;
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
     label: widget.label,
     child: GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
+      onTapDown: (_) => setState(() => _p = true),
       onTapUp: (_) {
-        setState(() => _pressed = false);
+        setState(() => _p = false);
         widget.onTap();
       },
-      onTapCancel: () => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _p = false),
       child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
+        scale: _p ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 80),
-        curve: Curves.easeOut,
         child: Container(
-          width: widget.fullWidth ? double.infinity : null,
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: _sp24),
+          width: double.infinity,
+          height: 50,
           decoration: BoxDecoration(
-            color: widget.bgColor,
-            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              colors: [widget.acc, _cyan.withOpacity(0.8)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: widget.bgColor.withOpacity(0.25),
-                blurRadius: 12,
+                color: widget.acc.withOpacity(0.30),
+                blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: widget.fullWidth
-                ? MainAxisSize.max
-                : MainAxisSize.min,
             children: [
               Text(
                 widget.label,
-                style: _label(14.5, widget.textColor, w: FontWeight.w700),
+                style: _lbl(15, Colors.white, w: FontWeight.w700),
               ),
-              const SizedBox(width: _sp8),
-              Icon(widget.icon, color: widget.textColor, size: 16),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
             ],
           ),
         ),
@@ -3767,180 +4590,53 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  LANG BUTTON & LOGOUT (unchanged from original)
+//  OBJ CARDS DATA
 // ══════════════════════════════════════════════════════════════════════
-class _LangButton extends StatelessWidget {
-  final Locale locale;
-  final Function(Locale) setLocale;
-  final bool isDark;
-  final Color accent;
-  final AppLocalizations l;
-  const _LangButton({
-    required this.locale,
-    required this.setLocale,
-    required this.isDark,
-    required this.accent,
-    required this.l,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final langs = [
-      {'code': 'en', 'flag': '🇬🇧', 'name': l.t('lang_en')},
-      {'code': 'hi', 'flag': '🇮🇳', 'name': l.t('lang_hi')},
-      {'code': 'mr', 'flag': '🇮🇳', 'name': l.t('lang_mr')},
-    ];
-    final cur = langs.firstWhere(
-      (x) => x['code'] == locale.languageCode,
-      orElse: () => langs[0],
-    );
-
-    return PopupMenuButton<String>(
-      offset: const Offset(0, 44),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: isDark ? _dBorder : _lBorder, width: 1),
-      ),
-      color: isDark ? _dSurface2 : _lSurface,
-      elevation: 8,
-      onSelected: (c) => setLocale(Locale(c)),
-      itemBuilder: (_) => langs
-          .map(
-            (lang) => PopupMenuItem<String>(
-              value: lang['code'],
-              height: 44,
-              child: Row(
-                children: [
-                  Text(lang['flag']!, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: _sp12),
-                  Text(
-                    lang['name']!,
-                    style: _body(
-                      14,
-                      lang['code'] == locale.languageCode
-                          ? accent
-                          : (isDark ? _dText : _lText),
-                    ),
-                  ),
-                  if (lang['code'] == locale.languageCode) ...[
-                    const Spacer(),
-                    Icon(Icons.check_rounded, color: accent, size: 16),
-                  ],
-                ],
-              ),
-            ),
-          )
-          .toList(),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: accent.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: accent.withOpacity(0.25), width: 1),
-        ),
-        child: Center(
-          child: Text(cur['flag']!, style: const TextStyle(fontSize: 18)),
-        ),
-      ),
-    );
-  }
-}
-
-class _TopLogoutMenu extends StatelessWidget {
-  final bool isDark;
-  const _TopLogoutMenu({required this.isDark});
-
-  Future<void> _logout(BuildContext context) async {
-    try {
-      final box = Hive.box<EmergencyContact>('emergency_contacts');
-      await box.clear();
-    } catch (_) {}
-    await Supabase.instance.client.auth.signOut();
-    if (!context.mounted) return;
-    final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l.t('menu_signed_out')),
-        backgroundColor: isDark ? _dSurface2 : _lText,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final subClr = isDark ? _dTextSub : _lTextSub;
-    final redClr = isDark ? _dangerDark : _danger;
-    final bg = isDark ? _dSurface2 : _lSurface;
-
-    return PopupMenuButton<String>(
-      offset: const Offset(0, 44),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: isDark ? _dBorder : _lBorder, width: 1),
-      ),
-      color: bg,
-      elevation: 8,
-      tooltip: l.t('common_more_options'),
-      icon: Icon(Icons.more_vert_rounded, color: subClr, size: 20),
-      itemBuilder: (_) => [
-        PopupMenuItem<String>(
-          value: 'logout',
-          height: 44,
-          child: Row(
-            children: [
-              Icon(Icons.logout_rounded, color: redClr, size: 18),
-              const SizedBox(width: _sp12),
-              Text(
-                l.t('menu_sign_out'),
-                style: _body(14, redClr, w: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ],
-      onSelected: (value) {
-        if (value != 'logout') return;
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: bg,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            title: Text(
-              l.t('menu_sign_out_confirm_title'),
-              style: _heading(17, isDark ? _dText : _lText),
-            ),
-            content: Text(
-              l.t('menu_sign_out_confirm_body'),
-              style: _body(14, subClr),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  l.t('menu_cancel'),
-                  style: _body(14, subClr, w: FontWeight.w600),
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _logout(context);
-                },
-                child: Text(
-                  l.t('menu_sign_out'),
-                  style: _body(14, redClr, w: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
+List<(Color, IconData, String, String, Widget)> _objCards(
+  AppLocalizations l,
+  VoidCallback toggleTheme,
+  Function(Locale) setLocale,
+) => [
+  (
+    _elBlue,
+    Icons.accessibility_new_rounded,
+    l.t('obj_accessibility'),
+    l.t('obj_accessibility_desc'),
+    AccessibilityPage(toggleTheme: toggleTheme, setLocale: setLocale),
+  ),
+  (
+    _teal,
+    Icons.connecting_airports_rounded,
+    l.t('obj_bridging'),
+    l.t('obj_bridging_desc'),
+    BridgingGapsPage(toggleTheme: toggleTheme, setLocale: setLocale),
+  ),
+  (
+    _emerald,
+    Icons.people_outline_rounded,
+    l.t('obj_inclusivity'),
+    l.t('obj_inclusivity_desc'),
+    InclusivityPage(toggleTheme: toggleTheme, setLocale: setLocale),
+  ),
+  (
+    _cyan,
+    Icons.language_rounded,
+    l.t('obj_localization'),
+    l.t('obj_localization_desc'),
+    LocalizationPage(toggleTheme: toggleTheme, setLocale: setLocale),
+  ),
+  (
+    _amber,
+    Icons.shield_outlined,
+    l.t('obj_privacy'),
+    l.t('obj_privacy_desc'),
+    PrivacyPage(toggleTheme: toggleTheme, setLocale: setLocale),
+  ),
+  (
+    _violet,
+    Icons.school_rounded,
+    l.t('obj_education'),
+    l.t('obj_education_desc'),
+    EducationPage(toggleTheme: toggleTheme, setLocale: setLocale),
+  ),
+];

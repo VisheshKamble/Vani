@@ -41,17 +41,12 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../components/GlobalNavbar.dart';
 import '../l10n/AppLocalizations.dart';
+import '../services/backend_config.dart';
 
 // ─────────────────────────────────────────────────────────────────────
-//  WEBSOCKET CONFIG  (unchanged from original)
+//  WEBSOCKET CONFIG
 // ─────────────────────────────────────────────────────────────────────
-const String _kRailwayHost = 'isl-production-57d4.up.railway.app';
-const String _kWsPath = '/ws';
 const int _kFrameIntervalMs = 100;
-const bool _railwayWsEnabled =
-    true; // set to false to disable WebSocket connection (for testing without backend)
-
-String _getWebSocketUrl() => 'wss://$_kRailwayHost$_kWsPath';
 
 const double _kMinPredictionConfidence = 0.30;
 const int _kStableDetectionMs = 450;
@@ -524,13 +519,13 @@ class _TwoWayScreenState extends State<TwoWayScreen>
   //  WEBSOCKET
   // ─────────────────────────────────────────────────────────────────
   void _connectWs() {
-    if (!_railwayWsEnabled) {
+    if (!BackendConfig.websocketEnabled) {
       setState(() => _wsConnected = false);
       return;
     }
     if (_reconnectAttempts >= _maxReconnectAttempts) return;
     try {
-      _ws = WebSocketChannel.connect(Uri.parse(_getWebSocketUrl()));
+      _ws = WebSocketChannel.connect(Uri.parse(BackendConfig.websocketUrl));
       if (mounted) setState(() => _wsConnected = true);
       _reconnectAttempts = 0;
       _ws!.stream.listen(

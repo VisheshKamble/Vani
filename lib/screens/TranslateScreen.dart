@@ -11,15 +11,10 @@
 // ║  • TTS, translation, transcript                                   ║
 // ║  • Onboarding flow                                                ║
 // ║                                                                    ║
-// ║  UX4G Principles Applied:                                         ║
-// ║  • Mobile-first fullscreen camera with structured bottom panel    ║
-// ║  • Semantic status colors (live=success, error=danger, idle=info) ║
-// ║  • Google Sans typography — consistent with entire app            ║
-// ║  • 8dp spacing grid, min 48dp touch targets                       ║
-// ║  • Semantics() on all interactive elements                        ║
-// ║  • Solid surfaces — no frosted glass (UX4G clarity principle)     ║
-// ║  • WCAG AA contrast on all text pairs                             ║
-// ║  • Section labels uppercase with letterSpacing (UX4G pattern)    ║
+// ║  UI REFRESH:                                                       ║
+// ║  • Loader: floating blobs + semicircles matching homepage          ║
+// ║  • Onboarding: glass-tinted cards with blob backgrounds            ║
+// ║  • Translate screen: ambient circles & patches on all panels      ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'dart:convert';
@@ -34,6 +29,7 @@ import '../components/GlobalNavbar.dart';
 import '../l10n/AppLocalizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart';
+import '../services/backend_config.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 //  UX4G DESIGN TOKENS
@@ -65,7 +61,7 @@ const _infoDark      = Color(0xFF42A5F5);
 const _infoLight     = Color(0xFFE3F2FD);
 
 // Neutral surfaces
-const _lBg           = Color(0xFFF5F7FA);
+const _lBg           = Color(0xFFF0F4FA);
 const _lSurface      = Color(0xFFFFFFFF);
 const _lSurface2     = Color(0xFFF0F4F8);
 const _lBorder       = Color(0xFFCDD5DF);
@@ -108,17 +104,11 @@ TextStyle _txtLabel(double size, Color c, {FontWeight w = FontWeight.w500}) =>
         color: c, height: 1.4, letterSpacing: 0.1);
 
 // ─────────────────────────────────────────────────────────────────────
-//  WEBSOCKET CONFIG (Railway Production)
+//  WEBSOCKET CONFIG
 // ─────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────
-const String _kRailwayHost  = 'isl-production-57d4.up.railway.app';
-const String _kWsPath       = '/ws';
-const int    _kFrameIntervalMs = 100;
-const bool _railwayWsEnabled = false; // Set to false to disable WebSocket connection (for testing without backend)
-//const bool _railwayWsEnabled = true; // Set to false to disable WebSocket connection (for testing without backend)
-
-
-String _getWebSocketUrl() => 'wss://$_kRailwayHost$_kWsPath';
+const int _kFrameIntervalMs = 100;
+const int _kWsConnectAttempts = 3;
+const Duration _kWsConnectTimeout = Duration(seconds: 4);
 
 // ─────────────────────────────────────────────────────────────────────
 //  25 MODEL WORDS
@@ -306,9 +296,86 @@ class _GestureToken {
   _GestureToken({required this.label, required this.confidence});
 }
 
-// ─────────────────────────────────────────────────────────────────────
-//  ONBOARDING FLOW — UX4G redesign (clean cards, no glass)
-// ─────────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════
+//  AMBIENT BLOB PAINTER — matches VANI homepage circles/semicircles
+// ═════════════════════════════════════════════════════════════════════
+class _AmbientBlobPainter extends CustomPainter {
+  final bool dark;
+  final double animValue; // 0.0–1.0 for subtle float
+  const _AmbientBlobPainter({required this.dark, this.animValue = 0.0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final float = math.sin(animValue * math.pi * 2) * 8.0;
+
+    // Colour palette — light mode: soft blue/purple/teal blobs
+    // Dark mode: deeper muted blobs
+    final List<_BlobDef> blobs = dark ? [
+      _BlobDef(dx: w * 0.92, dy: h * 0.08 + float, r: w * 0.30,
+          color: const Color(0xFF1A56DB).withOpacity(0.07)),
+      _BlobDef(dx: w * -0.04, dy: h * 0.55 - float * 0.5, r: w * 0.35,
+          color: const Color(0xFF6200EA).withOpacity(0.06)),
+      _BlobDef(dx: w * 0.50, dy: h * 0.92 + float * 0.3, r: w * 0.28,
+          color: const Color(0xFF00796B).withOpacity(0.05)),
+      _BlobDef(dx: w * 0.80, dy: h * 0.65, r: w * 0.18,
+          color: const Color(0xFF4A8EFF).withOpacity(0.05)),
+    ] : [
+      _BlobDef(dx: w * 0.92, dy: h * 0.06 + float, r: w * 0.32,
+          color: const Color(0xFF1A56DB).withOpacity(0.09)),
+      _BlobDef(dx: w * -0.05, dy: h * 0.52 - float * 0.5, r: w * 0.36,
+          color: const Color(0xFF6200EA).withOpacity(0.07)),
+      _BlobDef(dx: w * 0.48, dy: h * 0.94 + float * 0.3, r: w * 0.30,
+          color: const Color(0xFF00796B).withOpacity(0.06)),
+      _BlobDef(dx: w * 0.78, dy: h * 0.62, r: w * 0.20,
+          color: const Color(0xFF1A56DB).withOpacity(0.05)),
+    ];
+
+    for (final b in blobs) {
+      final paint = Paint()
+        ..color = b.color
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+      canvas.drawCircle(Offset(b.dx, b.dy), b.r, paint);
+    }
+
+    // Semicircle arc — top right (like homepage)
+    final arcPaint = Paint()
+      ..color = (dark ? const Color(0xFF4A8EFF) : const Color(0xFF1A56DB))
+          .withOpacity(dark ? 0.06 : 0.07)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = dark ? 60 : 70
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(w + w * 0.05, -h * 0.05), radius: w * 0.55),
+      math.pi * 0.55, math.pi * 0.80, false, arcPaint,
+    );
+
+    // Small circle ring — bottom left
+    final ringPaint = Paint()
+      ..color = (dark ? const Color(0xFF9C6BFF) : const Color(0xFF6200EA))
+          .withOpacity(dark ? 0.06 : 0.06)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = dark ? 40 : 50
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
+    canvas.drawCircle(Offset(-w * 0.08, h * 0.88 + float * 0.4), w * 0.28, ringPaint);
+  }
+
+  @override
+  bool shouldRepaint(_AmbientBlobPainter o) =>
+      o.dark != dark || o.animValue != animValue;
+}
+
+class _BlobDef {
+  final double dx, dy, r;
+  final Color color;
+  const _BlobDef({required this.dx, required this.dy,
+    required this.r, required this.color});
+}
+
+// ═════════════════════════════════════════════════════════════════════
+//  ONBOARDING FLOW — lifted, atmospheric cards
+// ═════════════════════════════════════════════════════════════════════
 class _OnboardingFlow extends StatefulWidget {
   final bool d;
   final VoidCallback onComplete;
@@ -322,7 +389,7 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
   int    _step  = 0;
   Timer? _timer;
 
-  late AnimationController _loaderCtrl, _fadeCtrl, _cardCtrl;
+  late AnimationController _loaderCtrl, _fadeCtrl, _cardCtrl, _blobCtrl;
   late Animation<double>   _loaderAnim, _fadeAnim, _cardSlide;
 
   static const _steps = [
@@ -339,13 +406,18 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
     _loaderCtrl = AnimationController(vsync: this,
         duration: const Duration(milliseconds: 2800));
     _loaderAnim = CurvedAnimation(parent: _loaderCtrl, curve: Curves.easeInOut);
+
+    _blobCtrl = AnimationController(vsync: this,
+        duration: const Duration(seconds: 6))..repeat();
+
     _fadeCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 300));
-    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
-    _cardCtrl = AnimationController(vsync: this,
         duration: const Duration(milliseconds: 350));
-    _cardSlide = Tween<double>(begin: 0.03, end: 0.0)
-        .animate(CurvedAnimation(parent: _cardCtrl, curve: Curves.easeOut));
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+
+    _cardCtrl = AnimationController(vsync: this,
+        duration: const Duration(milliseconds: 400));
+    _cardSlide = Tween<double>(begin: 0.04, end: 0.0)
+        .animate(CurvedAnimation(parent: _cardCtrl, curve: Curves.easeOutCubic));
 
     _loaderCtrl.forward();
     _fadeCtrl.forward();
@@ -363,7 +435,8 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
   @override
   void dispose() {
     _timer?.cancel();
-    _loaderCtrl.dispose(); _fadeCtrl.dispose(); _cardCtrl.dispose();
+    _loaderCtrl.dispose(); _fadeCtrl.dispose();
+    _cardCtrl.dispose(); _blobCtrl.dispose();
     super.dispose();
   }
 
@@ -378,69 +451,154 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
     final bg = widget.d ? _dBg : _lBg;
     return Material(
       color: bg,
-      child: FadeTransition(
-        opacity: _fadeAnim,
-        child: _phase == 0 ? _buildLoader() : _buildSteps(),
+      child: Stack(fit: StackFit.expand, children: [
+        // Ambient blobs — always visible
+        AnimatedBuilder(
+          animation: _blobCtrl,
+          builder: (_, __) => CustomPaint(
+            painter: _AmbientBlobPainter(
+                dark: widget.d, animValue: _blobCtrl.value),
+          ),
+        ),
+        FadeTransition(
+          opacity: _fadeAnim,
+          child: _phase == 0 ? _buildLoader() : _buildSteps(),
+        ),
+      ]),
+    );
+  }
+
+  // ── LOADER ──────────────────────────────────────────────────────────
+  Widget _buildLoader() {
+    final l        = AppLocalizations.of(context);
+    final textClr  = widget.d ? _dText    : _lText;
+    final subClr   = widget.d ? _dTextSub : _lTextSub;
+    final mutedClr = widget.d ? _dTextMuted : _lTextMuted;
+    final cardBg   = widget.d
+        ? Colors.white.withOpacity(0.04)
+        : Colors.white.withOpacity(0.72);
+    final cardBorder = widget.d
+        ? Colors.white.withOpacity(0.08)
+        : Colors.white.withOpacity(0.55);
+
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 380),
+        margin: const EdgeInsets.symmetric(horizontal: _sp24),
+        padding: const EdgeInsets.symmetric(
+            horizontal: _sp32, vertical: 40),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: cardBorder, width: 1.0),
+          boxShadow: widget.d ? [] : [
+            BoxShadow(
+              color: const Color(0xFF1A56DB).withOpacity(0.06),
+              blurRadius: 48, spreadRadius: -8, offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+
+          // Dot row — scanning indicator
+          _LoaderScanDots(d: widget.d, anim: _loaderAnim),
+          const SizedBox(height: _sp24),
+
+          // Progress ring
+          SizedBox(width: 72, height: 72,
+              child: AnimatedBuilder(
+                animation: _loaderAnim,
+                builder: (_, __) => CustomPaint(
+                    painter: _RingPainter(
+                        progress: _loaderAnim.value,
+                        color: _primary,
+                        track: widget.d ? _dBorder : const Color(0xFFDDE3EE))),
+              )),
+          const SizedBox(height: _sp20),
+
+          // Title
+          Text(l.t('translate_screen_title'),
+              textAlign: TextAlign.center,
+              style: _display(22, textClr).copyWith(
+                  letterSpacing: -0.3, height: 1.25)),
+          const SizedBox(height: _sp8),
+          Text(l.t('translate_loader_subtitle') != 'translate_loader_subtitle'
+              ? l.t('translate_loader_subtitle')
+              : 'Sign Language · Real-Time AI',
+              textAlign: TextAlign.center,
+              style: _body(13, mutedClr)),
+
+          const SizedBox(height: _sp32),
+
+          // Steps
+          AnimatedBuilder(
+            animation: _loaderAnim,
+            builder: (_, __) => Column(children: [
+              _LoaderStepRow(
+                  icon: Icons.camera_alt_outlined,
+                  label: l.t('translate_loader_camera'),
+                  done: _loaderAnim.value >= 0.35,
+                  active: _loaderAnim.value < 0.35,
+                  d: widget.d),
+              const SizedBox(height: _sp8),
+              _LoaderStepRow(
+                  icon: Icons.psychology_outlined,
+                  label: l.t('translate_loader_ai'),
+                  done: _loaderAnim.value >= 0.70,
+                  active: _loaderAnim.value >= 0.35 && _loaderAnim.value < 0.70,
+                  d: widget.d),
+              const SizedBox(height: _sp8),
+              _LoaderStepRow(
+                  icon: Icons.tune_rounded,
+                  label: l.t('translate_loader_calibrate'),
+                  done: _loaderAnim.value >= 1.0,
+                  active: _loaderAnim.value >= 0.70,
+                  d: widget.d),
+            ]),
+          ),
+
+          const SizedBox(height: _sp24),
+
+          // Progress bar
+          AnimatedBuilder(
+            animation: _loaderAnim,
+            builder: (_, __) => Column(children: [
+              ClipRRect(borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                      value: _loaderAnim.value, minHeight: 4,
+                      backgroundColor: widget.d
+                          ? Colors.white.withOpacity(0.08)
+                          : const Color(0xFFDDE3EE),
+                      valueColor: AlwaysStoppedAnimation(
+                          widget.d ? _primaryDark : _primary))),
+              const SizedBox(height: _sp8),
+              Text(
+                '${(_loaderAnim.value * 100).toInt()}%',
+                style: _txtLabel(11, subClr),
+              ),
+            ]),
+          ),
+        ]),
       ),
     );
   }
 
-  Widget _buildLoader() {
-    final l      = AppLocalizations.of(context);
-    final textClr = widget.d ? _dText    : _lText;
-    final subClr  = widget.d ? _dTextSub : _lTextSub;
-
-    return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      // Progress ring
-      SizedBox(width: 80, height: 80,
-          child: AnimatedBuilder(
-            animation: _loaderAnim,
-            builder: (_, __) => CustomPaint(
-                painter: _RingPainter(
-                    progress: _loaderAnim.value,
-                    color: _primary,
-                    track: widget.d ? _dBorder : _lBorder)),
-          )),
-      const SizedBox(height: _sp24),
-      Text(l.t('app_title_short'),
-          style: _display(26, textClr).copyWith(letterSpacing: 6)),
-      const SizedBox(height: _sp4),
-      Text(l.t('translate_screen_title'),
-          style: _txtLabel(12, subClr, w: FontWeight.w400)),
-      const SizedBox(height: _sp32),
-      SizedBox(width: 200, child: AnimatedBuilder(
-        animation: _loaderAnim,
-        builder: (_, __) => Column(children: [
-          ClipRRect(borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                  value: _loaderAnim.value, minHeight: 3,
-                  backgroundColor: widget.d ? _dBorder : _lBorder,
-                  valueColor: const AlwaysStoppedAnimation(_primary))),
-          const SizedBox(height: _sp8),
-          Text(_loaderLabel(_loaderAnim.value, l),
-              style: _body(12, subClr)),
-        ]),
-      )),
-    ]));
-  }
-
-  String _loaderLabel(double v, AppLocalizations l) {
-    if (v < 0.35) return l.t('translate_loader_camera');
-    if (v < 0.70) return l.t('translate_loader_ai');
-    return l.t('translate_loader_calibrate');
-  }
-
+  // ── STEPS ──────────────────────────────────────────────────────────
   Widget _buildSteps() {
     final l    = AppLocalizations.of(context);
     final step = _steps[_step];
     final last = _step == _steps.length - 1;
-    final bg   = widget.d ? _dSurface  : _lSurface;
-    final bord = widget.d ? _dBorder   : _lBorder;
-    final textClr = widget.d ? _dText : _lText;
-    final subClr  = widget.d ? _dTextSub : _lTextSub;
+    final cardBg = widget.d
+        ? Colors.white.withOpacity(0.04)
+        : Colors.white.withOpacity(0.80);
+    final cardBorder = widget.d
+        ? Colors.white.withOpacity(0.08)
+        : Colors.white.withOpacity(0.60);
+    final textClr  = widget.d ? _dText    : _lText;
+    final subClr   = widget.d ? _dTextSub : _lTextSub;
     final mutedClr = widget.d ? _dTextMuted : _lTextMuted;
+    final bord     = widget.d ? _dBorder   : _lBorder;
 
-    // Dark-mode accent mapping
     Color accentResolved = widget.d
         ? (step.color == _primary ? _primaryDark
         : step.color == _success ? _successDark
@@ -453,136 +611,159 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: _sp20),
         child: SlideTransition(
-          position: _cardSlide.drive(Tween(
-              begin: const Offset(0, 0.03), end: Offset.zero)),
+          position: _cardSlide.drive(
+              Tween(begin: const Offset(0, 0.03), end: Offset.zero)),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 440),
+            constraints: const BoxConstraints(maxWidth: 460),
             decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: bord, width: 1)),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              // Accent top bar
-              Container(height: 4,
-                  decoration: BoxDecoration(
-                      color: accentResolved,
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16)))),
-              Padding(
-                padding: const EdgeInsets.all(_sp24),
-                child: Column(children: [
-                  // Step header
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: _sp8, vertical: _sp4),
-                      decoration: BoxDecoration(
-                          color: accentResolved.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                              color: accentResolved.withOpacity(0.25), width: 1)),
-                      child: Text(l.t('translate_how_to_use').toUpperCase(),
-                          style: _txtLabel(10, accentResolved, w: FontWeight.w700)),
-                    ),
-                    const Spacer(),
-                    Text('${_step + 1} / ${_steps.length}',
-                        style: _txtLabel(12, mutedClr, w: FontWeight.w400)),
-                  ]),
-                  const SizedBox(height: _sp24),
+                color: cardBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: cardBorder, width: 1),
+                boxShadow: widget.d ? [] : [
+                  BoxShadow(
+                    color: accentResolved.withOpacity(0.08),
+                    blurRadius: 48, spreadRadius: -8,
+                    offset: const Offset(0, 16),
+                  ),
+                ]),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                // Gradient top accent strip
+                Container(height: 3,
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          accentResolved.withOpacity(0.6),
+                          accentResolved,
+                          accentResolved.withOpacity(0.6),
+                        ]))),
 
-                  // Icon
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                        key: ValueKey(_step),
-                        width: 68, height: 68,
+                Padding(
+                  padding: const EdgeInsets.all(_sp24),
+                  child: Column(children: [
+                    // Header row
+                    Row(children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: _sp8, vertical: _sp4),
                         decoration: BoxDecoration(
                             color: accentResolved.withOpacity(0.10),
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                                color: accentResolved.withOpacity(0.25), width: 1)),
-                        child: Icon(step.icon, color: accentResolved, size: 30)),
-                  ),
-                  const SizedBox(height: _sp16),
+                                color: accentResolved.withOpacity(0.22), width: 1)),
+                        child: Text(l.t('translate_how_to_use').toUpperCase(),
+                            style: _txtLabel(9, accentResolved, w: FontWeight.w800)
+                                .copyWith(letterSpacing: 1.0)),
+                      ),
+                      const Spacer(),
+                      // Step count pills
+                      Row(mainAxisSize: MainAxisSize.min,
+                          children: List.generate(_steps.length, (i) =>
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 250),
+                                margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                                width: i == _step ? 18 : 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                    color: i == _step
+                                        ? accentResolved
+                                        : (widget.d ? _dBorder : const Color(0xFFCDD5DF)),
+                                    borderRadius: BorderRadius.circular(3)),
+                              ))),
+                    ]),
+                    const SizedBox(height: _sp24),
 
-                  // Title
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 160),
-                    child: Text(l.t(step.titleKey), key: ValueKey('t$_step'),
-                        textAlign: TextAlign.center,
-                        style: _heading(19, textClr)),
-                  ),
-                  const SizedBox(height: _sp8),
-
-                  // Body
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 160),
-                    child: Text(l.t(step.bodyKey), key: ValueKey('b$_step'),
-                        textAlign: TextAlign.center,
-                        style: _body(14, subClr)),
-                  ),
-                  const SizedBox(height: _sp20),
-
-                  // Step dots
-                  Row(mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_steps.length, (i) =>
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: i == _step ? 20 : 6, height: 6,
-                            decoration: BoxDecoration(
-                                color: i == _step
-                                    ? accentResolved
-                                    : (widget.d ? _dBorder : _lBorder),
-                                borderRadius: BorderRadius.circular(3)),
-                          ))),
-                  const SizedBox(height: _sp20),
-
-                  // Action buttons
-                  Row(children: [
-                    if (_step > 0) ...[
-                      Expanded(child: OutlinedButton.icon(
-                        onPressed: _prev,
-                        icon: const Icon(Icons.chevron_left_rounded, size: 16),
-                        label: Text(l.t('translate_back')),
-                        style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                            side: BorderSide(color: bord)),
-                      )),
-                      const SizedBox(width: _sp12),
-                    ],
-                    Expanded(flex: 2, child: ElevatedButton.icon(
-                      onPressed: _next,
-                      icon: Icon(last
-                          ? Icons.play_arrow_rounded
-                          : Icons.chevron_right_rounded, size: 16),
-                      label: Text(last
-                          ? l.t('translate_lets_begin')
-                          : l.t('translate_next')),
-                      style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(0, 48),
-                          backgroundColor: accentResolved,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8))),
-                    )),
-                  ]),
-
-                  if (!last) ...[
-                    const SizedBox(height: _sp16),
-                    TextButton(
-                      onPressed: widget.onComplete,
-                      child: Text(l.t('translate_skip_tutorial'),
-                          style: _body(13, mutedClr,
-                              w: FontWeight.w500)),
+                    // Icon — with subtle ring
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      transitionBuilder: (child, anim) =>
+                          ScaleTransition(scale: anim, child:
+                          FadeTransition(opacity: anim, child: child)),
+                      child: Container(
+                          key: ValueKey(_step),
+                          width: 72, height: 72,
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: accentResolved.withOpacity(0.10),
+                              border: Border.all(
+                                  color: accentResolved.withOpacity(0.20),
+                                  width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accentResolved.withOpacity(0.15),
+                                  blurRadius: 20, spreadRadius: -4,
+                                ),
+                              ]),
+                          child: Icon(step.icon,
+                              color: accentResolved, size: 30)),
                     ),
-                  ],
-                ]),
-              ),
-            ]),
+                    const SizedBox(height: _sp20),
+
+                    // Title
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: Text(l.t(step.titleKey),
+                          key: ValueKey('t$_step'),
+                          textAlign: TextAlign.center,
+                          style: _heading(19, textClr)),
+                    ),
+                    const SizedBox(height: _sp8),
+
+                    // Body
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: Text(l.t(step.bodyKey),
+                          key: ValueKey('b$_step'),
+                          textAlign: TextAlign.center,
+                          style: _body(14, subClr)),
+                    ),
+                    const SizedBox(height: _sp24),
+
+                    // Action buttons
+                    Row(children: [
+                      if (_step > 0) ...[
+                        Expanded(child: OutlinedButton.icon(
+                          onPressed: _prev,
+                          icon: const Icon(Icons.chevron_left_rounded, size: 16),
+                          label: Text(l.t('translate_back')),
+                          style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              side: BorderSide(color: bord)),
+                        )),
+                        const SizedBox(width: _sp12),
+                      ],
+                      Expanded(flex: 2, child: ElevatedButton.icon(
+                        onPressed: _next,
+                        icon: Icon(last
+                            ? Icons.play_arrow_rounded
+                            : Icons.chevron_right_rounded, size: 16),
+                        label: Text(last
+                            ? l.t('translate_lets_begin')
+                            : l.t('translate_next')),
+                        style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(0, 48),
+                            backgroundColor: accentResolved,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10))),
+                      )),
+                    ]),
+
+                    if (!last) ...[
+                      const SizedBox(height: _sp12),
+                      TextButton(
+                        onPressed: widget.onComplete,
+                        child: Text(l.t('translate_skip_tutorial'),
+                            style: _body(13, mutedClr, w: FontWeight.w500)),
+                      ),
+                    ],
+                  ]),
+                ),
+              ]),
+            ),
           ),
         ),
       ),
@@ -590,6 +771,101 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
   }
 }
 
+// ── Loader step row widget ──────────────────────────────────────────
+class _LoaderStepRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool done, active, d;
+  const _LoaderStepRow({
+    required this.icon, required this.label,
+    required this.done, required this.active, required this.d,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color fg;
+    final Color bg;
+    if (done) {
+      fg = d ? _successDark : _success;
+      bg = fg.withOpacity(0.10);
+    } else if (active) {
+      fg = d ? _primaryDark : _primary;
+      bg = fg.withOpacity(0.08);
+    } else {
+      fg = d ? _dTextMuted : _lTextMuted;
+      bg = Colors.transparent;
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp8),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: (done || active) ? fg.withOpacity(0.18) : Colors.transparent,
+          width: 1,
+        ),
+      ),
+      child: Row(children: [
+        Icon(done ? Icons.check_circle_rounded : icon,
+            color: fg, size: 16),
+        const SizedBox(width: _sp8),
+        Expanded(child: Text(label,
+            style: _txtLabel(12, fg,
+                w: active ? FontWeight.w700 : FontWeight.w500))),
+        if (active)
+          SizedBox(width: 12, height: 12,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: fg)),
+      ]),
+    );
+  }
+}
+
+// ── Scan dots row ──────────────────────────────────────────────────
+class _LoaderScanDots extends StatefulWidget {
+  final bool d;
+  final Animation<double> anim;
+  const _LoaderScanDots({required this.d, required this.anim});
+  @override State<_LoaderScanDots> createState() => _LoaderScanDotsState();
+}
+
+class _LoaderScanDotsState extends State<_LoaderScanDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this,
+        duration: const Duration(milliseconds: 1200))..repeat();
+  }
+  @override void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) {
+        return Row(mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (i) {
+              final phase = ((_ctrl.value * 3) - i).clamp(0.0, 1.0);
+              final opacity = (math.sin(phase * math.pi)).clamp(0.25, 1.0);
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: 7, height: 7,
+                decoration: BoxDecoration(
+                    color: (widget.d ? _primaryDark : _primary)
+                        .withOpacity(opacity),
+                    shape: BoxShape.circle),
+              );
+            }));
+      },
+    );
+  }
+}
+
+// ── Ring painter ────────────────────────────────────────────────────
 class _RingPainter extends CustomPainter {
   final double progress;
   final Color color, track;
@@ -601,11 +877,11 @@ class _RingPainter extends CustomPainter {
     final r = size.width / 2 - 3;
     canvas.drawArc(Rect.fromCircle(center: c, radius: r),
         0, math.pi * 2, false,
-        Paint()..color = track..strokeWidth = 2..style = PaintingStyle.stroke);
+        Paint()..color = track..strokeWidth = 3..style = PaintingStyle.stroke);
     if (progress > 0) {
       canvas.drawArc(Rect.fromCircle(center: c, radius: r),
           -math.pi / 2, 2 * math.pi * progress, false,
-          Paint()..color = color..strokeWidth = 2.5
+          Paint()..color = color..strokeWidth = 3
             ..style = PaintingStyle.stroke..strokeCap = StrokeCap.round);
     }
   }
@@ -624,7 +900,7 @@ class TranslateScreen extends StatefulWidget {
 }
 
 class _TranslateScreenState extends State<TranslateScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
 
   bool _onboardingDone = false;
 
@@ -679,19 +955,24 @@ class _TranslateScreenState extends State<TranslateScreen>
   bool   _ttsSpeaking = false;
   String _ttsTag = '';
 
-  // Pulse anim
+  // Pulse + blob anims
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
+  late AnimationController _blobCtrl;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _setupCameras();
+
     _pulseCtrl = AnimationController(vsync: this,
         duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
     _pulseAnim = Tween<double>(begin: 0.4, end: 1.0)
         .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+
+    _blobCtrl = AnimationController(vsync: this,
+        duration: const Duration(seconds: 8))..repeat();
   }
 
   @override
@@ -741,18 +1022,44 @@ class _TranslateScreenState extends State<TranslateScreen>
   }
 
   Future<bool> _connectWs() async {
-    if (!_railwayWsEnabled) {
+    if (!BackendConfig.websocketEnabled) {
       _wsOk = false;
       return false;
     }
-    try {
-      _channel = WebSocketChannel.connect(Uri.parse(_getWebSocketUrl()));
-      await _channel!.ready.timeout(const Duration(seconds: 3));
-      _wsOk = true; _reconnects = 0;
-      _wsSub = _channel!.stream.listen(_onMsg,
-          onError: _onErr, onDone: _onDone, cancelOnError: false);
-      return true;
-    } catch (_) { _wsOk = false; return false; }
+    for (var attempt = 0; attempt < _kWsConnectAttempts; attempt++) {
+      try {
+        await _wsSub?.cancel();
+        _wsSub = null;
+        await _channel?.sink.close();
+      } catch (_) {}
+
+      try {
+        final channel = WebSocketChannel.connect(
+          Uri.parse(BackendConfig.websocketUrl),
+        );
+        _channel = channel;
+        await channel.ready.timeout(_kWsConnectTimeout);
+        _wsOk = true;
+        _reconnects = 0;
+        _wsSub = channel.stream.listen(
+          _onMsg,
+          onError: _onErr,
+          onDone: _onDone,
+          cancelOnError: false,
+        );
+        return true;
+      } catch (_) {
+        _wsOk = false;
+        try { await _wsSub?.cancel(); } catch (_) {}
+        _wsSub = null;
+        try { await _channel?.sink.close(); } catch (_) {}
+        _channel = null;
+        if (attempt < _kWsConnectAttempts - 1) {
+          await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+        }
+      }
+    }
+    return false;
   }
 
   void _onMsg(dynamic raw) {
@@ -977,16 +1284,13 @@ class _TranslateScreenState extends State<TranslateScreen>
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Row(children: [
-          const Icon(Icons.check_circle_rounded,
-              color: Colors.white, size: 16),
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
           const SizedBox(width: _sp8),
-          Text(l.t('common_copied_clipboard'),
-              style: _body(13, Colors.white)),
+          Text(l.t('common_copied_clipboard'), style: _body(13, Colors.white)),
         ]),
         behavior: SnackBarBehavior.floating,
         backgroundColor: _success,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp24),
         duration: const Duration(seconds: 2)));
   }
@@ -994,7 +1298,8 @@ class _TranslateScreenState extends State<TranslateScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _pulseCtrl.dispose(); _stabilityTimer?.cancel();
+    _pulseCtrl.dispose(); _blobCtrl.dispose();
+    _stabilityTimer?.cancel();
     _stopSession(); _transcriptCtrl.dispose();
     super.dispose();
   }
@@ -1033,7 +1338,7 @@ class _TranslateScreenState extends State<TranslateScreen>
         else
           _CamPlaceholder(d: d, state: _state),
 
-        // Corner brackets — UX4G: shows active scanning area
+        // Corner brackets
         IgnorePointer(child: CustomPaint(painter: _CornerPainter(
             color: _primary.withOpacity(running ? 0.7 : 0.3)))),
 
@@ -1046,7 +1351,7 @@ class _TranslateScreenState extends State<TranslateScreen>
                     onFlip: _switchCamera,
                     pulse: _pulseAnim))),
 
-        // Label overlay — shown when actively detecting
+        // Label overlay
         if (running && _conf > 0.15)
           Positioned(top: 72, left: 0, right: 0,
               child: Center(child: _LabelOverlay(
@@ -1062,7 +1367,7 @@ class _TranslateScreenState extends State<TranslateScreen>
           Positioned(bottom: 300, left: _sp16, right: _sp16,
               child: _ErrorBanner(msg: _error!, d: d)),
 
-        // Bottom panel — solid surface (UX4G: no blur)
+        // Bottom panel
         Positioned(bottom: 0, left: 0, right: 0,
             child: _MobileBottomPanel(
               d: d, state: _state, label: _label, conf: _conf,
@@ -1083,6 +1388,7 @@ class _TranslateScreenState extends State<TranslateScreen>
                 if (v != null && mounted) setState(() => _lang = v);
               },
               onCopy: _copy, onSpeak: _speak, ttsCode: _ttsCode, l: l,
+              blobAnim: _blobCtrl,
             )),
       ]),
     );
@@ -1094,15 +1400,26 @@ class _TranslateScreenState extends State<TranslateScreen>
   Widget _buildWeb(BuildContext context, bool d, bool wide) {
     return Scaffold(
       backgroundColor: d ? _dBg : _lBg,
-      body: SafeArea(child: Column(children: [
-        GlobalNavbar(toggleTheme: widget.toggleTheme,
-            setLocale: widget.setLocale, activeRoute: 'translate'),
-        Expanded(child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(_sp24, _sp16, _sp24, _sp32),
-          child: wide ? _webWide(d) : _webNarrow(d),
-        )),
-      ])),
+      body: Stack(children: [
+        // Ambient blobs behind everything
+        Positioned.fill(
+          child: AnimatedBuilder(
+            animation: _blobCtrl,
+            builder: (_, __) => CustomPaint(
+                painter: _AmbientBlobPainter(
+                    dark: d, animValue: _blobCtrl.value)),
+          ),
+        ),
+        SafeArea(child: Column(children: [
+          GlobalNavbar(toggleTheme: widget.toggleTheme,
+              setLocale: widget.setLocale, activeRoute: 'translate'),
+          Expanded(child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(_sp24, _sp16, _sp24, _sp32),
+            child: wide ? _webWide(d) : _webNarrow(d),
+          )),
+        ])),
+      ]),
     );
   }
 
@@ -1153,7 +1470,7 @@ class _TranslateScreenState extends State<TranslateScreen>
 
       // Camera view
       AspectRatio(aspectRatio: 16 / 10,
-          child: ClipRRect(borderRadius: BorderRadius.circular(8),
+          child: ClipRRect(borderRadius: BorderRadius.circular(10),
               child: Container(
                 color: const Color(0xFF0A0A0A),
                 child: Stack(fit: StackFit.expand, children: [
@@ -1206,8 +1523,8 @@ class _TranslateScreenState extends State<TranslateScreen>
 
   // ── Web: Detection card ───────────────────────────────────────────────
   Widget _webDetection(bool d) {
-    final l      = AppLocalizations.of(context);
-    final active = _state == _SessionState.running;
+    final l       = AppLocalizations.of(context);
+    final active  = _state == _SessionState.running;
     final textClr = d ? _dText    : _lText;
     final subClr  = d ? _dTextSub : _lTextSub;
     final mutedClr = d ? _dTextMuted : _lTextMuted;
@@ -1226,7 +1543,6 @@ class _TranslateScreenState extends State<TranslateScreen>
       ]),
       const SizedBox(height: _sp16),
 
-      // EN detection
       _WebDetectionRow(
           code: 'EN', color: d ? _primaryDark : _primary, d: d,
           text: active ? _label : l.t('translate_waiting'),
@@ -1236,7 +1552,6 @@ class _TranslateScreenState extends State<TranslateScreen>
               ? () => _speak(_label, 'en-US', 'en') : null),
       const SizedBox(height: _sp8),
 
-      // Regional detection
       _WebDetectionRow(
           code: _lang.substring(0, 2).toUpperCase(),
           color: d ? _successDark : _success, d: d,
@@ -1251,7 +1566,6 @@ class _TranslateScreenState extends State<TranslateScreen>
 
       const SizedBox(height: _sp16),
 
-      // Confidence
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Text(l.t('obj_page_confidence').toUpperCase(),
             style: _txtLabel(10, mutedClr, w: FontWeight.w700)),
@@ -1293,10 +1607,10 @@ class _TranslateScreenState extends State<TranslateScreen>
 
   // ── Web: Sentence builder card ────────────────────────────────────────
   Widget _webBuilder(bool d) {
-    final l = AppLocalizations.of(context);
-    final accent = d ? _purpleDark : _purple;
-    final textClr = d ? _dText    : _lText;
-    final subClr  = d ? _dTextSub : _lTextSub;
+    final l        = AppLocalizations.of(context);
+    final accent   = d ? _purpleDark : _purple;
+    final textClr  = d ? _dText    : _lText;
+    final subClr   = d ? _dTextSub : _lTextSub;
     final mutedClr = d ? _dTextMuted : _lTextMuted;
 
     return _UX4GCard(d: d, child: Column(
@@ -1334,7 +1648,7 @@ class _TranslateScreenState extends State<TranslateScreen>
       ]),
       const SizedBox(height: _sp16),
 
-      // Info box (UX4G: info color)
+      // Info box
       Container(
         padding: const EdgeInsets.symmetric(
             horizontal: _sp12, vertical: _sp8),
@@ -1354,7 +1668,6 @@ class _TranslateScreenState extends State<TranslateScreen>
       ),
       const SizedBox(height: _sp16),
 
-      // Tokens
       if (_tokens.isEmpty)
         _EmptyBuilderWeb(d: d)
       else
@@ -1364,7 +1677,6 @@ class _TranslateScreenState extends State<TranslateScreen>
                     isLast: e.key == _tokens.length - 1, d: d,
                     onRemove: () => _removeToken(e.key))).toList()),
 
-      // Generated sentence
       if (_tokens.isNotEmpty) ...[
         const SizedBox(height: _sp16),
         Row(children: [
@@ -1393,7 +1705,8 @@ class _TranslateScreenState extends State<TranslateScreen>
                   style: _heading(16, textClr))),
               _ActionIconBtn(
                   icon: Icons.copy_outlined, color: mutedClr,
-                  tooltip: l.t('common_copy'), onTap: () => _copy(_sentence)),
+                  tooltip: l.t('common_copy'),
+                  onTap: () => _copy(_sentence)),
               _ActionIconBtn(
                   icon: _ttsSpeaking && _ttsTag == 'sentence_en'
                       ? Icons.stop_rounded : Icons.volume_up_rounded,
@@ -1413,13 +1726,13 @@ class _TranslateScreenState extends State<TranslateScreen>
                     style: _heading(16, d ? _successDark : _success))),
                 _ActionIconBtn(
                     icon: Icons.copy_outlined, color: mutedClr,
-                  tooltip: l.t('common_copy'),
+                    tooltip: l.t('common_copy'),
                     onTap: () => _copy(_sentenceRegional)),
                 _ActionIconBtn(
                     icon: _ttsSpeaking && _ttsTag == 'sentence_reg'
                         ? Icons.stop_rounded : Icons.volume_up_rounded,
                     color: d ? _successDark : _success,
-                  tooltip: l.t('common_speak'),
+                    tooltip: l.t('common_speak'),
                     onTap: () => _speak(
                         _sentenceRegional, _ttsCode(_lang), 'sentence_reg')),
               ]),
@@ -1471,7 +1784,7 @@ class _TranslateScreenState extends State<TranslateScreen>
 
   // ── Web: Transcript card ──────────────────────────────────────────────
   Widget _webTranscript(bool d) {
-    final l = AppLocalizations.of(context);
+    final l       = AppLocalizations.of(context);
     final accent  = d ? _primaryDark : _primary;
     final textClr = d ? _dText    : _lText;
     final bg2     = d ? _dSurface2 : _lSurface2;
@@ -1619,7 +1932,7 @@ class _StatusPillOverlay extends StatelessWidget {
   }
 }
 
-// ── Mobile bottom panel — solid (UX4G: clarity over aesthetics) ───────
+// ── Mobile bottom panel ───────────────────────────────────────────────
 class _MobileBottomPanel extends StatefulWidget {
   final bool d;
   final _SessionState state;
@@ -1636,6 +1949,7 @@ class _MobileBottomPanel extends StatefulWidget {
   final Future<void> Function(String, String, String) onSpeak;
   final String Function(String) ttsCode;
   final AppLocalizations l;
+  final AnimationController blobAnim;
 
   const _MobileBottomPanel({
     required this.d, required this.state, required this.label,
@@ -1646,7 +1960,8 @@ class _MobileBottomPanel extends StatefulWidget {
     required this.transcriptCtrl, required this.onStart, required this.onStop,
     required this.onAddManual, required this.onRemoveLast, required this.onClearAll,
     required this.onCommit, required this.onRemoveToken, required this.onLangChanged,
-    required this.onCopy, required this.onSpeak, required this.ttsCode, required this.l,
+    required this.onCopy, required this.onSpeak, required this.ttsCode,
+    required this.l, required this.blobAnim,
   });
 
   @override State<_MobileBottomPanel> createState() => _MobileBottomPanelState();
@@ -1660,19 +1975,25 @@ class _MobileBottomPanelState extends State<_MobileBottomPanel> {
     final l   = widget.l;
     final d   = widget.d;
     final bg  = d ? _dSurface  : _lSurface;
-    final brd = d ? _dBorder   : _lBorder;
+    final brd = d ? _dBorder   : const Color(0xFFDDE3EE);
 
     return Container(
       decoration: BoxDecoration(
           color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          border: Border(top: BorderSide(color: brd, width: 1))),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          border: Border(top: BorderSide(color: brd, width: 1)),
+          boxShadow: d ? [] : [
+            BoxShadow(
+              color: const Color(0xFF1A56DB).withOpacity(0.05),
+              blurRadius: 32, spreadRadius: -4, offset: const Offset(0, -8),
+            ),
+          ]),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         // Drag handle
         Padding(padding: const EdgeInsets.only(top: _sp8, bottom: _sp4),
             child: Container(width: 36, height: 4,
                 decoration: BoxDecoration(
-                    color: d ? _dBorder : _lBorder,
+                    color: d ? _dBorder : const Color(0xFFCDD5DF),
                     borderRadius: BorderRadius.circular(2)))),
 
         // Session row
@@ -1713,8 +2034,7 @@ class _MobileBottomPanelState extends State<_MobileBottomPanel> {
           duration: const Duration(milliseconds: 180),
           child: KeyedSubtree(key: ValueKey(_tab),
               child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      _sp16, 0, _sp16, 0),
+                  padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, 0),
                   child: _tab == 0
                       ? _MobileOutputTab(widget: widget, d: d)
                       : _tab == 1
@@ -1746,8 +2066,7 @@ class _MobileTab extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(
-              horizontal: _sp8, vertical: _sp8),
+          padding: const EdgeInsets.symmetric(horizontal: _sp8, vertical: _sp8),
           decoration: BoxDecoration(
               color: active ? accent.withOpacity(0.10) : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
@@ -1839,7 +2158,7 @@ class _MobileSessionBtnState extends State<_MobileSessionBtn> {
               height: 48,
               decoration: BoxDecoration(
                   color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                   border: (running || err)
                       ? Border.all(color: textColor.withOpacity(0.30), width: 1)
                       : null),
@@ -1847,8 +2166,7 @@ class _MobileSessionBtnState extends State<_MobileSessionBtn> {
                 if (loading)
                   SizedBox(width: 14, height: 14,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: textColor))
+                          strokeWidth: 2.5, color: textColor))
                 else Icon(ico, color: textColor, size: 16),
                 const SizedBox(width: _sp8),
                 Text(lbl, style: _txtLabel(14, textColor, w: FontWeight.w700)),
@@ -1940,8 +2258,7 @@ class _MobileDetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: _sp12, vertical: _sp12),
+      padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp12),
       decoration: BoxDecoration(
           color: d ? _dSurface2 : _lSurface2,
           borderRadius: BorderRadius.circular(8),
@@ -1952,7 +2269,10 @@ class _MobileDetRow extends StatelessWidget {
         Expanded(child: Text(text, style: _heading(18, color))),
         if (onSpeak != null)
           Semantics(
-            label: speaking ? AppLocalizations.of(context).t('common_stop') : AppLocalizations.of(context).t('common_speak'), button: true,
+            label: speaking
+                ? AppLocalizations.of(context).t('common_stop')
+                : AppLocalizations.of(context).t('common_speak'),
+            button: true,
             child: GestureDetector(
               onTap: onSpeak,
               child: Container(width: 36, height: 36,
@@ -2012,29 +2332,28 @@ class _MobileBuilderTab extends StatelessWidget {
             decoration: BoxDecoration(
                 color: accent.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: accent.withOpacity(0.25), width: 1)),
+                border: Border.all(color: accent.withOpacity(0.25), width: 1)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
                     Expanded(child: Text(
                         widget.sentence.isNotEmpty ? widget.sentence : '…',
-                        style: _heading(15,
-                            d ? _dText : _lText))),
+                        style: _heading(15, d ? _dText : _lText))),
                     _ActionIconBtn(
                         icon: Icons.copy_outlined,
                         color: d ? _dTextMuted : _lTextMuted,
-                      tooltip: l.t('common_copy'),
+                        tooltip: l.t('common_copy'),
                         onTap: () => widget.onCopy(widget.sentence)),
                     _ActionIconBtn(
                         icon: widget.ttsSpeaking && widget.ttsTag == 'sentence_en'
                             ? Icons.stop_rounded : Icons.volume_up_rounded,
-                      color: accent, tooltip: l.t('common_speak'),
+                        color: accent, tooltip: l.t('common_speak'),
                         onTap: () => widget.onSpeak(
                             widget.sentence, 'en-US', 'sentence_en')),
                   ]),
                   if (widget.sentenceRegional.isNotEmpty) ...[
-                    Divider(height: _sp12, color: d ? _dBorderSub : _lBorderSub),
+                    Divider(height: _sp12,
+                        color: d ? _dBorderSub : _lBorderSub),
                     Text(widget.sentenceRegional, style: _heading(15, green)),
                   ],
                 ])),
@@ -2108,8 +2427,7 @@ class _MobileTranscriptTab extends StatelessWidget {
         decoration: BoxDecoration(
             color: d ? _dSurface2 : _lSurface2,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-                color: d ? _dBorder : _lBorder, width: 1)),
+            border: Border.all(color: d ? _dBorder : _lBorder, width: 1)),
         child: TextField(
           controller: widget.transcriptCtrl, maxLines: 4,
           style: _body(13.5, d ? _dText : _lText),
@@ -2213,14 +2531,13 @@ class _LabelOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     if (label == '—' || label.isEmpty) return const SizedBox.shrink();
-    final confColor = confidence > 0.75
-        ? _successDark : _warningDark;
+    final confColor = confidence > 0.75 ? _successDark : _warningDark;
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: _sp16, vertical: _sp12),
       decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.60),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
               color: Colors.white.withOpacity(0.10), width: 1)),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -2296,7 +2613,8 @@ class _ConnectingOverlay extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation<Color>(_primary),
             strokeWidth: 2.5),
         const SizedBox(height: _sp12),
-        Text(AppLocalizations.of(context).t('translate_establishing_connection'),
+        Text(AppLocalizations.of(context)
+            .t('translate_establishing_connection'),
             style: _txtLabel(13, _primaryDark, w: FontWeight.w700)),
       ])));
 }
@@ -2373,13 +2691,18 @@ class _TokenChip extends StatelessWidget {
                         w: FontWeight.w700)),
               ])),
           Semantics(
-            label: AppLocalizations.of(context).t('translate_remove_token').replaceAll('{token}', token.label), button: true,
+            label: AppLocalizations.of(context)
+                .t('translate_remove_token')
+                .replaceAll('{token}', token.label),
+            button: true,
             child: GestureDetector(onTap: onRemove,
                 child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: _sp8, vertical: _sp8),
                     child: Icon(Icons.close_rounded, size: 12,
-                        color: isLast ? accent : (d ? _dTextMuted : _lTextMuted)))),
+                        color: isLast
+                            ? accent
+                            : (d ? _dTextMuted : _lTextMuted)))),
           ),
         ]));
   }
@@ -2396,9 +2719,18 @@ class _UX4GCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.all(_sp20),
       decoration: BoxDecoration(
-          color: d ? _dSurface : _lSurface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: d ? _dBorder : _lBorder, width: 1)),
+          color: d
+              ? _dSurface.withOpacity(0.90)
+              : Colors.white.withOpacity(0.88),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: d ? _dBorder : const Color(0xFFDDE3EE), width: 1),
+          boxShadow: d ? [] : [
+            BoxShadow(
+              color: const Color(0xFF1A56DB).withOpacity(0.04),
+              blurRadius: 24, spreadRadius: -4, offset: const Offset(0, 6),
+            ),
+          ]),
       child: child);
 }
 
@@ -2431,11 +2763,10 @@ class _SessionStatusChip extends StatelessWidget {
       case _SessionState.error:      c = d ? _dangerDark  : _danger;  t = l.t('common_error'); break;
       default: c = d ? _dTextMuted : _lTextMuted; t = l.t('common_idle');
     }
-    final bgClr = c.withOpacity(0.10);
     return Container(
         padding: const EdgeInsets.symmetric(horizontal: _sp8, vertical: _sp4),
         decoration: BoxDecoration(
-            color: bgClr,
+            color: c.withOpacity(0.10),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: c.withOpacity(0.25), width: 1)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -2499,9 +2830,11 @@ class _WebDetectionRow extends StatelessWidget {
           Expanded(child: Text(text, style: _heading(19, color))),
         ]))),
     const SizedBox(width: _sp8),
-    // TTS button
     Semantics(
-      label: speaking ? AppLocalizations.of(context).t('common_stop') : AppLocalizations.of(context).t('common_speak'), button: true,
+      label: speaking
+          ? AppLocalizations.of(context).t('common_stop')
+          : AppLocalizations.of(context).t('common_speak'),
+      button: true,
       child: GestureDetector(
         onTap: onSpeak,
         child: AnimatedContainer(
