@@ -207,7 +207,9 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
               onBack: () => Navigator.pop(ctx),
               trailing: contacts.isNotEmpty
                   ? _PillBadge(
-                  label: '${contacts.length}/5',
+                  label: l
+                    .t('sos_contacts_progress')
+                    .replaceAll('{n}', '${contacts.length}'),
                   color: hasPrimary
                       ? (isDark ? _successD : _success)
                       : (isDark ? _warningD : _warning),
@@ -1150,12 +1152,14 @@ class _WebContactsPanel extends StatelessWidget {
       Row(children: [
         Text(contacts.isEmpty
             ? l.t('sos_no_contacts_yet')
-            : 'CONTACTS',
+            : l.t('sos_setup_title').toUpperCase(),
             style: _caption(subClr, w: FontWeight.w600)),
         const Spacer(),
         if (contacts.isNotEmpty)
           _PillBadge(
-              label: '${contacts.length}/5',
+              label: l
+                  .t('sos_contacts_progress')
+                  .replaceAll('{n}', '${contacts.length}'),
               color: hasPrimary
                   ? (isDark ? _successD : _success)
                   : (isDark ? _warningD : _warning),

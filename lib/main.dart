@@ -463,7 +463,7 @@ class _WebEntryGateState extends State<_WebEntryGate> {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Startup failed: $_error',
+              '${AppLocalizations.of(context).t('splash_startup_failed')}: $_error',
               textAlign: TextAlign.center,
             ),
           ),

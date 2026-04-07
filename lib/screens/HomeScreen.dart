@@ -693,14 +693,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: EdgeInsets.symmetric(
                       horizontal: desktop ? hPad * 0.55 : hPad * 0.8,
                     ),
-                    child: _WebVision(dark: d, l: l),
+                    child: _WebHoverLift(
+                      lift: 8,
+                      scale: 1.008,
+                      child: _WebVision(dark: d, l: l),
+                    ),
                   ),
                   SizedBox(height: desktop ? 56 : 40),
 
                   // Footer
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: _WebFooter(dark: d),
+                    child: _WebFooter(
+                      dark: d,
+                      l: l,
+                      onBackToTop: () {
+                        if (_scrollCtrl.hasClients) {
+                          _scrollCtrl.animateTo(
+                            0,
+                            duration: const Duration(milliseconds: 520),
+                            curve: Curves.easeOutCubic,
+                          );
+                        }
+                      },
+                    ),
                   ),
                   const SizedBox(height: _s48),
                 ],
@@ -829,6 +845,47 @@ class _DotGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DotGridPainter old) => old.color != color;
+}
+
+class _WebHoverLift extends StatefulWidget {
+  final Widget child;
+  final double lift;
+  final double scale;
+  const _WebHoverLift({
+    required this.child,
+    this.lift = 10,
+    this.scale = 1.012,
+  });
+
+  @override
+  State<_WebHoverLift> createState() => _WebHoverLiftState();
+}
+
+class _WebHoverLiftState extends State<_WebHoverLift> {
+  bool _hov = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: _hov ? -widget.lift : 0),
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        builder: (_, dy, child) => Transform.translate(
+          offset: Offset(0, dy),
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            scale: _hov ? widget.scale : 1,
+            child: child,
+          ),
+        ),
+        child: widget.child,
+      ),
+    );
+  }
 }
 
 class _ArcDecor extends StatelessWidget {
@@ -1306,6 +1363,7 @@ class _StatCardState extends State<_StatCard>
   late AnimationController _ctrl;
   late Animation<double> _anim;
   late int _target;
+  bool _hov = false;
   @override
   void initState() {
     super.initState();
@@ -1338,41 +1396,66 @@ class _StatCardState extends State<_StatCard>
   Widget build(BuildContext context) {
     final bg = _surf(widget.dark);
     final bd = _bord(widget.dark);
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Container(
-        padding: EdgeInsets.symmetric(
-          vertical: widget.desktop ? 36 : 24,
-          horizontal: 20,
-        ),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              bg,
-              widget.dark
-                  ? _navy4.withOpacity(0.92)
-                  : _lSurf2.withOpacity(0.72),
-            ],
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: _hov ? -9 : 0),
+        duration: const Duration(milliseconds: 190),
+        curve: Curves.easeOutCubic,
+        builder: (_, dy, child) => Transform.translate(
+          offset: Offset(0, dy),
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 190),
+            curve: Curves.easeOutCubic,
+            scale: _hov ? 1.014 : 1.0,
+            child: child,
           ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: bd.withOpacity(widget.dark ? 0.88 : 0.96), width: 1.1),
-          boxShadow: [
-            BoxShadow(
-              color: widget.color.withOpacity(widget.dark ? 0.12 : 0.09),
-              blurRadius: 24,
-              offset: const Offset(0, 6),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(widget.dark ? 0.26 : 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 12),
-            ),
-          ],
         ),
-        child: Column(
-          children: [
+        child: AnimatedBuilder(
+          animation: _anim,
+          builder: (_, __) => Container(
+            padding: EdgeInsets.symmetric(
+              vertical: widget.desktop ? 36 : 24,
+              horizontal: 20,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  bg,
+                  widget.dark
+                      ? _navy4.withOpacity(0.92)
+                      : _lSurf2.withOpacity(0.72),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _hov
+                    ? widget.color.withOpacity(widget.dark ? 0.42 : 0.26)
+                    : bd.withOpacity(widget.dark ? 0.88 : 0.96),
+                width: _hov ? 1.4 : 1.1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.color.withOpacity(
+                    _hov ? (widget.dark ? 0.20 : 0.15) : (widget.dark ? 0.12 : 0.09),
+                  ),
+                  blurRadius: _hov ? 34 : 24,
+                  offset: Offset(0, _hov ? 10 : 6),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(
+                    _hov ? (widget.dark ? 0.32 : 0.08) : (widget.dark ? 0.26 : 0.05),
+                  ),
+                  blurRadius: _hov ? 30 : 20,
+                  offset: Offset(0, _hov ? 18 : 12),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
             // Compact accent capsule for a cleaner premium header detail.
             Container(
               width: widget.desktop ? 92 : 74,
@@ -1406,7 +1489,9 @@ class _StatCardState extends State<_StatCard>
               textAlign: TextAlign.center,
               style: _b(13, _txts(widget.dark)),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1466,7 +1551,7 @@ class _WebFeatures extends StatelessWidget {
         _red,
         _red,
         l.t('nav_emergency'),
-        'Life-saving signs and one-tap SOS for critical moments.',
+        l.t('home_emergency_sub'),
         EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale),
         ['SOS Alerts', 'Emergency Signs'],
       ),
@@ -1488,7 +1573,7 @@ class _WebFeatures extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'FEATURES',
+                l.t('home_features_label'),
                 style: _lbl(
                   10.5,
                   _acc(dark),
@@ -1499,12 +1584,12 @@ class _WebFeatures extends StatelessWidget {
           ],
         ),
         const SizedBox(height: _s14),
-        Text('Everything you need', style: _h(desktop ? 36 : 26, _txt(dark))),
+        Text(l.t('home_features_title'), style: _h(desktop ? 36 : 26, _txt(dark))),
         const SizedBox(height: _s8),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Text(
-            'Powerful tools for India\'s 63 million deaf and mute community',
+            l.t('home_features_sub'),
             style: _b(15, _txts(dark)),
           ),
         ),
@@ -1572,48 +1657,61 @@ class _WebFeatCardState extends State<_WebFeatCard> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => widget.push(widget.page),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(_s24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: _hov
-                  ? [
-                      bgH,
-                      widget.dark
-                          ? _navy5.withOpacity(0.92)
-                          : _lSurf2.withOpacity(0.84),
-                    ]
-                  : [
-                      bg,
-                      widget.dark
-                          ? _navy4.withOpacity(0.88)
-                          : _lSurf2.withOpacity(0.58),
-                    ],
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: _hov ? -9 : 0),
+          duration: const Duration(milliseconds: 190),
+          curve: Curves.easeOutCubic,
+          builder: (_, dy, child) => Transform.translate(
+            offset: Offset(0, dy),
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 190),
+              curve: Curves.easeOutCubic,
+              scale: _hov ? 1.014 : 1.0,
+              child: child,
             ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: _hov ? widget.accent.withOpacity(0.46) : bd,
-              width: _hov ? 1.5 : 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _hov
-                    ? widget.accent.withOpacity(0.12)
-                    : Colors.black.withOpacity(widget.dark ? 0.15 : 0.04),
-                blurRadius: _hov ? 28 : 12,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: widget.accent.withOpacity(_hov ? 0.10 : 0.05),
-                blurRadius: _hov ? 36 : 18,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          child: Row(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(_s24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _hov
+                    ? [
+                        bgH,
+                        widget.dark
+                            ? _navy5.withOpacity(0.92)
+                            : _lSurf2.withOpacity(0.84),
+                      ]
+                    : [
+                        bg,
+                        widget.dark
+                            ? _navy4.withOpacity(0.88)
+                            : _lSurf2.withOpacity(0.58),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _hov ? widget.accent.withOpacity(0.46) : bd,
+                width: _hov ? 1.5 : 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _hov
+                      ? widget.accent.withOpacity(0.20)
+                      : Colors.black.withOpacity(widget.dark ? 0.15 : 0.04),
+                  blurRadius: _hov ? 34 : 12,
+                  offset: Offset(0, _hov ? 12 : 4),
+                ),
+                BoxShadow(
+                  color: widget.accent.withOpacity(_hov ? 0.15 : 0.05),
+                  blurRadius: _hov ? 44 : 18,
+                  offset: Offset(0, _hov ? 18 : 10),
+                ),
+              ],
+            ),
+            child: Row(
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
@@ -1722,6 +1820,7 @@ class _WebFeatCardState extends State<_WebFeatCard> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -1760,47 +1859,61 @@ class _WebAIBannerState extends State<_WebAIBanner> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: widget.dark
-                  ? [
-                      const Color(0xFF0F1B33),
-                      const Color(0xFF111E38),
-                      const Color(0xFF0D172B),
-                    ]
-                  : [
-                      const Color(0xFFFFFFFF),
-                      const Color(0xFFF6F9FF),
-                      const Color(0xFFEEF4FF),
-                    ],
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: _hov ? -10 : 0),
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          builder: (_, dy, child) => Transform.translate(
+            offset: Offset(0, dy),
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              scale: _hov ? 1.012 : 1.0,
+              child: child,
             ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _hov ? a.withOpacity(0.32) : a.withOpacity(0.16),
-              width: _hov ? 1.25 : 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: a.withOpacity(_hov ? 0.10 : 0.04),
-                blurRadius: _hov ? 30 : 18,
-                offset: const Offset(0, 10),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(widget.dark ? 0.16 : 0.04),
-                blurRadius: _hov ? 36 : 24,
-                offset: const Offset(0, 16),
-              ),
-            ],
           ),
-          child: Padding(
-            padding: EdgeInsets.all(widget.desktop ? 48 : 28),
-            child: widget.desktop
-                ? _bannerDesktop(widget.l, a, t, s)
-                : _bannerMobile(widget.l, a, t, s),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: widget.dark
+                    ? [
+                        const Color(0xFF0F1B33),
+                        const Color(0xFF111E38),
+                        const Color(0xFF0D172B),
+                      ]
+                    : [
+                        const Color(0xFFFFFFFF),
+                        const Color(0xFFF6F9FF),
+                        const Color(0xFFEEF4FF),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: _hov ? a.withOpacity(0.32) : a.withOpacity(0.16),
+                width: _hov ? 1.25 : 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: a.withOpacity(_hov ? 0.18 : 0.04),
+                  blurRadius: _hov ? 38 : 18,
+                  offset: Offset(0, _hov ? 14 : 10),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(widget.dark ? (_hov ? 0.22 : 0.16) : (_hov ? 0.08 : 0.04)),
+                  blurRadius: _hov ? 44 : 24,
+                  offset: Offset(0, _hov ? 20 : 16),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(widget.desktop ? 48 : 28),
+              child: widget.desktop
+                  ? _bannerDesktop(widget.l, a, t, s)
+                  : _bannerMobile(widget.l, a, t, s),
+            ),
           ),
         ),
       ),
@@ -1968,7 +2081,7 @@ class _AIChatMockup extends StatelessWidget {
                 ),
               ],
             ),
-            child: Text('How do I sign "HELP"?', style: _b(13, Colors.white)),
+            child: Text(AppLocalizations.of(context).t('assistant_mock_user_message'), style: _b(13, Colors.white)),
           ),
         ),
         const SizedBox(height: _s12),
@@ -2019,7 +2132,7 @@ class _AIChatMockup extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign HELP: Extend both hands flat,\npalms facing up, raise twice.',
+                  AppLocalizations.of(context).t('assistant_mock_ai_message'),
                   style: _b(12, s),
                   maxLines: 2,
                 ),
@@ -2027,8 +2140,8 @@ class _AIChatMockup extends StatelessWidget {
                 Wrap(
                   spacing: 6,
                   children: [
-                    _MiniChip('HELP', accent),
-                    _MiniChip('EMERGENCY', accent),
+                    _MiniChip(AppLocalizations.of(context).t('assistant_mock_chip_help'), accent),
+                    _MiniChip(AppLocalizations.of(context).t('assistant_mock_chip_emergency'), accent),
                   ],
                 ),
               ],
@@ -2207,118 +2320,132 @@ class _WebObjCardState extends State<_WebObjCard> {
             transitionDuration: const Duration(milliseconds: 240),
           ),
         ),
-        child: AnimatedContainer(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: _hov ? -8 : 0),
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(_s20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: _hov
-                  ? [
-                      bgH,
-                      widget.dark
-                          ? _navy5.withOpacity(0.90)
-                          : _lSurf2.withOpacity(0.82),
-                    ]
-                  : [
-                      bg,
-                      widget.dark
-                          ? _navy4.withOpacity(0.86)
-                          : _lSurf2.withOpacity(0.56),
-                    ],
+          curve: Curves.easeOutCubic,
+          builder: (_, dy, child) => Transform.translate(
+            offset: Offset(0, dy),
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              scale: _hov ? 1.012 : 1.0,
+              child: child,
             ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: _hov ? widget.accent.withOpacity(0.46) : bd,
-              width: _hov ? 1.5 : 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _hov
-                    ? widget.accent.withOpacity(0.12)
-                    : Colors.black.withOpacity(widget.dark ? 0.12 : 0.03),
-                blurRadius: _hov ? 22 : 8,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: widget.accent.withOpacity(_hov ? 0.08 : 0.04),
-                blurRadius: _hov ? 30 : 14,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 56,
-                height: 3,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  gradient: LinearGradient(
-                    colors: [
-                      widget.accent.withOpacity(0.92),
-                      widget.accent.withOpacity(0.30),
-                    ],
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.all(_s20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _hov
+                    ? [
+                        bgH,
+                        widget.dark
+                            ? _navy5.withOpacity(0.90)
+                            : _lSurf2.withOpacity(0.82),
+                      ]
+                    : [
+                        bg,
+                        widget.dark
+                            ? _navy4.withOpacity(0.86)
+                            : _lSurf2.withOpacity(0.56),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: _hov ? widget.accent.withOpacity(0.46) : bd,
+                width: _hov ? 1.5 : 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _hov
+                      ? widget.accent.withOpacity(0.18)
+                      : Colors.black.withOpacity(widget.dark ? 0.12 : 0.03),
+                  blurRadius: _hov ? 30 : 8,
+                  offset: Offset(0, _hov ? 10 : 4),
+                ),
+                BoxShadow(
+                  color: widget.accent.withOpacity(_hov ? 0.14 : 0.04),
+                  blurRadius: _hov ? 38 : 14,
+                  offset: Offset(0, _hov ? 16 : 10),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 56,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      colors: [
+                        widget.accent.withOpacity(0.92),
+                        widget.accent.withOpacity(0.30),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: _s12),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.accent.withOpacity(_hov ? 0.22 : 0.14),
-                          widget.accent.withOpacity(_hov ? 0.10 : 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: widget.accent.withOpacity(_hov ? 0.30 : 0.20),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(widget.icon, color: widget.accent, size: 18),
-                  ),
-                  const Spacer(),
-                  AnimatedOpacity(
-                    opacity: _hov ? 1.0 : 0.85,
-                    duration: const Duration(milliseconds: 150),
-                    child: Container(
-                      width: 26,
-                      height: 26,
+                const SizedBox(height: _s12),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: widget.accent.withOpacity(_hov ? 0.15 : 0.09),
-                        borderRadius: BorderRadius.circular(8),
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.accent.withOpacity(_hov ? 0.22 : 0.14),
+                            widget.accent.withOpacity(_hov ? 0.10 : 0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: widget.accent.withOpacity(_hov ? 0.25 : 0.17),
+                          color: widget.accent.withOpacity(_hov ? 0.30 : 0.20),
                           width: 1,
                         ),
                       ),
-                      child: Icon(
-                        Icons.arrow_forward_rounded,
-                        color: widget.accent,
-                        size: 13,
+                      child: Icon(widget.icon, color: widget.accent, size: 18),
+                    ),
+                    const Spacer(),
+                    AnimatedOpacity(
+                      opacity: _hov ? 1.0 : 0.85,
+                      duration: const Duration(milliseconds: 150),
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: widget.accent.withOpacity(_hov ? 0.15 : 0.09),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: widget.accent.withOpacity(_hov ? 0.25 : 0.17),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          color: widget.accent,
+                          size: 13,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: _s14),
-              Text(widget.title, style: _lbl(14.5, t, w: FontWeight.w700)),
-              const SizedBox(height: _s6),
-              Text(
-                widget.desc,
-                style: _b(12, s),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: _s14),
+                Text(widget.title, style: _lbl(14.5, t, w: FontWeight.w700)),
+                const SizedBox(height: _s6),
+                Text(
+                  widget.desc,
+                  style: _b(12, s),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -2560,10 +2687,12 @@ class _VisionChip extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════
 class _WebFooter extends StatelessWidget {
   final bool dark;
-  const _WebFooter({required this.dark});
+  final AppLocalizations l;
+  final VoidCallback onBackToTop;
+  const _WebFooter({required this.dark, required this.l, required this.onBackToTop});
   @override
   Widget build(BuildContext context) {
-    final a = _acc(dark);
+    final t = _txt(dark);
     final m = _txtm(dark);
     final d = _bordS(dark);
     return Column(
@@ -2590,8 +2719,8 @@ class _WebFooter extends StatelessWidget {
                   Text(
                     'VANI',
                     style: _lbl(
-                      22,
-                      _txt(dark),
+                      20,
+                      t,
                       w: FontWeight.w800,
                     ).copyWith(letterSpacing: 1.7),
                   ),
@@ -2603,13 +2732,13 @@ class _WebFooter extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '© 2026 — ${AppLocalizations.of(context).t('home_footer')}',
+                    l.t('home_footer_project_line'),
                     textAlign: TextAlign.center,
-                    style: _b(12, m),
+                    style: _b(13, m),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Final year project 2025-26',
+                    l.t('home_footer_stack_line'),
                     textAlign: TextAlign.center,
                     style: _lbl(12, m, w: FontWeight.w600),
                   ),
@@ -2619,23 +2748,66 @@ class _WebFooter extends StatelessWidget {
             Expanded(
               child: Align(
                 alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: a.withOpacity(dark ? 0.08 : 0.06),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: a.withOpacity(dark ? 0.18 : 0.14), width: 1),
-                  ),
-                  child: Text(
-                    'Built for India 🇮🇳',
-                    style: _lbl(12, m, w: FontWeight.w600),
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FooterNavLink(
+                      label: l.t('home_back_to_top'),
+                      dark: dark,
+                      onTap: onBackToTop,
+                    ),
+                    const SizedBox(width: 26),
+                    Text(
+                      l.t('home_footer_built_for_india'),
+                      style: _lbl(13, _txts(dark), w: FontWeight.w600),
+                    ),
+                  ],
                 ),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _FooterNavLink extends StatefulWidget {
+  final String label;
+  final bool dark;
+  final VoidCallback onTap;
+  const _FooterNavLink({
+    required this.label,
+    required this.dark,
+    required this.onTap,
+  });
+
+  @override
+  State<_FooterNavLink> createState() => _FooterNavLinkState();
+}
+
+class _FooterNavLinkState extends State<_FooterNavLink> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = _txts(widget.dark);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 140),
+          style: _lbl(
+            13,
+            _hover ? _acc(widget.dark) : c,
+            w: _hover ? FontWeight.w700 : FontWeight.w500,
+          ),
+          child: Text(widget.label),
+        ),
+      ),
     );
   }
 }

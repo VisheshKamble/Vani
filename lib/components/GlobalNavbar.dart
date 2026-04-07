@@ -658,7 +658,7 @@ class _MobileSOSBtnState extends State<_MobileSOSBtn>
             boxShadow: [BoxShadow(
                 color: c.withOpacity(_anim.value * 0.30), blurRadius: 10)],
           ),
-          child: Center(child: Text('SOS',
+          child: Center(child: Text(AppLocalizations.of(context).t('nav_emergency'),
               style: _label(9, c, w: FontWeight.w900)
                   .copyWith(letterSpacing: 1.0)))),
       ),

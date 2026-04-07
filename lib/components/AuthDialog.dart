@@ -795,8 +795,8 @@ class _VaniAuthCardState extends State<VaniAuthCard>
                               color: _kBrandBlue.withOpacity(0.25),
                               shape: BoxShape.circle)),
                       const SizedBox(width: 8),
-                      Text(
-                          'Empowering India\'s deaf & mute community',
+                        Text(
+                          l.t('auth_footer_community'),
                           style: _body(10, textMuted.withOpacity(0.60))),
                       const SizedBox(width: 8),
                       Container(

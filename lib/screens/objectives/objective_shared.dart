@@ -13,10 +13,10 @@
 // ║    - Compact stats strip (grouped table)                   ║
 // ║    - Grouped card sections                                 ║
 // ║                                                            ║
-// ║  ≥ 700px  → macOS / web article layout                    ║
-// ║    - Full-bleed white header band + breadcrumb             ║
-// ║    - 2×2 stats grid                                        ║
-// ║    - Max-width 860 centred column                          ║
+  // ║  ≥ 700px  → macOS / web article layout                    ║
+  // ║    - Full-bleed white header band + breadcrumb             ║
+  // ║    - 2×2 stats grid                                        ║
+  // ║    - Wider centred column on desktop                       ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 import 'dart:math' as math;
@@ -305,7 +305,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
   //  WEB / TABLET  (≥700px)
   Widget _buildWeb(BuildContext ctx, bool isDark, Color accent, double w) {
     final isDesktop = w > 1100;
-    final hPad      = isDesktop ? 120.0 : 64.0;
+    final hPad      = isDesktop ? 72.0 : 56.0;
     final bg        = isDark ? _dBg : _lBg;
     return Scaffold(
       backgroundColor: bg,
@@ -402,7 +402,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: hPad),
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 980),
+                          constraints: const BoxConstraints(maxWidth: 1280),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

@@ -31,9 +31,9 @@ const _primaryDark = Color(0xFF4A8EFF);
 const _secondary = Color(0xFF00796B);
 const _secondaryDark = Color(0xFF26A69A);
 
-// Assistant accent (violet)
-const _purple = Color(0xFF6200EA);
-const _purpleDark = Color(0xFF9C6BFF);
+// Assistant accent (azure)
+const _purple = Color(0xFF0B78D1);
+const _purpleDark = Color(0xFF46B4FF);
 
 // Status
 const _danger = Color(0xFFB71C1C);
@@ -299,7 +299,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
 
   Future<void> _initTts() async {
     await _tts.setLanguage('en-IN');
-    await _tts.setSpeechRate(0.90);
+    await _tts.setSpeechRate(0.80);
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.05);
   }
@@ -571,198 +571,336 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
   Widget _buildMobile(BuildContext ctx, bool isDark) {
     final l = AppLocalizations.of(ctx);
     final bg = isDark ? _dBg : _lBg;
-    final navBg = isDark ? _dSurface : _lSurface;
     final border = isDark ? _dBorder : _lBorder;
     final textClr = isDark ? _dText : _lText;
     final subClr = isDark ? _dTextSub : _lTextSub;
     final accent = isDark ? _purpleDark : _purple;
     final navBlue = isDark ? Color(0xFF4A8EFF) : _info;
+    final topCard = isDark
+        ? _dSurface.withOpacity(0.86)
+        : _lSurface.withOpacity(0.94);
+    final topShadow = isDark
+        ? Colors.black.withOpacity(0.22)
+        : Colors.black.withOpacity(0.05);
 
     return Scaffold(
       backgroundColor: bg,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // ── Refined mobile nav bar ───────────────────────────────────
-            Container(
-              decoration: BoxDecoration(
-                color: navBg,
-                border: Border(bottom: BorderSide(color: border, width: 1.0)),
+            Positioned(
+              top: -120,
+              right: -70,
+              child: _AssistantOrb(
+                color: accent.withOpacity(isDark ? 0.16 : 0.10),
+                size: 280,
               ),
-              padding: const EdgeInsets.fromLTRB(_sp8, _sp10, _sp12, _sp10),
-              child: Row(
-                children: [
-                  Semantics(
-                    label: l.t('common_back'),
-                    button: true,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: () => Navigator.pop(ctx),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: _sp8,
-                          vertical: _sp8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: navBlue.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: navBlue.withOpacity(0.18),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.chevron_left_rounded,
-                              color: navBlue,
-                              size: 20,
-                            ),
-                            Text(
-                              l.t('common_back'),
-                              style: _label(13, navBlue, w: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
+            ),
+            Positioned(
+              top: 160,
+              left: -90,
+              child: _AssistantOrb(
+                color: _primary.withOpacity(isDark ? 0.14 : 0.09),
+                size: 240,
+              ),
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: isDark
+                          ? [
+                              Colors.white.withOpacity(0.02),
+                              Colors.transparent,
+                              Colors.transparent,
+                            ]
+                          : [
+                              _primary.withOpacity(0.04),
+                              Colors.transparent,
+                              Colors.transparent,
+                            ],
                     ),
                   ),
-                  const Spacer(),
-                  // Avatar + Title centered
-                  Column(
-                    children: [
-                      Container(
-                        width: 34,
-                        height: 34,
+                ),
+              ),
+            ),
+            Column(
+              children: [
+                // ── Refined mobile nav bar ───────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(_sp10, _sp8, _sp10, _sp6),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 9, sigmaY: 9),
+                      child: Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [accent, accent.withOpacity(0.7)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
+                          color: topCard,
+                          border: Border.all(color: border, width: 1),
+                          borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: accent.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
+                              color: topShadow,
+                              blurRadius: 16,
+                              offset: const Offset(0, 7),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.sign_language_rounded,
-                          color: Colors.white,
-                          size: 17,
+                        padding: const EdgeInsets.fromLTRB(
+                          _sp10,
+                          _sp10,
+                          _sp10,
+                          _sp10,
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l.t('assistant_title'),
-                        style: _label(10, textClr, w: FontWeight.w700),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  // TTS toggle — pill style
-                  Semantics(
-                    label: _ttsEnabled
-                        ? 'Mute voice output'
-                        : 'Unmute voice output',
-                    button: true,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _ttsEnabled = !_ttsEnabled);
-                        if (!_ttsEnabled) _tts.stop();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: _ttsEnabled
-                              ? accent.withOpacity(0.12)
-                              : (isDark ? _dSurface2 : _lSurface2),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _ttsEnabled
-                                ? accent.withOpacity(0.30)
-                                : border,
-                            width: 1,
-                          ),
-                        ),
-                        child: Icon(
-                          _ttsEnabled
-                              ? Icons.graphic_eq_rounded
-                              : Icons.volume_off_rounded,
-                          size: 17,
-                          color: _ttsEnabled ? accent : subClr,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Centered brand lockup for a cleaner top identity.
+                            IgnorePointer(
+                              child: Container(
+                                padding: const EdgeInsets.fromLTRB(
+                                  _sp10,
+                                  _sp6,
+                                  _sp12,
+                                  _sp6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: accent.withOpacity(
+                                    isDark ? 0.15 : 0.09,
+                                  ),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: accent.withOpacity(0.22),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            accent,
+                                            accent.withOpacity(0.72),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: accent.withOpacity(0.24),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.sign_language_rounded,
+                                        color: Colors.white,
+                                        size: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(width: _sp8),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l.t('app_title_short'),
+                                          style: _label(
+                                            9.5,
+                                            textClr.withOpacity(0.72),
+                                            w: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Text(
+                                          l.t('assistant_title'),
+                                          style: _label(
+                                            11.5,
+                                            textClr,
+                                            w: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            Row(
+                              children: [
+                                Semantics(
+                                  label: l.t('common_back'),
+                                  button: true,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () => Navigator.pop(ctx),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: _sp8,
+                                        vertical: _sp8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: navBlue.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: navBlue.withOpacity(0.2),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.chevron_left_rounded,
+                                            color: navBlue,
+                                            size: 19,
+                                          ),
+                                          Text(
+                                            l.t('common_back'),
+                                            style: _label(
+                                              12.5,
+                                              navBlue,
+                                              w: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Semantics(
+                                  label: _ttsEnabled
+                                      ? l.t('assistant_mute')
+                                      : l.t('assistant_unmute'),
+                                  button: true,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(
+                                        () => _ttsEnabled = !_ttsEnabled,
+                                      );
+                                      if (!_ttsEnabled) _tts.stop();
+                                    },
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: _ttsEnabled
+                                            ? accent.withOpacity(0.12)
+                                            : (isDark
+                                                  ? _dSurface2
+                                                  : _lSurface2),
+                                        borderRadius: BorderRadius.circular(11),
+                                        border: Border.all(
+                                          color: _ttsEnabled
+                                              ? accent.withOpacity(0.3)
+                                              : border,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        _ttsEnabled
+                                            ? Icons.graphic_eq_rounded
+                                            : Icons.volume_off_rounded,
+                                        size: 17,
+                                        color: _ttsEnabled ? accent : subClr,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: _sp8),
+                                _OptionsMenuButton(
+                                  isDark: isDark,
+                                  onClear: _clearChat,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: _sp8),
-                  _OptionsMenuButton(isDark: isDark, onClear: _clearChat),
-                ],
-              ),
-            ),
+                ),
 
-            // ── Language selector (scrollable pill row) ──────────────────
-            _LangPillRow(
-              selected: _lang,
-              isDark: isDark,
-              onSelect: (l) => setState(() => _lang = l),
-            ),
+                // ── Language selector (scrollable pill row) ──────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(_sp10, 0, _sp10, _sp6),
+                  child: _LangPillRow(
+                    selected: _lang,
+                    isDark: isDark,
+                    onSelect: (l) => setState(() => _lang = l),
+                  ),
+                ),
 
-            // ── Messages ─────────────────────────────────────────────────
-            Expanded(
-              child: GestureDetector(
-                onTap: () => FocusScope.of(ctx).unfocus(),
-                child: _msgs.isEmpty
-                    ? _EmptyState(isDark: isDark, onPrompt: _send)
-                    : ListView.builder(
-                        controller: _scrollCtrl,
-                        padding: const EdgeInsets.fromLTRB(
-                          _sp12,
-                          _sp16,
-                          _sp12,
-                          _sp8,
-                        ),
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: _msgs.length + (_isLoading ? 1 : 0),
-                        itemBuilder: (_, i) {
-                          if (i == _msgs.length) {
-                            return _TypingIndicator(
-                              isDark: isDark,
-                              anim: _typingAnim,
-                            );
-                          }
-                          return _MsgBubble(
-                            msg: _msgs[i],
+                // ── Messages ─────────────────────────────────────────────────
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => FocusScope.of(ctx).unfocus(),
+                    child: _msgs.isEmpty
+                        ? _EmptyState(
                             isDark: isDark,
-                            onTapSign: (s) => _send(_askMoreSignPrompt(s)),
-                            onSpeak: (text) async {
-                              await _syncTtsLang();
-                              await _tts.speak(_cleanForTts(text));
+                            onPrompt: _send,
+                            compact: true,
+                          )
+                        : ListView.builder(
+                            controller: _scrollCtrl,
+                            padding: const EdgeInsets.fromLTRB(
+                              _sp12,
+                              _sp10,
+                              _sp12,
+                              _sp8,
+                            ),
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: _msgs.length + (_isLoading ? 1 : 0),
+                            itemBuilder: (_, i) {
+                              if (i == _msgs.length) {
+                                return _TypingIndicator(
+                                  isDark: isDark,
+                                  anim: _typingAnim,
+                                );
+                              }
+                              return _MsgBubble(
+                                msg: _msgs[i],
+                                isDark: isDark,
+                                onTapSign: (s) => _send(_askMoreSignPrompt(s)),
+                                onSpeak: (text) async {
+                                  await _syncTtsLang();
+                                  await _tts.speak(_cleanForTts(text));
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
-              ),
-            ),
+                          ),
+                  ),
+                ),
 
-            if (_msgs.length <= 1)
-              _QuickPromptsRow(isDark: isDark, onTap: _send),
+                if (_msgs.length <= 1)
+                  _QuickPromptsRow(isDark: isDark, onTap: _send),
 
-            _InputBar(
-              controller: _inputCtrl,
-              isDark: isDark,
-              isLoading: _isLoading,
-              isListening: _isListening,
-              speechOk: _speechOk,
-              onSend: _send,
-              onVoice: _toggleVoice,
+                _InputBar(
+                  controller: _inputCtrl,
+                  isDark: isDark,
+                  isLoading: _isLoading,
+                  isListening: _isListening,
+                  speechOk: _speechOk,
+                  onSend: _send,
+                  onVoice: _toggleVoice,
+                  mobileDense: true,
+                ),
+              ],
             ),
           ],
         ),
@@ -912,23 +1050,9 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
             ),
           ),
           Positioned(
-            left: sidebarWidth - 52,
-            top: 88,
-            child: _AssistantSemiCircle(
-              color: _purple,
-              dark: isDark,
-              diameter: 102,
-              leftSide: false,
-            ),
-          ),
-          Positioned(
             left: sidebarWidth + 30,
             top: 230,
-            child: _AssistantRing(
-              diameter: 22,
-              color: _primary,
-              dark: isDark,
-            ),
+            child: _AssistantRing(diameter: 22, color: _primary, dark: isDark),
           ),
           Positioned(
             left: sidebarWidth - 18,
@@ -1048,8 +1172,9 @@ class _AssistantArcDecor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Transform(
-      transform:
-          flip ? (Matrix4.identity()..rotateZ(math.pi)) : Matrix4.identity(),
+      transform: flip
+          ? (Matrix4.identity()..rotateZ(math.pi))
+          : Matrix4.identity(),
       child: SizedBox(
         width: size,
         height: size,
@@ -1104,49 +1229,6 @@ class _AssistantArcPainter extends CustomPainter {
   bool shouldRepaint(_AssistantArcPainter old) => false;
 }
 
-class _AssistantSemiCircle extends StatelessWidget {
-  final Color color;
-  final bool dark;
-  final double diameter;
-  final bool leftSide;
-  const _AssistantSemiCircle({
-    required this.color,
-    required this.dark,
-    required this.diameter,
-    required this.leftSide,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(diameter / 2),
-      child: Align(
-        widthFactor: 0.5,
-        alignment: leftSide ? Alignment.centerLeft : Alignment.centerRight,
-        child: Container(
-          width: diameter,
-          height: diameter,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withOpacity(dark ? 0.13 : 0.10),
-            border: Border.all(
-              color: color.withOpacity(dark ? 0.38 : 0.30),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(dark ? 0.16 : 0.10),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _AssistantRing extends StatelessWidget {
   final double diameter;
   final Color color;
@@ -1196,10 +1278,11 @@ class _LangPillRow extends StatelessWidget {
     final mutedClr = isDark ? _dTextMuted : _lTextMuted;
 
     return Container(
-      height: 44,
+      height: 50,
       decoration: BoxDecoration(
-        color: bg,
-        border: Border(bottom: BorderSide(color: border, width: 1.0)),
+        color: bg.withOpacity(isDark ? 0.84 : 0.90),
+        border: Border.all(color: border, width: 1.0),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
@@ -1209,7 +1292,10 @@ class _LangPillRow extends StatelessWidget {
               children: [
                 Icon(Icons.language_rounded, size: 12, color: mutedClr),
                 const SizedBox(width: _sp4),
-                Text('Lang', style: _label(10, mutedClr, w: FontWeight.w600)),
+                Text(
+                  AppLocalizations.of(context).t('isl_lang_label'),
+                  style: _label(10, mutedClr, w: FontWeight.w600),
+                ),
               ],
             ),
           ),
@@ -1237,18 +1323,38 @@ class _LangPillRow extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => onSelect(lang.$1),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
+                        duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.symmetric(
                           horizontal: _sp10,
                           vertical: _sp4,
                         ),
                         decoration: BoxDecoration(
-                          color: active ? accent : Colors.transparent,
+                          gradient: active
+                              ? LinearGradient(
+                                  colors: [accent, accent.withOpacity(0.76)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                          color: active
+                              ? null
+                              : (isDark ? _dSurface2 : _lSurface2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: active ? accent : border,
-                            width: active ? 0 : 1,
+                            color: active
+                                ? accent.withOpacity(0.35)
+                                : border.withOpacity(0.85),
+                            width: 1,
                           ),
+                          boxShadow: active
+                              ? [
+                                  BoxShadow(
+                                    color: accent.withOpacity(0.28),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1614,6 +1720,7 @@ const _sp5 = 5.0;
 class _InputBar extends StatefulWidget {
   final TextEditingController controller;
   final bool isDark, isLoading, isListening, speechOk;
+  final bool mobileDense;
   final void Function(String) onSend;
   final VoidCallback onVoice;
   const _InputBar({
@@ -1622,6 +1729,7 @@ class _InputBar extends StatefulWidget {
     required this.isLoading,
     required this.isListening,
     required this.speechOk,
+    this.mobileDense = false,
     required this.onSend,
     required this.onVoice,
   });
@@ -1650,6 +1758,8 @@ class _InputBarState extends State<_InputBar> {
     final textClr = widget.isDark ? _dText : _lText;
     final hintClr = widget.isDark ? _dTextMuted : _lTextMuted;
     final accent = widget.isDark ? _purpleDark : _purple;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final compact = widget.mobileDense;
 
     final micColor = widget.isListening
         ? (widget.isDark ? _dangerDark : _danger)
@@ -1660,10 +1770,28 @@ class _InputBarState extends State<_InputBar> {
 
     return Container(
       decoration: BoxDecoration(
-        color: bg,
-        border: Border(top: BorderSide(color: border, width: 1.0)),
+        color: bg.withOpacity(compact ? 0.95 : 1.0),
+        border: Border(
+          top: BorderSide(color: border, width: compact ? 0.8 : 1.0),
+        ),
+        boxShadow: compact
+            ? [
+                BoxShadow(
+                  color: widget.isDark
+                      ? Colors.black.withOpacity(0.24)
+                      : Colors.black.withOpacity(0.06),
+                  blurRadius: 18,
+                  offset: const Offset(0, -4),
+                ),
+              ]
+            : null,
       ),
-      padding: const EdgeInsets.fromLTRB(_sp12, _sp10, _sp12, _sp10),
+      padding: EdgeInsets.fromLTRB(
+        compact ? _sp10 : _sp12,
+        compact ? _sp8 : _sp10,
+        compact ? _sp10 : _sp12,
+        (compact ? _sp8 : _sp10) + math.min(bottomInset, 8),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -1681,8 +1809,8 @@ class _InputBarState extends State<_InputBar> {
                   onTap: widget.onVoice,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: 40,
-                    height: 40,
+                    width: compact ? 42 : 40,
+                    height: compact ? 42 : 40,
                     decoration: BoxDecoration(
                       color: micBg,
                       shape: BoxShape.circle,
@@ -1719,10 +1847,13 @@ class _InputBarState extends State<_InputBar> {
           // Text input
           Expanded(
             child: Container(
-              constraints: const BoxConstraints(minHeight: 44, maxHeight: 120),
+              constraints: BoxConstraints(
+                minHeight: compact ? 46 : 44,
+                maxHeight: 120,
+              ),
               decoration: BoxDecoration(
                 color: fill,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(compact ? 24 : 22),
                 border: Border.all(color: border, width: 1.0),
               ),
               child: TextField(
@@ -1739,7 +1870,7 @@ class _InputBarState extends State<_InputBar> {
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: _sp16,
-                    vertical: _sp12,
+                    vertical: _sp10,
                   ),
                 ),
                 onSubmitted: (v) {
@@ -1759,8 +1890,8 @@ class _InputBarState extends State<_InputBar> {
               child: widget.isLoading
                   ? SizedBox(
                       key: const ValueKey('loading'),
-                      width: 40,
-                      height: 40,
+                      width: compact ? 42 : 40,
+                      height: compact ? 42 : 40,
                       child: Padding(
                         padding: const EdgeInsets.all(10),
                         child: CircularProgressIndicator(
@@ -1777,8 +1908,8 @@ class _InputBarState extends State<_InputBar> {
                         onTap: () => widget.onSend(widget.controller.text),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          width: 40,
-                          height: 40,
+                          width: compact ? 42 : 40,
+                          height: compact ? 42 : 40,
                           decoration: BoxDecoration(
                             gradient: _hasText
                                 ? LinearGradient(
@@ -1840,14 +1971,14 @@ class _QuickPromptsRow extends StatelessWidget {
     final accent = isDark ? _infoDark : _info;
 
     return Container(
-      height: 52,
+      height: 58,
       decoration: BoxDecoration(
-        color: bg,
-        border: Border(top: BorderSide(color: border, width: 1.0)),
+        color: bg.withOpacity(0.96),
+        border: Border(top: BorderSide(color: border, width: 0.8)),
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp8),
+        padding: const EdgeInsets.symmetric(horizontal: _sp10, vertical: _sp10),
         physics: const BouncingScrollPhysics(),
         itemCount: prompts.length,
         itemBuilder: (_, i) {
@@ -1865,12 +1996,19 @@ class _QuickPromptsRow extends StatelessWidget {
                     vertical: _sp6,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.07),
+                    color: accent.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: accent.withOpacity(0.20),
+                      color: accent.withOpacity(0.22),
                       width: 1,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1895,8 +2033,13 @@ class _QuickPromptsRow extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════
 class _EmptyState extends StatelessWidget {
   final bool isDark;
+  final bool compact;
   final void Function(String) onPrompt;
-  const _EmptyState({required this.isDark, required this.onPrompt});
+  const _EmptyState({
+    required this.isDark,
+    required this.onPrompt,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1910,14 +2053,14 @@ class _EmptyState extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _sp32),
+        padding: EdgeInsets.symmetric(horizontal: compact ? _sp20 : _sp32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Glowing icon
             Container(
-              width: 80,
-              height: 80,
+              width: compact ? 68 : 80,
+              height: compact ? 68 : 80,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [accent, accent.withOpacity(0.7)],
@@ -1941,15 +2084,18 @@ class _EmptyState extends StatelessWidget {
               child: const Icon(
                 Icons.sign_language_rounded,
                 color: Colors.white,
-                size: 40,
+                size: 34,
               ),
             ),
-            const SizedBox(height: _sp24),
-            Text(l.t('assistant_title'), style: _display(26, textClr)),
+            SizedBox(height: compact ? _sp20 : _sp24),
+            Text(
+              l.t('assistant_title'),
+              style: _display(compact ? 23 : 26, textClr),
+            ),
             const SizedBox(height: _sp8),
             Text(
               l.t('isl_empty_subtitle'),
-              style: _body(13.5, subClr),
+              style: _body(compact ? 13 : 13.5, subClr),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: _sp8),
@@ -1968,16 +2114,20 @@ class _EmptyState extends StatelessWidget {
                 const SizedBox(width: _sp6),
                 Text(
                   '10 Indian Languages • Gemini AI',
-                  style: _label(11, mutedClr, w: FontWeight.w500),
+                  style: _label(
+                    compact ? 10.5 : 11,
+                    mutedClr,
+                    w: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: _sp24),
+            SizedBox(height: compact ? _sp16 : _sp24),
             Wrap(
               spacing: _sp8,
               runSpacing: _sp8,
               children: prompts
-                  .take(4)
+                  .take(compact ? 3 : 4)
                   .map(
                     (q) => Semantics(
                       label: q.$1,
@@ -2094,7 +2244,10 @@ class _WebSidebar extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l.t('assistant_title'), style: _heading(16, textClr)),
+                      Text(
+                        l.t('assistant_title'),
+                        style: _heading(16, textClr),
+                      ),
                       Row(
                         children: [
                           Container(
@@ -2128,9 +2281,11 @@ class _WebSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(_sp16, _sp14, _sp16, _sp8),
             child: Text(
               'LANGUAGE',
-              style: _label(9.5, mutedClr, w: FontWeight.w700).copyWith(
-                letterSpacing: 1.2,
-              ),
+              style: _label(
+                9.5,
+                mutedClr,
+                w: FontWeight.w700,
+              ).copyWith(letterSpacing: 1.2),
             ),
           ),
           Padding(
@@ -2210,9 +2365,11 @@ class _WebSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp8),
             child: Text(
               'SETTINGS',
-              style: _label(9.5, mutedClr, w: FontWeight.w700).copyWith(
-                letterSpacing: 1.2,
-              ),
+              style: _label(
+                9.5,
+                mutedClr,
+                w: FontWeight.w700,
+              ).copyWith(letterSpacing: 1.2),
             ),
           ),
           _SidebarToggle(
@@ -2240,9 +2397,11 @@ class _WebSidebar extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp8),
             child: Text(
               'QUICK PROMPTS',
-              style: _label(9.5, mutedClr, w: FontWeight.w700).copyWith(
-                letterSpacing: 1.2,
-              ),
+              style: _label(
+                9.5,
+                mutedClr,
+                w: FontWeight.w700,
+              ).copyWith(letterSpacing: 1.2),
             ),
           ),
           Padding(
@@ -2663,7 +2822,9 @@ class _WebTopBar extends StatelessWidget {
           const SizedBox(width: _sp8),
           // TTS
           Semantics(
-            label: ttsEnabled ? 'Mute' : 'Unmute',
+            label: ttsEnabled
+                ? AppLocalizations.of(context).t('assistant_mute')
+                : AppLocalizations.of(context).t('assistant_unmute'),
             button: true,
             child: InkWell(
               borderRadius: BorderRadius.circular(8),

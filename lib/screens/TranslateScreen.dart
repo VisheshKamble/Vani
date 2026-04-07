@@ -81,11 +81,15 @@ const _dTextMuted    = Color(0xFF8B949E);
 
 const _sp4  = 4.0;
 const _sp8  = 8.0;
+const _sp10 = 10.0;
 const _sp12 = 12.0;
+const _sp14 = 14.0;
 const _sp16 = 16.0;
+const _sp18 = 18.0;
 const _sp20 = 20.0;
 const _sp24 = 24.0;
 const _sp32 = 32.0;
+const _sp40 = 40.0;
 
 TextStyle _display(double size, Color c) => TextStyle(
     fontFamily: _fontFamily, fontSize: size, fontWeight: FontWeight.w700,
@@ -373,209 +377,514 @@ class _BlobDef {
     required this.r, required this.color});
 }
 
-// ═════════════════════════════════════════════════════════════════════
-//  ONBOARDING FLOW — lifted, atmospheric cards
-// ═════════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────────────
+//  ATMOSPHERIC BACKGROUND PAINTER
+// ─────────────────────────────────────────────────────────────────────
+class _AtmosphericBg extends StatelessWidget {
+  final bool d;
+  const _AtmosphericBg({required this.d});
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+        child: CustomPaint(
+          painter: _AtmosphericPainter(dark: d),
+          child: const SizedBox.expand(),
+        ),
+      );
+}
+
+class _AtmosphericPainter extends CustomPainter {
+  final bool dark;
+  const _AtmosphericPainter({required this.dark});
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width;
+    final h = s.height;
+
+    final cBlue = dark ? const Color(0xFF4A8EFF) : const Color(0xFF1A56DB);
+    final cPurple = dark ? const Color(0xFF9C6BFF) : const Color(0xFF6200EA);
+    final cTeal = dark ? const Color(0xFF26A69A) : const Color(0xFF00796B);
+
+    void orb(Offset c, double r, Color color, double alpha) {
+      canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [color.withOpacity(alpha), Colors.transparent],
+            stops: const [0.0, 1.0],
+          ).createShader(Rect.fromCircle(center: c, radius: r)),
+      );
+    }
+
+    orb(Offset(w * 1.05, -h * 0.04), w * 0.70, cBlue, dark ? 0.14 : 0.11);
+    orb(Offset(-w * 0.10, h * 1.05), w * 0.62, cPurple, dark ? 0.11 : 0.08);
+    orb(Offset(w * 0.12, h * 0.48), w * 0.30, cTeal, dark ? 0.08 : 0.06);
+
+    void ring(Offset c, double r, Color color, double alpha, double sw) {
+      canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..color = color.withOpacity(alpha)
+          ..strokeWidth = sw
+          ..style = PaintingStyle.stroke,
+      );
+    }
+
+    ring(Offset(w * 1.05, -h * 0.04), w * 0.78, cBlue, dark ? 0.10 : 0.08, 1.0);
+    ring(Offset(w * 1.05, -h * 0.04), w * 0.98, cBlue, dark ? 0.06 : 0.05, 0.7);
+    ring(Offset(-w * 0.10, h * 1.05), w * 0.70, cPurple, dark ? 0.08 : 0.06, 0.8);
+
+    void floatCircle(Offset c, double r, Color color, double alpha) {
+      canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..color = color.withOpacity(alpha)
+          ..strokeWidth = 1.0
+          ..style = PaintingStyle.stroke,
+      );
+      canvas.drawCircle(
+        c,
+        r,
+        Paint()..color = color.withOpacity(alpha * 0.15),
+      );
+    }
+
+    floatCircle(Offset(w * 0.72, h * 0.10), w * 0.12, cBlue, dark ? 0.18 : 0.14);
+    floatCircle(Offset(w * 0.90, h * 0.22), w * 0.07, cBlue, dark ? 0.12 : 0.09);
+    floatCircle(Offset(w * 0.06, h * 0.32), w * 0.10, cPurple, dark ? 0.14 : 0.10);
+    floatCircle(Offset(w * 0.15, h * 0.72), w * 0.15, cBlue, dark ? 0.12 : 0.09);
+    floatCircle(Offset(w * 0.38, h * 0.82), w * 0.08, cTeal, dark ? 0.14 : 0.10);
+    floatCircle(Offset(w * 0.80, h * 0.68), w * 0.11, cPurple, dark ? 0.12 : 0.08);
+    floatCircle(Offset(w * 1.05, h * 0.88), w * 0.30, cBlue, dark ? 0.08 : 0.06);
+
+    void dot(Offset c, double r, Color color, double alpha) {
+      canvas.drawCircle(c, r, Paint()..color = color.withOpacity(alpha));
+    }
+
+    dot(Offset(w * 0.08, h * 0.17), 3.5, cBlue, dark ? 0.35 : 0.25);
+    dot(Offset(w * 0.88, h * 0.62), 2.5, cPurple, dark ? 0.30 : 0.20);
+    dot(Offset(w * 0.22, h * 0.88), 4.0, cTeal, dark ? 0.28 : 0.18);
+    dot(Offset(w * 0.78, h * 0.30), 2.8, cBlue, dark ? 0.25 : 0.18);
+    dot(Offset(w * 0.52, h * 0.06), 2.0, cPurple, dark ? 0.22 : 0.15);
+  }
+
+  @override
+  bool shouldRepaint(_AtmosphericPainter o) => o.dark != dark;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  ONBOARDING FLOW — premium fullscreen layout
+// ─────────────────────────────────────────────────────────────────────
 class _OnboardingFlow extends StatefulWidget {
   final bool d;
   final VoidCallback onComplete;
   const _OnboardingFlow({required this.d, required this.onComplete});
-  @override State<_OnboardingFlow> createState() => _OnboardingFlowState();
+
+  @override
+  State<_OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
 class _OnboardingFlowState extends State<_OnboardingFlow>
     with TickerProviderStateMixin {
-  int    _phase = 0;
-  int    _step  = 0;
+  int _phase = 0;
+  int _step = 0;
   Timer? _timer;
 
-  late AnimationController _loaderCtrl, _fadeCtrl, _cardCtrl, _blobCtrl;
-  late Animation<double>   _loaderAnim, _fadeAnim, _cardSlide;
+  late AnimationController _loaderCtrl;
+  late Animation<double> _loaderAnim;
+
+  int _phaseIdx = 0;
+  double _loadProgress = 0.0;
+  static const _loadPhases = [
+    (target: 0.33, ms: 900, labelKey: 'translate_loader_camera'),
+    (target: 0.68, ms: 900, labelKey: 'translate_loader_ai'),
+    (target: 0.92, ms: 600, labelKey: 'translate_loader_calibrate'),
+    (target: 1.00, ms: 300, labelKey: 'translate_loader_ready'),
+  ];
+  late AnimationController _progressCtrl;
+  late Animation<double> _progressAnim;
+
+  late AnimationController _fadeCtrl;
+  late Animation<double> _fadeAnim;
+
+  late AnimationController _slideCtrl;
+  late Animation<Offset> _slideAnim;
+
+  late AnimationController _iconCtrl;
+  late Animation<double> _iconAnim;
 
   static const _steps = [
-    (icon: Icons.camera_alt_outlined,   color: _primary,    titleKey: 'translate_onboard_title_1', bodyKey: 'translate_onboard_body_1'),
-    (icon: Icons.back_hand_outlined,    color: _success,    titleKey: 'translate_onboard_title_2', bodyKey: 'translate_onboard_body_2'),
-    (icon: Icons.wb_sunny_outlined,     color: _warning,    titleKey: 'translate_onboard_title_3', bodyKey: 'translate_onboard_body_3'),
-    (icon: Icons.auto_awesome_outlined, color: _purple,     titleKey: 'translate_onboard_title_4', bodyKey: 'translate_onboard_body_4'),
-    (icon: Icons.translate_outlined,    color: _secondary,  titleKey: 'translate_onboard_title_5', bodyKey: 'translate_onboard_body_5'),
+    (
+      icon: Icons.camera_alt_outlined,
+      color: Color(0xFF1A56DB),
+      darkColor: Color(0xFF4A8EFF),
+      titleKey: 'translate_onboard_title_1',
+      bodyKey: 'translate_onboard_body_1',
+    ),
+    (
+      icon: Icons.back_hand_outlined,
+      color: Color(0xFF1B7340),
+      darkColor: Color(0xFF27AE60),
+      titleKey: 'translate_onboard_title_2',
+      bodyKey: 'translate_onboard_body_2',
+    ),
+    (
+      icon: Icons.wb_sunny_outlined,
+      color: Color(0xFF7A4800),
+      darkColor: Color(0xFFFFB300),
+      titleKey: 'translate_onboard_title_3',
+      bodyKey: 'translate_onboard_body_3',
+    ),
+    (
+      icon: Icons.auto_awesome_outlined,
+      color: Color(0xFF6200EA),
+      darkColor: Color(0xFF9C6BFF),
+      titleKey: 'translate_onboard_title_4',
+      bodyKey: 'translate_onboard_body_4',
+    ),
+    (
+      icon: Icons.translate_outlined,
+      color: Color(0xFF00796B),
+      darkColor: Color(0xFF26A69A),
+      titleKey: 'translate_onboard_title_5',
+      bodyKey: 'translate_onboard_body_5',
+    ),
   ];
+
+  String get _currentLabelKey =>
+      _phaseIdx < _loadPhases.length
+          ? _loadPhases[_phaseIdx].labelKey
+          : _loadPhases.last.labelKey;
 
   @override
   void initState() {
     super.initState();
-    _loaderCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 2800));
+
+    _loaderCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3200));
     _loaderAnim = CurvedAnimation(parent: _loaderCtrl, curve: Curves.easeInOut);
-
-    _blobCtrl = AnimationController(vsync: this,
-        duration: const Duration(seconds: 6))..repeat();
-
-    _fadeCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 350));
-    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
-
-    _cardCtrl = AnimationController(vsync: this,
-        duration: const Duration(milliseconds: 400));
-    _cardSlide = Tween<double>(begin: 0.04, end: 0.0)
-        .animate(CurvedAnimation(parent: _cardCtrl, curve: Curves.easeOutCubic));
-
     _loaderCtrl.forward();
+
+    _progressCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _progressAnim = Tween<double>(begin: 0.0, end: 0.0).animate(_progressCtrl);
+    _progressAnim.addListener(() {
+      if (mounted) setState(() => _loadProgress = _progressAnim.value);
+    });
+    _kickPhase(0, 0.0);
+
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 320));
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
-    _timer = Timer(const Duration(milliseconds: 3100), () {
+
+    _slideCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 420));
+    _slideAnim = Tween<Offset>(
+            begin: const Offset(0, 0.06), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut));
+
+    _iconCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 380));
+    _iconAnim = CurvedAnimation(parent: _iconCtrl, curve: Curves.elasticOut);
+
+    _timer = Timer(const Duration(milliseconds: 3500), () {
       if (!mounted) return;
       _fadeCtrl.reverse().then((_) {
         if (!mounted) return;
         setState(() => _phase = 1);
         _fadeCtrl.forward();
-        _cardCtrl.forward();
+        _slideCtrl.forward();
+        _iconCtrl.forward();
       });
+    });
+  }
+
+  void _kickPhase(int idx, double from) {
+    if (idx >= _loadPhases.length) return;
+    final phase = _loadPhases[idx];
+    final delay = idx == 0 ? 0 : _loadPhases[idx - 1].ms + 80;
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (!mounted) return;
+      setState(() => _phaseIdx = idx);
+      _progressCtrl.duration = Duration(milliseconds: phase.ms);
+      _progressAnim = Tween<double>(begin: from, end: phase.target)
+          .animate(CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut))
+        ..addListener(() {
+          if (mounted) setState(() => _loadProgress = _progressAnim.value);
+        });
+      _progressCtrl
+        ..reset()
+        ..forward();
+      _kickPhase(idx + 1, phase.target);
     });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _loaderCtrl.dispose(); _fadeCtrl.dispose();
-    _cardCtrl.dispose(); _blobCtrl.dispose();
+    _loaderCtrl.dispose();
+    _progressCtrl.dispose();
+    _fadeCtrl.dispose();
+    _slideCtrl.dispose();
+    _iconCtrl.dispose();
     super.dispose();
   }
 
   void _next() {
-    if (_step < _steps.length - 1) setState(() => _step++);
-    else widget.onComplete();
+    if (_step < _steps.length - 1) {
+      setState(() => _step++);
+      _slideCtrl.reset();
+      _iconCtrl.reset();
+      _slideCtrl.forward();
+      _iconCtrl.forward();
+    } else {
+      widget.onComplete();
+    }
   }
-  void _prev() { if (_step > 0) setState(() => _step--); }
+
+  void _prev() {
+    if (_step > 0) {
+      setState(() => _step--);
+      _slideCtrl.reset();
+      _iconCtrl.reset();
+      _slideCtrl.forward();
+      _iconCtrl.forward();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bg = widget.d ? _dBg : _lBg;
+    final bg = widget.d ? const Color(0xFF0D1117) : const Color(0xFFF0F4FB);
     return Material(
       color: bg,
       child: Stack(fit: StackFit.expand, children: [
-        // Ambient blobs — always visible
-        AnimatedBuilder(
-          animation: _blobCtrl,
-          builder: (_, __) => CustomPaint(
-            painter: _AmbientBlobPainter(
-                dark: widget.d, animValue: _blobCtrl.value),
-          ),
-        ),
+        _AtmosphericBg(d: widget.d),
         FadeTransition(
           opacity: _fadeAnim,
-          child: _phase == 0 ? _buildLoader() : _buildSteps(),
+          child: _phase == 0 ? _buildLoader(context) : _buildSteps(context),
         ),
       ]),
     );
   }
 
-  // ── LOADER ──────────────────────────────────────────────────────────
-  Widget _buildLoader() {
-    final l        = AppLocalizations.of(context);
-    final textClr  = widget.d ? _dText    : _lText;
-    final subClr   = widget.d ? _dTextSub : _lTextSub;
-    final mutedClr = widget.d ? _dTextMuted : _lTextMuted;
-    final cardBg   = widget.d
-        ? Colors.white.withOpacity(0.04)
-        : Colors.white.withOpacity(0.72);
-    final cardBorder = widget.d
-        ? Colors.white.withOpacity(0.08)
-        : Colors.white.withOpacity(0.55);
+  Widget _buildLoader(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    return screenW < 700 ? _buildLoaderMobile(context) : _buildLoaderWeb(context);
+  }
+
+  Widget _buildLoaderMobile(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final d = widget.d;
+    final textClr = d ? _dText : _lText;
+    final mutedClr = d ? _dTextMuted : _lTextMuted;
+    final cardBg = d ? const Color(0xFF161B22).withOpacity(0.88) : const Color(0xFFF4F7FC).withOpacity(0.92);
+    final cardBorder = d ? Colors.white.withOpacity(0.08) : const Color(0xFFD9E2F0);
+
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _sp16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(_sp20, _sp20, _sp20, _sp16),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: cardBorder, width: 1),
+                boxShadow: d
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFF1A56DB).withOpacity(0.07),
+                          blurRadius: 36,
+                          spreadRadius: -10,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+              ),
+              child: AnimatedBuilder(
+                animation: _loaderAnim,
+                builder: (_, __) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _LoaderScanDots(d: d, anim: _loaderAnim),
+                    const SizedBox(height: _sp18),
+                    SizedBox(
+                      width: 84,
+                      height: 84,
+                      child: CustomPaint(
+                        painter: _RingPainter(
+                          progress: _loaderAnim.value,
+                          color: d ? _primaryDark : _primary,
+                          track: d ? _dBorder : const Color(0xFFDDE3EE),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: _sp20),
+                    Text(
+                      l.t('translate_screen_title'),
+                      textAlign: TextAlign.center,
+                      style: _display(24, textClr).copyWith(letterSpacing: -0.3),
+                    ),
+                    const SizedBox(height: _sp8),
+                    Text(
+                      l.t('translate_loader_tagline'),
+                      textAlign: TextAlign.center,
+                      style: _body(13.5, mutedClr),
+                    ),
+                    const SizedBox(height: _sp20),
+                    _LoaderStepRowMobile(
+                      icon: Icons.camera_alt_outlined,
+                      label: l.t('translate_loader_camera'),
+                      done: _loaderAnim.value >= 0.35,
+                      active: _loaderAnim.value < 0.35,
+                      d: d,
+                    ),
+                    const SizedBox(height: _sp8),
+                    _LoaderStepRowMobile(
+                      icon: Icons.psychology_outlined,
+                      label: l.t('translate_loader_ai'),
+                      done: _loaderAnim.value >= 0.70,
+                      active: _loaderAnim.value >= 0.35 && _loaderAnim.value < 0.70,
+                      d: d,
+                    ),
+                    const SizedBox(height: _sp8),
+                    _LoaderStepRowMobile(
+                      icon: Icons.tune_rounded,
+                      label: l.t('translate_loader_calibrate'),
+                      done: _loaderAnim.value >= 1.0,
+                      active: _loaderAnim.value >= 0.70,
+                      d: d,
+                    ),
+                    const SizedBox(height: _sp18),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: _loaderAnim.value,
+                        minHeight: 4,
+                        backgroundColor: d ? Colors.white.withOpacity(0.10) : const Color(0xFFDDE3EE),
+                        valueColor: AlwaysStoppedAnimation(d ? _primaryDark : _primary),
+                      ),
+                    ),
+                    const SizedBox(height: _sp10),
+                    Text(
+                      '${(_loaderAnim.value * 100).toInt()}%',
+                      style: _txtLabel(13, d ? _dTextSub : _lTextSub, w: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoaderWeb(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final d = widget.d;
+    final textClr = d ? _dText : _lText;
+    final subClr = d ? _dTextSub : _lTextSub;
+    final mutedClr = d ? _dTextMuted : _lTextMuted;
+    final cardBg = d ? Colors.white.withOpacity(0.04) : Colors.white.withOpacity(0.80);
+    final cardBorder = d ? Colors.white.withOpacity(0.08) : Colors.white.withOpacity(0.55);
 
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 380),
         margin: const EdgeInsets.symmetric(horizontal: _sp24),
-        padding: const EdgeInsets.symmetric(
-            horizontal: _sp32, vertical: 40),
+        padding: const EdgeInsets.symmetric(horizontal: _sp32, vertical: 40),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: cardBorder, width: 1.0),
-          boxShadow: widget.d ? [] : [
-            BoxShadow(
-              color: const Color(0xFF1A56DB).withOpacity(0.06),
-              blurRadius: 48, spreadRadius: -8, offset: const Offset(0, 12),
-            ),
-          ],
+          boxShadow: d
+              ? []
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF1A56DB).withOpacity(0.06),
+                    blurRadius: 48,
+                    spreadRadius: -8,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-
-          // Dot row — scanning indicator
-          _LoaderScanDots(d: widget.d, anim: _loaderAnim),
+          _LoaderScanDots(d: d, anim: _loaderAnim),
           const SizedBox(height: _sp24),
-
-          // Progress ring
-          SizedBox(width: 72, height: 72,
-              child: AnimatedBuilder(
-                animation: _loaderAnim,
-                builder: (_, __) => CustomPaint(
-                    painter: _RingPainter(
-                        progress: _loaderAnim.value,
-                        color: _primary,
-                        track: widget.d ? _dBorder : const Color(0xFFDDE3EE))),
-              )),
+          SizedBox(
+            width: 72,
+            height: 72,
+            child: AnimatedBuilder(
+              animation: _loaderAnim,
+              builder: (_, __) => CustomPaint(
+                painter: _RingPainter(
+                  progress: _loaderAnim.value,
+                  color: d ? _primaryDark : _primary,
+                  track: d ? _dBorder : const Color(0xFFDDE3EE),
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: _sp20),
-
-          // Title
-          Text(l.t('translate_screen_title'),
-              textAlign: TextAlign.center,
-              style: _display(22, textClr).copyWith(
-                  letterSpacing: -0.3, height: 1.25)),
+          Text(
+            l.t('translate_screen_title'),
+            textAlign: TextAlign.center,
+            style: _display(22, textClr).copyWith(letterSpacing: -0.3, height: 1.25),
+          ),
           const SizedBox(height: _sp8),
-          Text(l.t('translate_loader_subtitle') != 'translate_loader_subtitle'
-              ? l.t('translate_loader_subtitle')
-              : 'Sign Language · Real-Time AI',
-              textAlign: TextAlign.center,
-              style: _body(13, mutedClr)),
-
+          Text(l.t('translate_loader_tagline'), textAlign: TextAlign.center, style: _body(13, mutedClr)),
           const SizedBox(height: _sp32),
-
-          // Steps
           AnimatedBuilder(
             animation: _loaderAnim,
             builder: (_, __) => Column(children: [
               _LoaderStepRow(
-                  icon: Icons.camera_alt_outlined,
-                  label: l.t('translate_loader_camera'),
-                  done: _loaderAnim.value >= 0.35,
-                  active: _loaderAnim.value < 0.35,
-                  d: widget.d),
+                icon: Icons.camera_alt_outlined,
+                label: l.t('translate_loader_camera'),
+                done: _loaderAnim.value >= 0.35,
+                active: _loaderAnim.value < 0.35,
+                d: d,
+              ),
               const SizedBox(height: _sp8),
               _LoaderStepRow(
-                  icon: Icons.psychology_outlined,
-                  label: l.t('translate_loader_ai'),
-                  done: _loaderAnim.value >= 0.70,
-                  active: _loaderAnim.value >= 0.35 && _loaderAnim.value < 0.70,
-                  d: widget.d),
+                icon: Icons.psychology_outlined,
+                label: l.t('translate_loader_ai'),
+                done: _loaderAnim.value >= 0.70,
+                active: _loaderAnim.value >= 0.35 && _loaderAnim.value < 0.70,
+                d: d,
+              ),
               const SizedBox(height: _sp8),
               _LoaderStepRow(
-                  icon: Icons.tune_rounded,
-                  label: l.t('translate_loader_calibrate'),
-                  done: _loaderAnim.value >= 1.0,
-                  active: _loaderAnim.value >= 0.70,
-                  d: widget.d),
+                icon: Icons.tune_rounded,
+                label: l.t('translate_loader_calibrate'),
+                done: _loaderAnim.value >= 1.0,
+                active: _loaderAnim.value >= 0.70,
+                d: d,
+              ),
             ]),
           ),
-
           const SizedBox(height: _sp24),
-
-          // Progress bar
           AnimatedBuilder(
             animation: _loaderAnim,
             builder: (_, __) => Column(children: [
-              ClipRRect(borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                      value: _loaderAnim.value, minHeight: 4,
-                      backgroundColor: widget.d
-                          ? Colors.white.withOpacity(0.08)
-                          : const Color(0xFFDDE3EE),
-                      valueColor: AlwaysStoppedAnimation(
-                          widget.d ? _primaryDark : _primary))),
-              const SizedBox(height: _sp8),
-              Text(
-                '${(_loaderAnim.value * 100).toInt()}%',
-                style: _txtLabel(11, subClr),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: _loaderAnim.value,
+                  minHeight: 4,
+                  backgroundColor: d ? Colors.white.withOpacity(0.08) : const Color(0xFFDDE3EE),
+                  valueColor: AlwaysStoppedAnimation(d ? _primaryDark : _primary),
+                ),
               ),
+              const SizedBox(height: _sp8),
+              Text('${(_loaderAnim.value * 100).toInt()}%', style: _txtLabel(11, subClr)),
             ]),
           ),
         ]),
@@ -583,186 +892,365 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
     );
   }
 
-  // ── STEPS ──────────────────────────────────────────────────────────
-  Widget _buildSteps() {
-    final l    = AppLocalizations.of(context);
+  Widget _buildSteps(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    return screenW < 700 ? _buildStepsMobile(context) : _buildStepsWeb(context);
+  }
+
+  Widget _buildStepsMobile(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final step = _steps[_step];
     final last = _step == _steps.length - 1;
-    final cardBg = widget.d
-        ? Colors.white.withOpacity(0.04)
-        : Colors.white.withOpacity(0.80);
-    final cardBorder = widget.d
-        ? Colors.white.withOpacity(0.08)
-        : Colors.white.withOpacity(0.60);
-    final textClr  = widget.d ? _dText    : _lText;
-    final subClr   = widget.d ? _dTextSub : _lTextSub;
-    final mutedClr = widget.d ? _dTextMuted : _lTextMuted;
-    final bord     = widget.d ? _dBorder   : _lBorder;
+    final accent = widget.d ? step.darkColor : step.color;
+    final textClr = widget.d ? const Color(0xFFE6EDF3) : const Color(0xFF111827);
+    final subClr = widget.d ? const Color(0xFFB0BEC5) : const Color(0xFF4B5563);
+    final mutedClr = widget.d ? const Color(0xFF8B949E) : const Color(0xFF9CA3AF);
+    final trackClr = widget.d ? const Color(0xFF30363D) : const Color(0xFFDDE3ED);
+    final screenH = MediaQuery.of(context).size.height;
 
-    Color accentResolved = widget.d
-        ? (step.color == _primary ? _primaryDark
-        : step.color == _success ? _successDark
-        : step.color == _warning ? _warningDark
-        : step.color == _purple  ? _purpleDark
-        : _secondaryDark)
-        : step.color;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _sp20),
-        child: SlideTransition(
-          position: _cardSlide.drive(
-              Tween(begin: const Offset(0, 0.03), end: Offset.zero)),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 460),
-            decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: cardBorder, width: 1),
-                boxShadow: widget.d ? [] : [
-                  BoxShadow(
-                    color: accentResolved.withOpacity(0.08),
-                    blurRadius: 48, spreadRadius: -8,
-                    offset: const Offset(0, 16),
-                  ),
-                ]),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                // Gradient top accent strip
-                Container(height: 3,
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [
-                          accentResolved.withOpacity(0.6),
-                          accentResolved,
-                          accentResolved.withOpacity(0.6),
-                        ]))),
-
-                Padding(
-                  padding: const EdgeInsets.all(_sp24),
-                  child: Column(children: [
-                    // Header row
-                    Row(children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: _sp8, vertical: _sp4),
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: List.generate(_steps.length, (i) {
+                    final isActive = i <= _step;
+                    return Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: EdgeInsets.only(right: i < _steps.length - 1 ? 4 : 0),
+                        height: 3,
                         decoration: BoxDecoration(
-                            color: accentResolved.withOpacity(0.10),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: accentResolved.withOpacity(0.22), width: 1)),
-                        child: Text(l.t('translate_how_to_use').toUpperCase(),
-                            style: _txtLabel(9, accentResolved, w: FontWeight.w800)
-                                .copyWith(letterSpacing: 1.0)),
+                          borderRadius: BorderRadius.circular(2),
+                          color: isActive ? accent : trackClr,
+                        ),
                       ),
-                      const Spacer(),
-                      // Step count pills
-                      Row(mainAxisSize: MainAxisSize.min,
-                          children: List.generate(_steps.length, (i) =>
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                                width: i == _step ? 18 : 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                    color: i == _step
-                                        ? accentResolved
-                                        : (widget.d ? _dBorder : const Color(0xFFCDD5DF)),
-                                    borderRadius: BorderRadius.circular(3)),
-                              ))),
-                    ]),
-                    const SizedBox(height: _sp24),
-
-                    // Icon — with subtle ring
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      transitionBuilder: (child, anim) =>
-                          ScaleTransition(scale: anim, child:
-                          FadeTransition(opacity: anim, child: child)),
-                      child: Container(
-                          key: ValueKey(_step),
-                          width: 72, height: 72,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: accentResolved.withOpacity(0.10),
-                              border: Border.all(
-                                  color: accentResolved.withOpacity(0.20),
-                                  width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: accentResolved.withOpacity(0.15),
-                                  blurRadius: 20, spreadRadius: -4,
-                                ),
-                              ]),
-                          child: Icon(step.icon,
-                              color: accentResolved, size: 30)),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${(_step + 1).toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontFamily: 'Google Sans',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: accent,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' / ${_steps.length.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontFamily: 'Google Sans',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: mutedClr,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: _sp20),
-
-                    // Title
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: Text(l.t(step.titleKey),
-                          key: ValueKey('t$_step'),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: widget.onComplete,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Text(
+                          l.t('translate_skip_tutorial'),
+                          style: TextStyle(
+                            fontFamily: 'Google Sans',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: mutedClr,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SlideTransition(
+              position: _slideAnim,
+              child: FadeTransition(
+                opacity: _slideCtrl,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ScaleTransition(
+                        scale: _iconAnim,
+                        child: _HaloIcon(icon: step.icon, accent: accent),
+                      ),
+                      SizedBox(height: screenH * 0.045),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          l.t(step.titleKey),
+                          key: ValueKey('title_$_step'),
                           textAlign: TextAlign.center,
-                          style: _heading(19, textClr)),
-                    ),
-                    const SizedBox(height: _sp8),
-
-                    // Body
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: Text(l.t(step.bodyKey),
-                          key: ValueKey('b$_step'),
+                          style: TextStyle(
+                            fontFamily: 'Google Sans',
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: textClr,
+                            height: 1.2,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          l.t(step.bodyKey),
+                          key: ValueKey('body_$_step'),
                           textAlign: TextAlign.center,
-                          style: _body(14, subClr)),
-                    ),
-                    const SizedBox(height: _sp24),
-
-                    // Action buttons
-                    Row(children: [
-                      if (_step > 0) ...[
-                        Expanded(child: OutlinedButton.icon(
-                          onPressed: _prev,
-                          icon: const Icon(Icons.chevron_left_rounded, size: 16),
-                          label: Text(l.t('translate_back')),
-                          style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 48),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                              side: BorderSide(color: bord)),
-                        )),
-                        const SizedBox(width: _sp12),
-                      ],
-                      Expanded(flex: 2, child: ElevatedButton.icon(
-                        onPressed: _next,
-                        icon: Icon(last
-                            ? Icons.play_arrow_rounded
-                            : Icons.chevron_right_rounded, size: 16),
-                        label: Text(last
-                            ? l.t('translate_lets_begin')
-                            : l.t('translate_next')),
-                        style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(0, 48),
-                            backgroundColor: accentResolved,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10))),
-                      )),
-                    ]),
-
-                    if (!last) ...[
-                      const SizedBox(height: _sp12),
-                      TextButton(
-                        onPressed: widget.onComplete,
-                        child: Text(l.t('translate_skip_tutorial'),
-                            style: _body(13, mutedClr, w: FontWeight.w500)),
+                          style: TextStyle(
+                            fontFamily: 'Google Sans',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: subClr,
+                            height: 1.65,
+                          ),
+                        ),
                       ),
                     ],
-                  ]),
+                  ),
                 ),
-              ]),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_steps.length, (i) {
+                    final active = i == _step;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: active ? 22 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: active ? accent : trackClr,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    if (_step > 0) ...[
+                      _BackButton(onTap: _prev, d: widget.d),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: _PillButton(
+                        label: last ? l.t('translate_lets_begin') : l.t('translate_next'),
+                        icon: last ? Icons.play_arrow_rounded : Icons.arrow_forward_rounded,
+                        accent: accent,
+                        onTap: _next,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepsWeb(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final step = _steps[_step];
+    final last = _step == _steps.length - 1;
+    final accent = widget.d ? step.darkColor : step.color;
+    final textClr = widget.d ? const Color(0xFFE6EDF3) : const Color(0xFF111827);
+    final subClr = widget.d ? const Color(0xFFB0BEC5) : const Color(0xFF4B5563);
+    final mutedClr = widget.d ? const Color(0xFF8B949E) : const Color(0xFF9CA3AF);
+    final trackClr = widget.d ? const Color(0xFF30363D) : const Color(0xFFDDE3ED);
+
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(_sp20, _sp20, _sp20, _sp20),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
+              decoration: BoxDecoration(
+                color: widget.d
+                    ? Colors.white.withOpacity(0.04)
+                    : Colors.white.withOpacity(0.84),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: widget.d
+                      ? Colors.white.withOpacity(0.08)
+                      : const Color(0xFFDDE3EE),
+                  width: 1,
+                ),
+                boxShadow: widget.d
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: const Color(0xFF1A56DB).withOpacity(0.06),
+                          blurRadius: 32,
+                          spreadRadius: -8,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '${(_step + 1).toString().padLeft(2, '0')}',
+                              style: _txtLabel(15, accent, w: FontWeight.w700),
+                            ),
+                            TextSpan(
+                              text: ' / ${_steps.length.toString().padLeft(2, '0')}',
+                              style: _txtLabel(15, mutedClr, w: FontWeight.w400),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: widget.onComplete,
+                        child: Text(l.t('translate_skip_tutorial'), style: _txtLabel(13, mutedClr, w: FontWeight.w500)),
+                      ),
+                    ],
+                  ),
+                    const SizedBox(height: _sp14),
+                  Row(
+                    children: List.generate(_steps.length, (i) {
+                      final isActive = i <= _step;
+                      return Expanded(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 280),
+                          margin: EdgeInsets.only(right: i < _steps.length - 1 ? 4 : 0),
+                          height: 3,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            color: isActive ? accent : trackClr,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ScaleTransition(
+                        scale: _iconAnim,
+                        child: _HaloIcon(icon: step.icon, accent: accent),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: Text(
+                                  l.t(step.titleKey),
+                                  key: ValueKey('title_web_$_step'),
+                                  style: _display(30, textClr).copyWith(
+                                    letterSpacing: -0.7,
+                                    height: 1.12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: _sp10),
+                              const SizedBox(height: _sp12),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 700),
+                                  child: Text(
+                                    l.t(step.bodyKey),
+                                    key: ValueKey('body_web_$_step'),
+                                    style: _body(16, subClr).copyWith(height: 1.65),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 26),
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: 118,
+                                    height: 50,
+                                    child: OutlinedButton(
+                                      onPressed: _step > 0 ? _prev : null,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: mutedClr,
+                                        side: BorderSide(
+                                          color: mutedClr.withOpacity(0.25),
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.arrow_back_rounded, size: 16),
+                                          const SizedBox(width: 6),
+                                          Text(l.t('common_back')),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                    const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _PillButton(
+                                      label: last ? l.t('translate_lets_begin') : l.t('translate_next'),
+                                      icon: last ? Icons.play_arrow_rounded : Icons.arrow_forward_rounded,
+                                      accent: accent,
+                                      onTap: _next,
+                                    ),
+                                  ),
+                                  ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -771,7 +1259,396 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
   }
 }
 
-// ── Loader step row widget ──────────────────────────────────────────
+class _HaloIcon extends StatelessWidget {
+  final IconData icon;
+  final Color accent;
+  const _HaloIcon({required this.icon, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 160,
+      height: 160,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 158,
+            height: 158,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: accent.withOpacity(0.08), width: 1),
+              color: accent.withOpacity(0.04),
+            ),
+          ),
+          Container(
+            width: 122,
+            height: 122,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: accent.withOpacity(0.13), width: 1),
+              color: accent.withOpacity(0.06),
+            ),
+          ),
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: accent.withOpacity(0.22), width: 1),
+              color: accent.withOpacity(0.10),
+            ),
+          ),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent.withOpacity(0.14),
+              border: Border.all(color: accent.withOpacity(0.30), width: 1.5),
+            ),
+            child: Icon(icon, color: accent, size: 28),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PillButton extends StatefulWidget {
+  final String label;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback onTap;
+  const _PillButton({
+    required this.label,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  State<_PillButton> createState() => _PillButtonState();
+}
+
+class _PillButtonState extends State<_PillButton> {
+  bool _down = false;
+
+  Color get _gradStart => widget.accent;
+  Color get _gradEnd {
+    final hsl = HSLColor.fromColor(widget.accent);
+    return hsl.withHue((hsl.hue + 30) % 360).withSaturation(
+        (hsl.saturation + 0.05).clamp(0.0, 1.0)).toColor();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapUp: (_) {
+        setState(() => _down = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _down = false),
+      child: AnimatedScale(
+        scale: _down ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [_gradStart, _gradEnd],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.accent.withOpacity(_down ? 0.20 : 0.30),
+                blurRadius: _down ? 10 : 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                widget.label,
+                style: const TextStyle(
+                  fontFamily: 'Google Sans',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(widget.icon, color: Colors.white, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool d;
+  const _BackButton({required this.onTap, required this.d});
+
+  @override
+  Widget build(BuildContext context) {
+    final border = d ? const Color(0xFF30363D) : const Color(0xFFCDD5DF);
+    final icon = d ? const Color(0xFFB0BEC5) : const Color(0xFF6B7280);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: border, width: 1.0),
+          color: Colors.transparent,
+        ),
+        child: Icon(Icons.arrow_back_rounded, color: icon, size: 20),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  MOBILE STEP DECORATIVE PAINTER
+//  Paints large ambient circles/arcs/patches per step.
+//  Each step gets a unique composition so it feels like a new scene.
+// ══════════════════════════════════════════════════════════════════════
+class _MobileStepBlobPainter extends CustomPainter {
+  final Color accent;
+  final bool dark;
+  final double animValue;
+  final int stepIndex;
+
+  const _MobileStepBlobPainter({
+    required this.accent,
+    required this.dark,
+    required this.animValue,
+    required this.stepIndex,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final float = math.sin(animValue * math.pi * 2 + stepIndex * 0.35) * 8.0;
+    final float2 = math.cos(animValue * math.pi * 2 + stepIndex * 0.2) * 6.0;
+    final stepShift = (stepIndex % 5) * 0.02;
+
+    final orbA = accent.withOpacity(dark ? 0.10 : 0.14);
+    final orbB = accent.withOpacity(dark ? 0.07 : 0.10);
+    final lineA = dark ? 0.18 : 0.15;
+    final lineB = dark ? 0.14 : 0.12;
+    final grid = accent.withOpacity(dark ? 0.06 : 0.07);
+
+    void orb(double x, double y, double r, Color color, double blur) {
+      canvas.drawCircle(
+        Offset(x, y),
+        r,
+        Paint()
+          ..color = color
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur),
+      );
+    }
+
+    void quarterArc(Offset center, double radius, double start, double strength) {
+      final glow = Paint()
+        ..color = accent.withOpacity(strength * (dark ? 0.12 : 0.10))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+      final stroke = Paint()
+        ..color = accent.withOpacity(strength * (dark ? 0.36 : 0.30))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
+      canvas.drawArc(Rect.fromCircle(center: center, radius: radius), start, math.pi / 2, false, glow);
+      canvas.drawArc(Rect.fromCircle(center: center, radius: radius), start, math.pi / 2, false, stroke);
+    }
+
+    void ring(Offset center, double radius, double strength) {
+      final p = Paint()
+        ..color = accent.withOpacity(strength)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
+      canvas.drawCircle(center, radius, p);
+    }
+
+    void semiArc(Offset center, double radius, double start, double strength) {
+      final p = Paint()
+        ..color = accent.withOpacity(strength)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.15;
+      canvas.drawArc(Rect.fromCircle(center: center, radius: radius), start, math.pi, false, p);
+    }
+
+    void patchCluster(Offset center, double sizeFactor, double strength) {
+      orb(center.dx, center.dy, sizeFactor, accent.withOpacity(strength), 22);
+      orb(center.dx + sizeFactor * 0.95, center.dy - sizeFactor * 0.35, sizeFactor * 0.55,
+          accent.withOpacity(strength * 0.75), 14);
+      orb(center.dx - sizeFactor * 0.80, center.dy + sizeFactor * 0.45, sizeFactor * 0.48,
+          accent.withOpacity(strength * 0.65), 12);
+      ring(center, sizeFactor * 1.25, dark ? 0.09 : 0.08);
+    }
+
+    orb(-w * (0.16 + stepShift * 0.6), -h * 0.08 + float, w * 0.52, orbA, 82);
+    orb(w * 1.04, h * (0.10 + stepShift * 0.4) + float2, w * 0.44, orbB, 74);
+    orb(w * 0.50, h * 1.06 - float * 0.4, w * 0.40, orbB, 70);
+    orb(w * 0.08, h * 0.24 - float2 * 0.2, w * 0.14, accent.withOpacity(dark ? 0.06 : 0.08), 24);
+
+    semiArc(Offset(w * 1.02, -h * 0.01), w * (0.50 + stepShift * 0.4), math.pi * 0.56, lineA);
+    semiArc(Offset(-w * 0.02, -h * 0.01), w * (0.49 + stepShift * 0.4), math.pi * 0.94, lineB);
+    semiArc(Offset(-w * 0.04, h * 0.90), w * (0.28 + stepShift), -math.pi * 0.05, lineA);
+
+    quarterArc(Offset.zero, w * 0.34, 0, 0.90);
+    quarterArc(Offset(w, 0), w * 0.28, math.pi / 2, 0.75);
+    quarterArc(Offset(0, h), w * 0.24, -math.pi / 2, 0.70);
+    quarterArc(Offset(w, h), w * 0.38, math.pi, 0.95);
+
+    ring(Offset(w * 0.84, h * 0.18 + float2 * 0.25), w * 0.14, lineA);
+    ring(Offset(w * 0.16, h * 0.74 - float * 0.20), w * 0.12, lineA * 0.95);
+    ring(Offset(w * 0.50, h * 0.72 + float * 0.15), w * 0.10, lineB);
+    ring(Offset(w * 0.50, h * 0.36 - float2 * 0.10), w * 0.08, lineB * 0.92);
+
+    final patchLift = <double>[-0.03, 0.0, 0.02, -0.015, 0.01][stepIndex % 5];
+    patchCluster(
+      Offset(w * 0.22, h * (0.26 + patchLift) + float2 * 0.10),
+      w * 0.07,
+      dark ? 0.10 : 0.13,
+    );
+    patchCluster(
+      Offset(w * 0.78, h * (0.60 - patchLift) - float * 0.08),
+      w * 0.065,
+      dark ? 0.09 : 0.12,
+    );
+    patchCluster(
+      Offset(w * 0.50, h * (0.84 + patchLift * 0.6) + float * 0.06),
+      w * 0.055,
+      dark ? 0.08 : 0.11,
+    );
+
+    final dotPaint = Paint()..color = grid;
+    const spacing = 34.0;
+    for (double x = 0; x < w; x += spacing) {
+      for (double y = 0; y < h; y += spacing) {
+        if ((x + y) % (spacing * 3) == 0) {
+          canvas.drawCircle(Offset(x, y), 1.0, dotPaint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MobileStepBlobPainter o) =>
+      o.accent != accent || o.animValue != animValue ||
+      o.stepIndex != stepIndex || o.dark != dark;
+}
+
+// ── Step icon with concentric pulse rings ──────────────────────────
+class _MobileStepIcon extends StatefulWidget {
+  final IconData icon;
+  final Color accent;
+  final bool d;
+  const _MobileStepIcon({
+    required this.icon,
+    required this.accent,
+    required this.d,
+  });
+  @override
+  State<_MobileStepIcon> createState() => _MobileStepIconState();
+}
+
+class _MobileStepIconState extends State<_MobileStepIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this,
+        duration: const Duration(milliseconds: 2000))..repeat();
+    _pulse = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 130, height: 130,
+      child: Stack(alignment: Alignment.center, children: [
+
+        // ── Outermost pulse ring
+        AnimatedBuilder(
+          animation: _pulse,
+          builder: (_, __) => Container(
+            width: 130, height: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: widget.accent.withOpacity(
+                    (1.0 - _pulse.value) * (widget.d ? 0.18 : 0.22)),
+                width: 1.0,
+              ),
+            ),
+          ),
+        ),
+
+        // ── Mid ring
+        AnimatedBuilder(
+          animation: _pulse,
+          builder: (_, __) {
+            final v = ((_ctrl.value + 0.33) % 1.0);
+            return Container(
+              width: 108, height: 108,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: widget.accent.withOpacity(
+                      (1.0 - v) * (widget.d ? 0.20 : 0.25)),
+                  width: 1.0,
+                ),
+              ),
+            );
+          },
+        ),
+
+        // ── Inner filled circle
+        Container(
+          width: 88, height: 88,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.accent.withOpacity(widget.d ? 0.12 : 0.10),
+            border: Border.all(
+                color: widget.accent.withOpacity(0.28), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: widget.accent.withOpacity(widget.d ? 0.20 : 0.16),
+                blurRadius: 32, spreadRadius: -8,
+              ),
+            ],
+          ),
+          child: Icon(widget.icon, color: widget.accent, size: 38),
+        ),
+      ]),
+    );
+  }
+}
+
+// ── Loader step row widget (web) ────────────────────────────────────
 class _LoaderStepRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -823,6 +1700,71 @@ class _LoaderStepRow extends StatelessWidget {
   }
 }
 
+// ── Loader step row — MOBILE (full-width, larger, card-like) ─────────
+class _LoaderStepRowMobile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool done, active, d;
+  const _LoaderStepRowMobile({
+    required this.icon, required this.label,
+    required this.done, required this.active, required this.d,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color fg;
+    final Color bg;
+    final Color border;
+    if (done) {
+      fg = d ? _successDark : _success;
+      bg = fg.withOpacity(0.08);
+      border = fg.withOpacity(0.20);
+    } else if (active) {
+      fg = d ? _primaryDark : _primary;
+      bg = fg.withOpacity(0.08);
+      border = fg.withOpacity(0.25);
+    } else {
+      fg = d ? _dTextMuted : _lTextMuted;
+      bg = d ? Colors.white.withOpacity(0.02) : Colors.white.withOpacity(0.40);
+      border = d ? Colors.white.withOpacity(0.06) : const Color(0xFFE4E9F0);
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: _sp16, vertical: 14),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border, width: 1),
+      ),
+      child: Row(children: [
+        // Icon circle
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: fg.withOpacity(done ? 0.15 : active ? 0.12 : 0.06)),
+          child: Icon(
+              done ? Icons.check_circle_rounded : icon,
+              color: fg, size: 18),
+        ),
+        const SizedBox(width: _sp12),
+        Expanded(child: Text(label,
+            style: _txtLabel(13, fg,
+                w: active ? FontWeight.w700 : FontWeight.w500))),
+        if (active)
+          SizedBox(width: 16, height: 16,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2.5, color: fg))
+        else if (done)
+          Icon(Icons.check_rounded, color: fg, size: 16),
+      ]),
+    );
+  }
+}
+
 // ── Scan dots row ──────────────────────────────────────────────────
 class _LoaderScanDots extends StatefulWidget {
   final bool d;
@@ -868,24 +1810,54 @@ class _LoaderScanDotsState extends State<_LoaderScanDots>
 // ── Ring painter ────────────────────────────────────────────────────
 class _RingPainter extends CustomPainter {
   final double progress;
-  final Color color, track;
-  const _RingPainter({required this.progress, required this.color,
-    required this.track});
+  final Color color;
+  final Color track;
+  const _RingPainter({
+    required this.progress,
+    required this.color,
+    required this.track,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width / 2 - 3;
-    canvas.drawArc(Rect.fromCircle(center: c, radius: r),
-        0, math.pi * 2, false,
-        Paint()..color = track..strokeWidth = 3..style = PaintingStyle.stroke);
-    if (progress > 0) {
-      canvas.drawArc(Rect.fromCircle(center: c, radius: r),
-          -math.pi / 2, 2 * math.pi * progress, false,
-          Paint()..color = color..strokeWidth = 3
-            ..style = PaintingStyle.stroke..strokeCap = StrokeCap.round);
-    }
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 4;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = track
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke,
+    );
+
+    if (progress <= 0) return;
+
+    canvas.drawArc(
+      rect,
+      -math.pi / 2,
+      2 * math.pi * progress,
+      false,
+      Paint()
+        ..shader = SweepGradient(
+          startAngle: -math.pi / 2,
+          endAngle: -math.pi / 2 + 2 * math.pi * progress,
+          colors: const [
+            Color(0xFF1A56DB),
+            Color(0xFF6200EA),
+            Color(0xFF4A8EFF),
+          ],
+        ).createShader(rect)
+        ..strokeWidth = 3.0
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
   }
-  @override bool shouldRepaint(_RingPainter o) => o.progress != progress;
+
+  @override
+  bool shouldRepaint(_RingPainter o) => o.progress != progress;
 }
 
 // ══════════════════════════════════════════════════════════════════════

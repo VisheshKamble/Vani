@@ -309,6 +309,8 @@ class AppLocalizations {
       'home_features_title': 'Everything you need to communicate',
       'home_features_sub':
           'Powerful tools designed for India\'s 63 million deaf and mute community',
+      'home_emergency_sub':
+          'Life-saving signs and one-tap SOS for critical moments.',
       'home_mission_label': 'OUR MISSION',
       'home_trust_deaf_community': 'Deaf Community',
     'home_trust_indian_languages': 'Languages',
@@ -316,6 +318,11 @@ class AppLocalizations {
       'home_trust_powered': 'Powered',
       'home_tag_life_saving_signs': 'Life-saving signs',
       'home_tag_one_tap_sos': 'One-tap SOS',
+    'home_back_to_top': 'Back to top',
+      'home_footer_project_line':
+          'Final Year Project · Computer Engineering · 2025-26',
+      'home_footer_stack_line': 'Built with Python, FastAPI, Flutter, AI',
+      'home_footer_built_for_india': 'Built for India',
 
       'assistant_ai_powered_isl': 'AI-Powered ISL Assistant',
       'assistant_supports_10_languages': 'Supports 10 Indian Languages',
@@ -325,6 +332,8 @@ class AppLocalizations {
           'Sign HELP: Extend both hands flat,\npalms facing up, raise upward twice.',
       'assistant_mock_chip_help': 'HELP',
       'assistant_mock_chip_emergency': 'EMERGENCY',
+    'assistant_mute': 'Mute',
+    'assistant_unmute': 'Unmute',
 
       'sos_sms_general_template':
           'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
@@ -413,12 +422,14 @@ class AppLocalizations {
       'auth_sign_in': 'Sign In',
       'auth_create_account': 'Create Account',
       'auth_footer_tagline': 'Built for accuracy. Designed for dignity.',
+    'auth_footer_community': 'Empowering India\'s deaf & mute community',
       'auth_login_or_signup': 'Login or sign up',
       'auth_welcome_back': 'Welcome back!',
       'auth_account_created': 'Account created!',
 
       // ── Translate additional labels
       'translate_screen_title': 'Sign Language Translator',
+    'translate_loader_tagline': 'Sign Language · Real-Time AI',
       'translate_loader_camera': 'Loading camera modules...',
       'translate_loader_ai': 'Initializing AI engine...',
       'translate_loader_calibrate': 'Calibrating gesture model...',
@@ -677,6 +688,26 @@ class AppLocalizations {
       'signs_no_results': 'No signs found',
       'signs_no_results_sub': 'Try adjusting your search or filter',
       'signs_tap_flip': 'Tap to flip',
+      'signs_library_label': 'SIGNS LIBRARY',
+      'signs_stat_explored': 'Explored',
+      'signs_categories_label': 'CATEGORIES',
+      'signs_progress_label': 'Progress',
+      'signs_progress_count': '{viewed} / {total} explored',
+      'signs_learning_vault_title': 'Learning Vault',
+      'signs_learning_vault_subtitle':
+          'Practice and memorize ISL signs faster',
+      'signs_islrtc_resources': 'ISLRTC Resources',
+      'signs_visible_label': 'signs visible',
+      'signs_viewed_badge': 'Viewed',
+      'signs_open_detail': 'Open detail',
+      'signs_tap_to_open': 'Tap to open',
+      'signs_detail_title': 'Sign Details',
+      'signs_detail_subtitle': 'Interactive ISL reference',
+      'signs_detail_meaning': 'Meaning',
+      'signs_detail_how_to_sign': 'How to sign',
+      'signs_practice_title': 'Practice this sign',
+      'signs_practice_subtitle':
+          'Open the Translate screen to practice with live detection',
 
       // ── Signs A-Z
       'sign_a_name': 'Letter A',
@@ -1546,6 +1577,7 @@ class AppLocalizations {
       'home_features_title': 'Everything you need to communicate',
       'home_features_sub':
           'Powerful tools designed for India\'s 63 million deaf and mute community',
+      'home_emergency_sub': 'गंभीर समय में जीवनरक्षक संकेत और एक-टैप SOS।',
       'home_mission_label': 'OUR MISSION',
       'home_trust_deaf_community': 'Deaf Community',
     'home_trust_indian_languages': 'भाषाएँ',
@@ -1553,6 +1585,11 @@ class AppLocalizations {
       'home_trust_powered': 'Powered',
       'home_tag_life_saving_signs': 'Life-saving signs',
       'home_tag_one_tap_sos': 'One-tap SOS',
+    'home_back_to_top': 'ऊपर वापस जाएँ',
+      'home_footer_project_line':
+          'अंतिम वर्ष परियोजना · कंप्यूटर इंजीनियरिंग · 2025-26',
+      'home_footer_stack_line': 'Python, FastAPI, Flutter, AI के साथ निर्मित',
+      'home_footer_built_for_india': 'भारत के लिए निर्मित',
 
       'assistant_ai_powered_isl': 'AI-Powered ISL Assistant',
       'assistant_supports_10_languages': 'Supports 10 Indian Languages',
@@ -1562,6 +1599,8 @@ class AppLocalizations {
           'Sign HELP: Extend both hands flat,\npalms facing up, raise upward twice.',
       'assistant_mock_chip_help': 'HELP',
       'assistant_mock_chip_emergency': 'EMERGENCY',
+    'assistant_mute': 'म्यूट',
+    'assistant_unmute': 'अनम्यूट',
 
       'sos_sms_general_template':
           'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
@@ -1649,11 +1688,13 @@ class AppLocalizations {
       'auth_create_account': 'खाता बनाएं',
       'auth_footer_tagline':
           'सटीकता के लिए बनाया गया। गरिमा के लिए डिज़ाइन किया गया।',
+      'auth_footer_community': 'भारत के बधिर और मूक समुदाय को सशक्त बनाना',
       'auth_login_or_signup': 'लॉगिन या साइन अप करें',
       'auth_welcome_back': 'वापसी पर स्वागत है!',
       'auth_account_created': 'खाता बन गया!',
 
       'translate_screen_title': 'सांकेतिक भाषा अनुवादक',
+    'translate_loader_tagline': 'सांकेतिक भाषा · रियल-टाइम AI',
       'translate_loader_camera': 'कैमरा मॉड्यूल लोड हो रहे हैं...',
       'translate_loader_ai': 'AI इंजन प्रारंभ हो रहा है...',
       'translate_loader_calibrate': 'जेस्चर मॉडल कैलिब्रेट हो रहा है...',
@@ -1897,6 +1938,26 @@ class AppLocalizations {
       'signs_no_results': 'कोई संकेत नहीं मिला',
       'signs_no_results_sub': 'खोज बदलकर प्रयास करें',
       'signs_tap_flip': 'पलटने के लिए टैप करें',
+      'signs_library_label': 'संकेत पुस्तकालय',
+      'signs_stat_explored': 'देखे गए',
+      'signs_categories_label': 'श्रेणियां',
+      'signs_progress_label': 'प्रगति',
+      'signs_progress_count': '{viewed} / {total} देखे गए',
+      'signs_learning_vault_title': 'लर्निंग वॉल्ट',
+      'signs_learning_vault_subtitle':
+          'ISL संकेतों का अभ्यास करें और तेजी से याद करें',
+      'signs_islrtc_resources': 'ISLRTC संसाधन',
+      'signs_visible_label': 'दिख रहे संकेत',
+      'signs_viewed_badge': 'देखा गया',
+      'signs_open_detail': 'विवरण खोलें',
+      'signs_tap_to_open': 'खोलने के लिए टैप करें',
+      'signs_detail_title': 'संकेत विवरण',
+      'signs_detail_subtitle': 'इंटरैक्टिव ISL संदर्भ',
+      'signs_detail_meaning': 'अर्थ',
+      'signs_detail_how_to_sign': 'संकेत कैसे करें',
+      'signs_practice_title': 'इस संकेत का अभ्यास करें',
+      'signs_practice_subtitle':
+          'लाइव पहचान के साथ अभ्यास के लिए ट्रांसलेट स्क्रीन खोलें',
 
       'sign_a_name': 'अक्षर A',
       'sign_a_meaning': 'अक्षर A',
@@ -2615,6 +2676,8 @@ class AppLocalizations {
       'home_features_title': 'Everything you need to communicate',
       'home_features_sub':
           'Powerful tools designed for India\'s 63 million deaf and mute community',
+      'home_emergency_sub':
+          'गंभीर क्षणी जीव वाचवणाऱ्या खुणा आणि वन-टॅप SOS.',
       'home_mission_label': 'OUR MISSION',
       'home_trust_deaf_community': 'Deaf Community',
     'home_trust_indian_languages': 'भाषा',
@@ -2622,6 +2685,11 @@ class AppLocalizations {
       'home_trust_powered': 'Powered',
       'home_tag_life_saving_signs': 'Life-saving signs',
       'home_tag_one_tap_sos': 'One-tap SOS',
+    'home_back_to_top': 'वर जा',
+      'home_footer_project_line':
+          'अंतिम वर्ष प्रकल्प · संगणक अभियांत्रिकी · 2025-26',
+      'home_footer_stack_line': 'Python, FastAPI, Flutter, AI सह तयार',
+      'home_footer_built_for_india': 'भारतातील लोकांसाठी तयार',
 
       'assistant_ai_powered_isl': 'AI-Powered ISL Assistant',
       'assistant_supports_10_languages': 'Supports 10 Indian Languages',
@@ -2631,6 +2699,8 @@ class AppLocalizations {
           'Sign HELP: Extend both hands flat,\npalms facing up, raise upward twice.',
       'assistant_mock_chip_help': 'HELP',
       'assistant_mock_chip_emergency': 'EMERGENCY',
+    'assistant_mute': 'म्यूट',
+    'assistant_unmute': 'अनम्यूट',
 
       'sos_sms_general_template':
           'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
@@ -2717,11 +2787,14 @@ class AppLocalizations {
       'auth_sign_in': 'साइन इन',
       'auth_create_account': 'खाते तयार करा',
       'auth_footer_tagline': 'अचूकतेसाठी बनवलेले. सन्मानासाठी डिझाइन केलेले.',
+      'auth_footer_community':
+          'भारताच्या बहिऱ्या आणि मूक समुदायाला सक्षम बनवणे',
       'auth_login_or_signup': 'लॉगिन किंवा साइन अप करा',
       'auth_welcome_back': 'परत स्वागत आहे!',
       'auth_account_created': 'खाते तयार झाले!',
 
       'translate_screen_title': 'सांकेतिक भाषा अनुवादक',
+    'translate_loader_tagline': 'सांकेतिक भाषा · रिअल-टाइम AI',
       'translate_loader_camera': 'कॅमेरा मॉड्यूल लोड होत आहेत...',
       'translate_loader_ai': 'AI इंजिन सुरू होत आहे...',
       'translate_loader_calibrate': 'जेश्चर मॉडेल कॅलिब्रेट होत आहे...',
@@ -2961,6 +3034,26 @@ class AppLocalizations {
       'signs_no_results': 'खुणा आढळल्या नाहीत',
       'signs_no_results_sub': 'शोध बदलून प्रयत्न करा',
       'signs_tap_flip': 'फ्लिप करण्यासाठी टॅप करा',
+      'signs_library_label': 'खुणा ग्रंथालय',
+      'signs_stat_explored': 'पाहिलेल्या',
+      'signs_categories_label': 'श्रेणी',
+      'signs_progress_label': 'प्रगती',
+      'signs_progress_count': '{viewed} / {total} पाहिलेल्या',
+      'signs_learning_vault_title': 'लर्निंग व्हॉल्ट',
+      'signs_learning_vault_subtitle':
+          'ISL खुणांचा सराव करा आणि पटकन लक्षात ठेवा',
+      'signs_islrtc_resources': 'ISLRTC संसाधने',
+      'signs_visible_label': 'दिसणाऱ्या खुणा',
+      'signs_viewed_badge': 'पाहिले',
+      'signs_open_detail': 'तपशील उघडा',
+      'signs_tap_to_open': 'उघडण्यासाठी टॅप करा',
+      'signs_detail_title': 'खूण तपशील',
+      'signs_detail_subtitle': 'परस्परसंवादी ISL संदर्भ',
+      'signs_detail_meaning': 'अर्थ',
+      'signs_detail_how_to_sign': 'खूण कशी करावी',
+      'signs_practice_title': 'या खुणेचा सराव करा',
+      'signs_practice_subtitle':
+          'लाईव्ह ओळखीसह सरावासाठी ट्रान्सलेट स्क्रीन उघडा',
 
       'sign_a_name': 'अक्षर A',
       'sign_a_meaning': 'अक्षर A',
