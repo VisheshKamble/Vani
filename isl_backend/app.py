@@ -9,6 +9,7 @@ import time
 import logging
 from collections import deque
 from urllib.request import urlopen
+import gdown
 from ultralytics import YOLO
 
 # ─────────────────────────────────────────────
@@ -54,6 +55,7 @@ os.makedirs("model", exist_ok=True)
 MODEL_PATH = os.path.join("model", "isl_best.pt")
 # Direct ID from your link
 FILE_ID = "1TcCNyM1MtbixlN3wZgFttOlvuJutTPqB"
+MIN_MODEL_BYTES = 10_000_000
 
 
 def _download_model(url: str, destination: str) -> None:
@@ -64,10 +66,28 @@ def _download_model(url: str, destination: str) -> None:
                 break
             target.write(chunk)
 
+
+def _download_model_from_drive(file_id: str, destination: str) -> None:
+    url = f"https://drive.google.com/uc?id={file_id}"
+
+    # Primary path: gdown handles Drive confirmation pages and redirects.
+    try:
+        gdown.download(url, destination, quiet=False, fuzzy=True)
+        return
+    except Exception as e:
+        log.warning(f"gdown download failed, trying urllib fallback: {e}")
+
+    # Fallback path for environments where gdown has transient issues.
+    _download_model(url, destination)
+
+
+def _is_model_file_valid(path: str) -> bool:
+    return os.path.exists(path) and os.path.getsize(path) >= MIN_MODEL_BYTES
+
 def initialize_model():
     """Downloads model if missing/corrupt and loads into memory."""
     # 1. Clean up old/failed downloads (HTML error pages are usually < 1MB)
-    if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) < 1_000_000:
+    if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) < MIN_MODEL_BYTES:
         log.info("🗑️ Deleting corrupted model file (size too small)...")
         os.remove(MODEL_PATH)
 
@@ -75,8 +95,13 @@ def initialize_model():
     if not os.path.exists(MODEL_PATH):
         try:
             log.info(f"📥 Downloading model ID: {FILE_ID}")
-            url = f"https://drive.google.com/uc?id={FILE_ID}"
-            _download_model(url, MODEL_PATH)
+            _download_model_from_drive(FILE_ID, MODEL_PATH)
+
+            if not _is_model_file_valid(MODEL_PATH):
+                raise RuntimeError(
+                    f"Downloaded file appears invalid (size={os.path.getsize(MODEL_PATH)} bytes)."
+                )
+
             log.info("✅ Download complete!")
         except Exception as e:
             log.error(f"❌ Download failed: {e}")
