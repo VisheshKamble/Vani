@@ -25,7 +25,7 @@ import '../screens/TranslateScreen.dart';
 import '../screens/Signspage.dart';
 import '../screens/EmergencyScreen.dart';
 import '../screens/TwoWayScreen.dart';
-import '../screens/ISLAssistantScreen.dart';
+import '../screens/Islassistantscreen.dart';
 import '../l10n/AppLocalizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';

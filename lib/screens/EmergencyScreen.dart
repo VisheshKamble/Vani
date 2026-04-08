@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../components/GlobalNavbar.dart';
 import '../services/EmergencyService.dart';
-import '../utils/PlatformHelper.dart';
+import '../Utils/PlatformHelper.dart';
 import '../l10n/AppLocalizations.dart';
 import 'EmergencySetupScreen.dart';
 import 'package:hive_flutter/hive_flutter.dart';

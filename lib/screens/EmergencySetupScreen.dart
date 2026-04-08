@@ -13,7 +13,7 @@ import '../components/GlobalNavbar.dart';
 import '../l10n/AppLocalizations.dart';
 import '../models/EmergencyContact.dart';
 import '../services/EmergencyService.dart';
-import '../utils/PlatformHelper.dart';
+import '../Utils/PlatformHelper.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 //  DESIGN TOKENS — Apple-inspired refined palette
