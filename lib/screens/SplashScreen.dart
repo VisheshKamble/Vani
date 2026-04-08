@@ -2,7 +2,7 @@
 //
 // ╔══════════════════════════════════════════════════════════╗
 // ║  VANI — Splash Screen  · Apple-Inspired Premium UI     ║
-// ║  Font: Google Sans (SF Pro equivalent)                 ║
+// ║  Font: Plus Jakarta Sans                               ║
 // ║                                                        ║
 // ║  PHILOSOPHY                                            ║
 // ║  Pure white canvas. Surgical timing. No noise.        ║
@@ -40,7 +40,7 @@ const _label2 = Color(0x993C3C43);   // iOS secondary label
 
 TextStyle _t(double size, FontWeight w, Color c,
     {double ls = 0, double? h}) =>
-    TextStyle(fontFamily: 'Google Sans',
+  TextStyle(fontFamily: 'Plus Jakarta Sans',
         fontSize: size, fontWeight: w, color: c,
         letterSpacing: ls, height: h);
 
@@ -168,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       Navigator.of(context).pushReplacement(PageRouteBuilder(
         transitionDuration: Duration.zero,
-        pageBuilder: (_, __, ___) => _PostSplashGate(
+        pageBuilder: (_, _, _) => _PostSplashGate(
             toggleTheme: widget.toggleTheme, setLocale: widget.setLocale),
       ));
     } catch (e) {
@@ -205,7 +205,7 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: _white,
       body: AnimatedBuilder(
         animation: Listenable.merge([_iconCtrl, _textCtrl, _exitCtrl]),
-        builder: (_, __) => FadeTransition(
+        builder: (_, _) => FadeTransition(
           opacity: _exitFade,
           child: SafeArea(
             child: Center(
@@ -298,7 +298,7 @@ class _AppIconPainter extends CustomPainter {
           Rect.fromLTWH(0, 3, w, h),
           Radius.circular(iconRadius)),
       Paint()
-        ..color = Colors.black.withValues(alpha: 0.08)
+        ..color = Colors.black.withOpacity(0.08)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
     );
 
@@ -309,7 +309,7 @@ class _AppIconPainter extends CustomPainter {
     // Subtle border
     canvas.drawRRect(iconRRect,
         Paint()
-          ..color = Colors.black.withValues(alpha: 0.06)
+          ..color = Colors.black.withOpacity(0.06)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 0.5);
 
@@ -321,7 +321,7 @@ class _AppIconPainter extends CustomPainter {
       // Track (ghost ring)
       canvas.drawCircle(Offset(cx, cy), arcR,
           Paint()
-            ..color = _blue.withValues(alpha: 0.07)
+            ..color = _blue.withOpacity(0.07)
             ..strokeWidth = 3.0
             ..style = PaintingStyle.stroke);
 
@@ -361,7 +361,7 @@ class _AppIconPainter extends CustomPainter {
       canvas.scale(handScale * 0.52);
       canvas.translate(-cx, -cy);
 
-      final handColor = _blue.withValues(alpha: handOpacity * 0.90);
+      final handColor = _blue.withOpacity(handOpacity * 0.90);
 
       // Palm
       canvas.drawRRect(
@@ -387,7 +387,7 @@ class _AppIconPainter extends CustomPainter {
           RRect.fromRectAndRadius(
               Rect.fromLTWH(cx + f.$1 - 3.5, cy - fH - 1, 7, fH + 1),
               const Radius.circular(3.5)),
-          Paint()..color = _blue.withValues(alpha: handOpacity * fp * 0.90),
+          Paint()..color = _blue.withOpacity(handOpacity * fp * 0.90),
         );
       }
 

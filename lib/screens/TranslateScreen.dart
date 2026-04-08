@@ -2,7 +2,7 @@
 //
 // ╔══════════════════════════════════════════════════════════════════════╗
 // ║  VANI — Translate Screen  · UX4G Redesign                         ║
-// ║  Font: Google Sans (UX4G standard)                                ║
+// ║  Font: Plus Jakarta Sans (UX4G standard)                                ║
 // ║                                                                    ║
 // ║  ALL functional logic preserved exactly:                           ║
 // ║  • SentenceBuilder (25 model words, all patterns)                 ║
@@ -34,7 +34,7 @@ import '../services/backend_config.dart';
 // ─────────────────────────────────────────────────────────────────────
 //  UX4G DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────────────
-const _fontFamily = 'Google Sans';
+const _fontFamily = 'Plus Jakarta Sans';
 
 const _primary = Color(0xFF1A56DB);
 const _primaryDark = Color(0xFF4A8EFF);
@@ -100,7 +100,7 @@ TextStyle _display(double size, Color c) => TextStyle(
   letterSpacing: -0.5,
 );
 
-TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w700}) =>
     TextStyle(
       fontFamily: _fontFamily,
       fontSize: size,
@@ -1210,7 +1210,7 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
                           TextSpan(
                             text: (_step + 1).toString().padLeft(2, '0'),
                             style: TextStyle(
-                              fontFamily: 'Google Sans',
+                              fontFamily: 'Plus Jakarta Sans',
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: accent,
@@ -1220,7 +1220,7 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
                             text:
                                 ' / ${_steps.length.toString().padLeft(2, '0')}',
                             style: TextStyle(
-                              fontFamily: 'Google Sans',
+                              fontFamily: 'Plus Jakarta Sans',
                               fontSize: 15,
                               fontWeight: FontWeight.w400,
                               color: mutedClr,
@@ -1240,7 +1240,7 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
                         child: Text(
                           l.t('translate_skip_tutorial'),
                           style: TextStyle(
-                            fontFamily: 'Google Sans',
+                            fontFamily: 'Plus Jakarta Sans',
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: mutedClr,
@@ -1275,7 +1275,7 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
                           key: ValueKey('title_$_step'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Google Sans',
+                            fontFamily: 'Plus Jakarta Sans',
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
                             color: textClr,
@@ -1292,7 +1292,7 @@ class _OnboardingFlowState extends State<_OnboardingFlow>
                           key: ValueKey('body_$_step'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Google Sans',
+                            fontFamily: 'Plus Jakarta Sans',
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                             color: subClr,
@@ -1691,7 +1691,7 @@ class _PillButtonState extends State<_PillButton> {
               Text(
                 widget.label,
                 style: const TextStyle(
-                  fontFamily: 'Google Sans',
+                  fontFamily: 'Plus Jakarta Sans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -2830,7 +2830,7 @@ class _TranslateScreenState extends State<TranslateScreen>
   Widget build(BuildContext context) {
     final d = Theme.of(context).brightness == Brightness.dark;
     final w = MediaQuery.of(context).size.width;
-    final mob = w < 700;
+    final mob = !kIsWeb && w < 700;
 
     if (!_onboardingDone) {
       return _OnboardingFlow(
@@ -2963,6 +2963,8 @@ class _TranslateScreenState extends State<TranslateScreen>
   //  WEB — card layout with GlobalNavbar
   // ════════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext context, bool d, bool wide) {
+    final compactWeb = MediaQuery.of(context).size.width < 700;
+    final horizontalPad = compactWeb ? _sp12 : _sp24;
     return Scaffold(
       backgroundColor: d ? _dBg : _lBg,
       body: Stack(
@@ -2990,10 +2992,10 @@ class _TranslateScreenState extends State<TranslateScreen>
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(
-                      _sp24,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPad,
                       _sp16,
-                      _sp24,
+                      horizontalPad,
                       _sp32,
                     ),
                     child: wide ? _webWide(d) : _webNarrow(d),
@@ -3064,7 +3066,7 @@ class _TranslateScreenState extends State<TranslateScreen>
                   children: [
                     Text(
                       l.t('translate_vision_title'),
-                      style: _heading(15, textClr),
+                      style: _heading(15, textClr, w: FontWeight.w800),
                     ),
                     Text(l.t('translate_vision_sub'), style: _body(12, subClr)),
                   ],
@@ -3183,7 +3185,7 @@ class _TranslateScreenState extends State<TranslateScreen>
               Expanded(
                 child: Text(
                   l.t('translate_prediction'),
-                  style: _heading(14, textClr),
+                  style: _heading(14, textClr, w: FontWeight.w800),
                 ),
               ),
               _LangDropdownWeb(
@@ -3318,7 +3320,7 @@ class _TranslateScreenState extends State<TranslateScreen>
                   children: [
                     Text(
                       l.t('translate_sentence_builder'),
-                      style: _heading(14, textClr),
+                      style: _heading(14, textClr, w: FontWeight.w800),
                     ),
                     Text(
                       l.t('translate_auto_chain_subtitle'),
@@ -3607,7 +3609,7 @@ class _TranslateScreenState extends State<TranslateScreen>
               const SizedBox(width: _sp12),
               Text(
                 l.t('translate_transcription'),
-                style: _heading(14, textClr),
+                style: _heading(14, textClr, w: FontWeight.w800),
               ),
             ],
           ),

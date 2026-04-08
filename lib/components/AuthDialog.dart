@@ -16,9 +16,9 @@ import '../services/EmergencyService.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/EmergencyContact.dart';
 
-const _fontFamily = 'Google Sans';
+const _fontFamily = 'Plus Jakarta Sans';
 
-TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w700}) =>
     TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w,
         color: c, height: 1.3, letterSpacing: -0.2);
 
@@ -595,7 +595,7 @@ class _VaniAuthCardState extends State<VaniAuthCard>
                             color: _kBrandBlue,
                             borderRadius: BorderRadius.circular(2))),
                     const SizedBox(width: _sp8),
-                    Text('VANI',
+                    Text(l.t('app_name_short'),
                         style: _label(15, _kBrandBlue, w: FontWeight.w900)
                             .copyWith(letterSpacing: 3.5)),
                     const Spacer(),
@@ -608,7 +608,7 @@ class _VaniAuthCardState extends State<VaniAuthCard>
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                               color: const Color(0x55C8D2F0), width: 1)),
-                      child: Text('v 0.0.1 · Beta',
+                      child: Text(l.t('version_number'),
                           style: _label(10, textMuted)),
                     ),
                     if (widget.canClose) ...[

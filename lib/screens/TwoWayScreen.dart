@@ -2,7 +2,7 @@
 //
 // ╔══════════════════════════════════════════════════════════════════════╗
 // ║  VANI — Two-Way Bridge Screen  · UX4G Redesign                    ║
-// ║  Font: Google Sans (UX4G standard)                                ║
+// ║  Font: Plus Jakarta Sans (UX4G standard)                                ║
 // ║                                                                    ║
 // ║  FEATURES (production-ready):                                      ║
 // ║  • ISL sign detection via WebSocket (preserved exactly)            ║
@@ -17,7 +17,7 @@
 // ║  • Reconnect with exponential back-off (preserved)                ║
 // ║                                                                    ║
 // ║  UX4G Principles Applied:                                         ║
-// ║  • Google Sans throughout                                          ║
+// ║  • Plus Jakarta Sans throughout                                          ║
 // ║  • Semantic color roles: primary/secondary/success/danger/info    ║
 // ║  • WCAG AA contrast on all text/bg pairs                          ║
 // ║  • Min 48dp touch targets                                         ║
@@ -56,7 +56,7 @@ const int _kSameLabelCooldownMs = 1800;
 // ─────────────────────────────────────────────────────────────────────
 //  UX4G DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────────────
-const _fontFamily = 'Google Sans';
+const _fontFamily = 'Plus Jakarta Sans';
 
 // Primary (blue) — deaf / ISL channel
 const _primary = Color(0xFF1A56DB);
@@ -125,7 +125,7 @@ TextStyle _display(double size, Color c) => TextStyle(
   letterSpacing: -0.5,
 );
 
-TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w700}) =>
     TextStyle(
       fontFamily: _fontFamily,
       fontSize: size,
@@ -277,6 +277,126 @@ const List<_Phrase> _kPhrases = [
   _Phrase(Icons.handshake_outlined, 'phrase_11'),
   _Phrase(Icons.call_outlined, 'phrase_12'),
 ];
+
+const Map<String, Map<String, String>> _kPhraseTextByLang = {
+  'en': {
+    'phrase_1': 'How can I help you today?',
+    'phrase_2': 'Please show me your ID.',
+    'phrase_3': 'Please wait here for a moment.',
+    'phrase_4': 'I understand. Let me assist you.',
+    'phrase_5': 'Can you write it down for me?',
+    'phrase_6': 'Please follow me.',
+    'phrase_7': 'Is this an emergency?',
+    'phrase_8': 'The doctor will see you shortly.',
+    'phrase_9': 'Your appointment is confirmed.',
+    'phrase_10': 'Please take a seat.',
+    'phrase_11': 'Do you need an interpreter?',
+    'phrase_12': 'I will call someone who can help.',
+  },
+  'hi': {
+    'phrase_1': 'आज मैं आपकी कैसे मदद कर सकता/सकती हूँ?',
+    'phrase_2': 'कृपया अपनी पहचान दिखाइए।',
+    'phrase_3': 'कृपया यहाँ थोड़ी देर प्रतीक्षा करें।',
+    'phrase_4': 'मैं समझ गया/गई। मैं आपकी मदद करता/करती हूँ।',
+    'phrase_5': 'क्या आप इसे मेरे लिए लिख सकते हैं?',
+    'phrase_6': 'कृपया मेरे साथ आइए।',
+    'phrase_7': 'क्या यह आपातकाल है?',
+    'phrase_8': 'डॉक्टर आपसे थोड़ी देर में मिलेंगे।',
+    'phrase_9': 'आपकी अपॉइंटमेंट की पुष्टि हो गई है।',
+    'phrase_10': 'कृपया बैठ जाइए।',
+    'phrase_11': 'क्या आपको दुभाषिया चाहिए?',
+    'phrase_12': 'मैं किसी मदद करने वाले को बुलाता/बुलाती हूँ।',
+  },
+  'mr': {
+    'phrase_1': 'आज मी तुमची कशी मदत करू?',
+    'phrase_2': 'कृपया तुमचा ओळखपत्र दाखवा.',
+    'phrase_3': 'कृपया येथे थोडा वेळ थांबा.',
+    'phrase_4': 'मला समजले. मी मदत करतो/करते.',
+    'phrase_5': 'तुम्ही हे माझ्यासाठी लिहू शकता का?',
+    'phrase_6': 'कृपया माझ्या मागे या.',
+    'phrase_7': 'ही आपत्कालीन परिस्थिती आहे का?',
+    'phrase_8': 'डॉक्टर लवकरच तुम्हाला भेटतील.',
+    'phrase_9': 'तुमची अपॉइंटमेंट निश्चित झाली आहे.',
+    'phrase_10': 'कृपया बसा.',
+    'phrase_11': 'तुम्हाला दुभाष्याची गरज आहे का?',
+    'phrase_12': 'मी मदत करू शकणाऱ्या व्यक्तीला बोलावतो/बोलावते.',
+  },
+  'gu': {
+    'phrase_1': 'આજે હું તમારી કેવી રીતે મદદ કરી શકું?',
+    'phrase_2': 'કૃપા કરીને તમારું ઓળખપત્ર બતાવો.',
+    'phrase_3': 'કૃપા કરીને અહીં થોડી વાર રાહ જુઓ.',
+    'phrase_4': 'હું સમજી ગયો/ગઈ. હું મદદ કરું છું.',
+    'phrase_5': 'તમે આ મને લખીને આપી શકો?',
+    'phrase_6': 'કૃપા કરીને મારા સાથે આવો.',
+    'phrase_7': 'શું આ ઇમરજન્સી છે?',
+    'phrase_8': 'ડોક્ટર ટૂંક સમયમાં તમને મળશે.',
+    'phrase_9': 'તમારી એપોઇન્ટમેન્ટ કન્ફર્મ થઈ ગઈ છે.',
+    'phrase_10': 'કૃપા કરીને બેસો.',
+    'phrase_11': 'શું તમને દોભાષિયા જોઈએ?',
+    'phrase_12': 'હું મદદ કરી શકે એવી વ્યક્તિને બોલાવું છું.',
+  },
+  'ta': {
+    'phrase_1': 'இன்று நான் எப்படி உதவலாம்?',
+    'phrase_2': 'தயவுசெய்து உங்கள் அடையாள அட்டையை காட்டுங்கள்.',
+    'phrase_3': 'தயவுசெய்து இங்கே சிறிது நேரம் காத்திருக்கவும்.',
+    'phrase_4': 'எனக்கு புரிகிறது. நான் உதவுகிறேன்.',
+    'phrase_5': 'இதை எனக்காக எழுத முடியுமா?',
+    'phrase_6': 'தயவுசெய்து என்னுடன் வாருங்கள்.',
+    'phrase_7': 'இது அவசர நிலைமையா?',
+    'phrase_8': 'மருத்துவர் விரைவில் உங்களை பார்ப்பார்.',
+    'phrase_9': 'உங்கள் நேர்முகம் உறுதிசெய்யப்பட்டது.',
+    'phrase_10': 'தயவுசெய்து உட்காருங்கள்.',
+    'phrase_11': 'உங்களுக்கு மொழிபெயர்ப்பாளர் தேவையா?',
+    'phrase_12': 'உதவக்கூடிய ஒருவரை நான் அழைக்கிறேன்.',
+  },
+  'te': {
+    'phrase_1': 'ఈరోజు నేను మీకు ఎలా సహాయం చేయగలను?',
+    'phrase_2': 'దయచేసి మీ ఐడీ చూపించండి.',
+    'phrase_3': 'దయచేసి ఇక్కడ కాసేపు వేచి ఉండండి.',
+    'phrase_4': 'నాకు అర్థమైంది. నేను సహాయం చేస్తాను.',
+    'phrase_5': 'దాన్ని నాకు రాసి చూపించగలరా?',
+    'phrase_6': 'దయచేసి నా వెంట రండి.',
+    'phrase_7': 'ఇది అత్యవసర పరిస్థితినా?',
+    'phrase_8': 'డాక్టర్ త్వరలో మిమ్మల్ని కలుస్తారు.',
+    'phrase_9': 'మీ అపాయింట్‌మెంట్ నిర్ధారించబడింది.',
+    'phrase_10': 'దయచేసి కూర్చోండి.',
+    'phrase_11': 'మీకు అనువాదకుడు కావాలా?',
+    'phrase_12': 'సహాయం చేయగల వ్యక్తిని నేను పిలుస్తాను.',
+  },
+  'kn': {
+    'phrase_1': 'ಇಂದು ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?',
+    'phrase_2': 'ದಯವಿಟ್ಟು ನಿಮ್ಮ ಗುರುತಿನ ಚೀಟಿ ತೋರಿಸಿ.',
+    'phrase_3': 'ದಯವಿಟ್ಟು ಇಲ್ಲಿ ಸ್ವಲ್ಪ ಹೊತ್ತು ಕಾಯಿರಿ.',
+    'phrase_4': 'ನನಗೆ ಅರ್ಥವಾಗಿದೆ. ನಾನು ಸಹಾಯ ಮಾಡುತ್ತೇನೆ.',
+    'phrase_5': 'ಇದನ್ನು ನನಗಾಗಿ ಬರೆಯಬಹುದೇ?',
+    'phrase_6': 'ದಯವಿಟ್ಟು ನನ್ನ ಜೊತೆ ಬನ್ನಿ.',
+    'phrase_7': 'ಇದು ತುರ್ತು ಪರಿಸ್ಥಿತಿಯೇ?',
+    'phrase_8': 'ಡಾಕ್ಟರ್ ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮನ್ನು ನೋಡುತ್ತಾರೆ.',
+    'phrase_9': 'ನಿಮ್ಮ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ದೃಢವಾಗಿದೆ.',
+    'phrase_10': 'ದಯವಿಟ್ಟು ಕುಳಿತುಕೊಳ್ಳಿ.',
+    'phrase_11': 'ನಿಮಗೆ ಭಾಷಾಂತರಕಾರರ ಅಗತ್ಯವಿದೆಯೇ?',
+    'phrase_12': 'ಸಹಾಯ ಮಾಡಬಲ್ಲವರನ್ನು ನಾನು ಕರೆಸುತ್ತೇನೆ.',
+  },
+  'bn': {
+    'phrase_1': 'আজ আমি কীভাবে আপনাকে সাহায্য করতে পারি?',
+    'phrase_2': 'দয়া করে আপনার পরিচয়পত্র দেখান।',
+    'phrase_3': 'দয়া করে এখানে কিছুক্ষণ অপেক্ষা করুন।',
+    'phrase_4': 'আমি বুঝেছি। আমি সাহায্য করছি।',
+    'phrase_5': 'আপনি কি এটা লিখে দিতে পারবেন?',
+    'phrase_6': 'দয়া করে আমার সাথে আসুন।',
+    'phrase_7': 'এটা কি জরুরি অবস্থা?',
+    'phrase_8': 'ডাক্তার শীঘ্রই আপনাকে দেখবেন।',
+    'phrase_9': 'আপনার অ্যাপয়েন্টমেন্ট নিশ্চিত হয়েছে।',
+    'phrase_10': 'দয়া করে বসুন।',
+    'phrase_11': 'আপনার কি একজন দোভাষী দরকার?',
+    'phrase_12': 'আমি এমন কাউকে ডাকছি যিনি সাহায্য করতে পারবেন।',
+  },
+};
+
+String _phraseText(String langCode, String key, AppLocalizations l) {
+  final text = _kPhraseTextByLang[langCode]?[key];
+  return text ?? l.t(key);
+}
 
 // ══════════════════════════════════════════════════════════════════════
 //  TWO WAY SCREEN
@@ -754,34 +874,39 @@ class _TwoWayScreenState extends State<TwoWayScreen>
     final w = size.width;
     final isDesktop = w > 1100;
     final isTablet = w >= 700 && w <= 1100;
-    final isMobile = w < 700;
+    final isMobile = !kIsWeb && w < 700;
 
     return Scaffold(
       backgroundColor: isMobile ? Colors.black : (isDark ? _dBg : _lBg),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _entryFade,
-          child: SlideTransition(
-            position: _entrySlide,
-            child: Column(
-              children: [
-                if (!isMobile)
-                  GlobalNavbar(
-                    toggleTheme: widget.toggleTheme,
-                    setLocale: widget.setLocale,
-                    activeRoute: 'bridge',
-                  ),
-                Expanded(
-                  child: isMobile
-                      ? _buildMobileShell(context, isDark, size)
-                      : isDesktop
-                      ? _desktopLayout(context, isDark, size)
-                      : _tabletLayout(context, isDark, size),
+        child: Stack(
+          children: [
+            if (!isMobile) Positioned.fill(child: _WebBridgeBackdrop(isDark: isDark)),
+            FadeTransition(
+              opacity: _entryFade,
+              child: SlideTransition(
+                position: _entrySlide,
+                child: Column(
+                  children: [
+                    if (!isMobile)
+                      GlobalNavbar(
+                        toggleTheme: widget.toggleTheme,
+                        setLocale: widget.setLocale,
+                        activeRoute: 'bridge',
+                      ),
+                    Expanded(
+                      child: isMobile
+                          ? _buildMobileShell(context, isDark, size)
+                          : isDesktop
+                          ? _desktopLayout(context, isDark, size)
+                          : _tabletLayout(context, isDark, size),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -791,42 +916,63 @@ class _TwoWayScreenState extends State<TwoWayScreen>
   //  DESKTOP LAYOUT
   // ══════════════════════════════════════════════════════════════════
   Widget _desktopLayout(BuildContext ctx, bool isDark, Size size) {
+    final wide = size.width > 1500;
+    final hPad = wide ? 28.0 : 16.0;
+    final railWidth = wide ? 260.0 : 220.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_sp24, 0, _sp24, _sp16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left — ISL camera panel
-          Expanded(
-            flex: 4,
-            child: Column(
-              children: [
-                _deafPanelHeader(isDark),
-                const SizedBox(height: _sp12),
-                Expanded(child: _cameraPanel(isDark)),
-                const SizedBox(height: _sp12),
-                _signStatusBar(isDark),
-              ],
-            ),
+      padding: EdgeInsets.fromLTRB(hPad, 0, hPad, _sp16),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1520),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 4,
+                child: _WebBridgePanel(
+                  isDark: isDark,
+                  accent: isDark ? _violetLight : _violet,
+                  child: Column(
+                    children: [
+                      _deafPanelHeader(isDark),
+                      const SizedBox(height: _sp12),
+                      Expanded(child: _cameraPanel(isDark)),
+                      const SizedBox(height: _sp12),
+                      _signStatusBar(isDark),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: _sp16),
+              Expanded(
+                flex: 5,
+                child: _WebBridgePanel(
+                  isDark: isDark,
+                  accent: isDark ? _secondaryDark : _secondary,
+                  child: Column(
+                    children: [
+                      _conversationHeader(isDark),
+                      const SizedBox(height: _sp12),
+                      Expanded(child: _messageThread(isDark)),
+                      const SizedBox(height: _sp12),
+                      _hearingInputBar(isDark),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: _sp16),
+              SizedBox(
+                width: railWidth,
+                child: _WebBridgePanel(
+                  isDark: isDark,
+                  accent: isDark ? _infoDark : _info,
+                  child: _phrasesColumn(isDark),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: _sp16),
-          // Centre — conversation
-          Expanded(
-            flex: 5,
-            child: Column(
-              children: [
-                _conversationHeader(isDark),
-                const SizedBox(height: _sp12),
-                Expanded(child: _messageThread(isDark)),
-                const SizedBox(height: _sp12),
-                _hearingInputBar(isDark),
-              ],
-            ),
-          ),
-          const SizedBox(width: _sp16),
-          // Right — phrases + controls
-          SizedBox(width: 200, child: _phrasesColumn(isDark)),
-        ],
+        ),
       ),
     );
   }
@@ -835,34 +981,43 @@ class _TwoWayScreenState extends State<TwoWayScreen>
   //  TABLET LAYOUT
   // ══════════════════════════════════════════════════════════════════
   Widget _tabletLayout(BuildContext ctx, bool isDark, Size size) {
+    final compact = size.width < 860;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_sp16, 0, _sp16, _sp16),
+      padding: EdgeInsets.fromLTRB(compact ? _sp12 : _sp16, 0, compact ? _sp12 : _sp16, _sp16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             flex: 5,
-            child: Column(
-              children: [
-                _deafPanelHeader(isDark),
-                const SizedBox(height: _sp12),
-                Expanded(child: _cameraPanel(isDark)),
-                const SizedBox(height: _sp12),
-                _signStatusBar(isDark),
-              ],
+            child: _WebBridgePanel(
+              isDark: isDark,
+              accent: isDark ? _violetLight : _violet,
+              child: Column(
+                children: [
+                  _deafPanelHeader(isDark),
+                  const SizedBox(height: _sp12),
+                  Expanded(child: _cameraPanel(isDark)),
+                  const SizedBox(height: _sp12),
+                  _signStatusBar(isDark),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: _sp16),
+          SizedBox(width: compact ? _sp12 : _sp16),
           Expanded(
             flex: 6,
-            child: Column(
-              children: [
-                _conversationHeader(isDark),
-                const SizedBox(height: _sp12),
-                Expanded(child: _messageThread(isDark)),
-                const SizedBox(height: _sp12),
-                _hearingInputBar(isDark),
-              ],
+            child: _WebBridgePanel(
+              isDark: isDark,
+              accent: isDark ? _secondaryDark : _secondary,
+              child: Column(
+                children: [
+                  _conversationHeader(isDark),
+                  const SizedBox(height: _sp12),
+                  Expanded(child: _messageThread(isDark)),
+                  const SizedBox(height: _sp12),
+                  _hearingInputBar(isDark),
+                ],
+              ),
             ),
           ),
         ],
@@ -1773,7 +1928,7 @@ class _TwoWayScreenState extends State<TwoWayScreen>
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
                   onTap: () {
-                    final text = l.t(p.key);
+                    final text = _phraseText(_selectedLangCode, p.key, l);
                     _addMessage(text, _Sender.hearing);
                     if (_autoSpeak) _speak(text);
                   },
@@ -1795,7 +1950,7 @@ class _TwoWayScreenState extends State<TwoWayScreen>
                         const SizedBox(width: _sp8),
                         Expanded(
                           child: Text(
-                            l.t(p.key),
+                            _phraseText(_selectedLangCode, p.key, l),
                             style: _body(11, subClr),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -1873,7 +2028,7 @@ class _TwoWayScreenState extends State<TwoWayScreen>
                   itemCount: _kPhrases.length,
                   itemBuilder: (_, i) {
                     final p = _kPhrases[i];
-                    final text = l.t(p.key);
+                    final text = _phraseText(_selectedLangCode, p.key, l);
                     return Semantics(
                       label: text,
                       button: true,
@@ -1922,6 +2077,133 @@ class _TwoWayScreenState extends State<TwoWayScreen>
               SizedBox(height: MediaQuery.of(ctx).viewInsets.bottom + _sp16),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WebBridgeBackdrop extends StatelessWidget {
+  final bool isDark;
+  const _WebBridgeBackdrop({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final blue = isDark ? _primaryDark : _primary;
+    final teal = isDark ? _secondaryDark : _secondary;
+    final violet = isDark ? _violetLight : _violet;
+
+    return Stack(
+      children: [
+        Positioned(
+          top: -220,
+          left: -180,
+          child: _AmbientOrb(color: blue.withOpacity(isDark ? 0.18 : 0.12), size: 620),
+        ),
+        Positioned(
+          top: 140,
+          right: -140,
+          child: _AmbientOrb(color: violet.withOpacity(isDark ? 0.14 : 0.09), size: 520),
+        ),
+        Positioned(
+          bottom: -160,
+          left: 220,
+          child: _AmbientOrb(color: teal.withOpacity(isDark ? 0.14 : 0.08), size: 560),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isDark
+                      ? [
+                          Colors.white.withOpacity(0.015),
+                          Colors.transparent,
+                          blue.withOpacity(0.025),
+                        ]
+                      : [
+                          blue.withOpacity(0.045),
+                          Colors.transparent,
+                          teal.withOpacity(0.028),
+                        ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WebBridgePanel extends StatelessWidget {
+  final bool isDark;
+  final Color accent;
+  final Widget child;
+  const _WebBridgePanel({
+    required this.isDark,
+    required this.accent,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(_sp12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  _dSurface.withOpacity(0.95),
+                  _dSurface2.withOpacity(0.92),
+                ]
+              : [
+                  _lSurface.withOpacity(0.98),
+                  _lSurface2.withOpacity(0.94),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accent.withOpacity(isDark ? 0.24 : 0.18),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withOpacity(isDark ? 0.12 : 0.08),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.24 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _AmbientOrb extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _AmbientOrb({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [color, Colors.transparent],
+          stops: const [0.0, 1.0],
         ),
       ),
     );
@@ -2418,6 +2700,7 @@ class _MobileBridgePanelState extends State<_MobileBridgePanel> {
                     )
                   : _MobilePhrasesTab(
                       isDark: isDark,
+                      selectedLangCode: widget.selectedLangCode,
                       onPhraseSelected: widget.onPhraseSelected,
                     ),
             ),
@@ -2684,9 +2967,11 @@ class _MobileChatTab extends StatelessWidget {
 // ── Mobile phrases tab ────────────────────────────────────────────────
 class _MobilePhrasesTab extends StatelessWidget {
   final bool isDark;
+  final String selectedLangCode;
   final void Function(String) onPhraseSelected;
   const _MobilePhrasesTab({
     required this.isDark,
+    required this.selectedLangCode,
     required this.onPhraseSelected,
   });
 
@@ -2705,7 +2990,7 @@ class _MobilePhrasesTab extends StatelessWidget {
         itemCount: _kPhrases.length,
         itemBuilder: (_, i) {
           final p = _kPhrases[i];
-          final text = l.t(p.key);
+          final text = _phraseText(selectedLangCode, p.key, l);
           return Semantics(
             label: text,
             button: true,

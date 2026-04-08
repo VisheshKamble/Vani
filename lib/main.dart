@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,13 +25,13 @@ import 'components/AuthDialog.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+const _appFontFamily = 'Plus Jakarta Sans';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
 
-  await SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.immersiveSticky,
-  );
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   // Apple-style: transparent status bar, light icons on dark, dark icons on light
   SystemChrome.setSystemUIOverlayStyle(
@@ -71,10 +72,7 @@ class AppBootstrap {
       );
     }
 
-    await Supabase.initialize(
-      url: _supabaseUrl,
-      anonKey: _supabaseAnonKey,
-    );
+    await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
   }
 }
 
@@ -144,9 +142,6 @@ class _VaniAppState extends State<VaniApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Google Sans — used as Apple SF Pro equivalent
-    const appFont = 'Google Sans';
-
     return MaterialApp(
       onGenerateTitle: (ctx) => AppLocalizations.of(ctx).t('app_title'),
       debugShowCheckedModeBanner: false,
@@ -164,7 +159,7 @@ class _VaniAppState extends State<VaniApp> {
       theme: ThemeData(
         brightness: Brightness.light,
         useMaterial3: true,
-        fontFamily: appFont,
+        fontFamily: _appFontFamily,
         primaryColor: _kAppleBlue,
         scaffoldBackgroundColor: _lBg,
         cardColor: _lSurface,
@@ -183,17 +178,16 @@ class _VaniAppState extends State<VaniApp> {
           surfaceContainer: _lSurface2,
         ),
 
-        textTheme: _buildTextTheme(Brightness.light, appFont),
-        appBarTheme: const AppBarTheme(
+        textTheme: _buildTextTheme(Brightness.light),
+        appBarTheme: AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
-          titleTextStyle: TextStyle(
-            fontFamily: appFont,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: _lLabel,
+          titleTextStyle: _appTextStyle(
+            17,
+            FontWeight.w700,
+            _lLabel,
             letterSpacing: -0.2,
           ),
           iconTheme: IconThemeData(color: _kAppleBlue, size: 22),
@@ -202,11 +196,7 @@ class _VaniAppState extends State<VaniApp> {
           backgroundColor: _lSurface.withValues(alpha: 0.92),
           indicatorColor: _kAppleBlue.withValues(alpha: 0.12),
           labelTextStyle: WidgetStateProperty.all(
-            const TextStyle(
-              fontFamily: appFont,
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-            ),
+            _appTextStyle(10, FontWeight.w500, _lLabel),
           ),
         ),
         pageTransitionsTheme: const PageTransitionsTheme(
@@ -224,7 +214,7 @@ class _VaniAppState extends State<VaniApp> {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         useMaterial3: true,
-        fontFamily: appFont,
+        fontFamily: _appFontFamily,
         primaryColor: _kAppleBlueDark,
         scaffoldBackgroundColor: _dBg,
         cardColor: _dSurface,
@@ -242,17 +232,16 @@ class _VaniAppState extends State<VaniApp> {
           error: _kAppleRed,
           surfaceContainer: _dSurface2,
         ),
-        textTheme: _buildTextTheme(Brightness.dark, appFont),
-        appBarTheme: const AppBarTheme(
+        textTheme: _buildTextTheme(Brightness.dark),
+        appBarTheme: AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
-          titleTextStyle: TextStyle(
-            fontFamily: appFont,
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: _dLabel,
+          titleTextStyle: _appTextStyle(
+            17,
+            FontWeight.w700,
+            _dLabel,
             letterSpacing: -0.2,
           ),
           iconTheme: IconThemeData(color: _kAppleBlueDark, size: 22),
@@ -261,11 +250,7 @@ class _VaniAppState extends State<VaniApp> {
           backgroundColor: _dSurface.withValues(alpha: 0.92),
           indicatorColor: _kAppleBlueDark.withValues(alpha: 0.18),
           labelTextStyle: WidgetStateProperty.all(
-            const TextStyle(
-              fontFamily: appFont,
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-            ),
+            _appTextStyle(10, FontWeight.w500, _dLabel),
           ),
         ),
         pageTransitionsTheme: const PageTransitionsTheme(
@@ -284,99 +269,88 @@ class _VaniAppState extends State<VaniApp> {
     );
   }
 
-  /// Builds a Google Sans text theme mirroring Apple SF Pro scales
-  TextTheme _buildTextTheme(Brightness b, String font) {
+  TextStyle _appTextStyle(
+    double fontSize,
+    FontWeight fontWeight,
+    Color color, {
+    double? letterSpacing,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: _appFontFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
+
+  TextTheme _buildTextTheme(Brightness b) {
     final base = b == Brightness.dark ? _dLabel : _lLabel;
     final muted = b == Brightness.dark
         ? _dLabel2.withValues(alpha: 0.60)
         : _lLabel2.withValues(alpha: 0.60);
     return TextTheme(
-      // Large Title — 34pt, regular
-      displayLarge: TextStyle(
-        fontFamily: font,
-        fontSize: 34,
-        fontWeight: FontWeight.w400,
-        color: base,
+      displayLarge: _appTextStyle(
+        34,
+        FontWeight.w700,
+        base,
         letterSpacing: 0.37,
       ),
-      // Title 1 — 28pt
-      displayMedium: TextStyle(
-        fontFamily: font,
-        fontSize: 28,
-        fontWeight: FontWeight.w400,
-        color: base,
+      displayMedium: _appTextStyle(
+        28,
+        FontWeight.w700,
+        base,
         letterSpacing: 0.36,
       ),
-      // Title 2 — 22pt
-      displaySmall: TextStyle(
-        fontFamily: font,
-        fontSize: 22,
-        fontWeight: FontWeight.w400,
-        color: base,
+      displaySmall: _appTextStyle(
+        22,
+        FontWeight.w700,
+        base,
         letterSpacing: 0.35,
       ),
-      // Title 3 — 20pt
-      headlineLarge: TextStyle(
-        fontFamily: font,
-        fontSize: 20,
-        fontWeight: FontWeight.w400,
-        color: base,
+      headlineLarge: _appTextStyle(
+        20,
+        FontWeight.w700,
+        base,
         letterSpacing: 0.38,
       ),
-      // Headline — 17pt semibold
-      headlineMedium: TextStyle(
-        fontFamily: font,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        color: base,
+      headlineMedium: _appTextStyle(
+        17,
+        FontWeight.w700,
+        base,
         letterSpacing: -0.41,
       ),
-      // Body — 17pt regular
-      bodyLarge: TextStyle(
-        fontFamily: font,
-        fontSize: 17,
-        fontWeight: FontWeight.w400,
-        color: base,
-        letterSpacing: -0.41,
-      ),
-      // Callout — 16pt regular
-      bodyMedium: TextStyle(
-        fontFamily: font,
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: base,
+      bodyLarge: _appTextStyle(17, FontWeight.w400, base, letterSpacing: -0.41),
+      bodyMedium: _appTextStyle(
+        16,
+        FontWeight.w400,
+        base,
         letterSpacing: -0.32,
       ),
-      // Subheadline — 15pt regular
-      bodySmall: TextStyle(
-        fontFamily: font,
-        fontSize: 15,
-        fontWeight: FontWeight.w400,
-        color: muted,
+      bodySmall: _appTextStyle(
+        15,
+        FontWeight.w400,
+        muted,
         letterSpacing: -0.23,
       ),
-      // Footnote — 13pt regular
-      labelLarge: TextStyle(
-        fontFamily: font,
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        color: muted,
+      labelLarge: _appTextStyle(
+        13,
+        FontWeight.w400,
+        muted,
         letterSpacing: -0.08,
       ),
-      // Caption 1 — 12pt regular
-      labelMedium: TextStyle(
-        fontFamily: font,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: muted,
+      labelMedium: _appTextStyle(
+        12,
+        FontWeight.w400,
+        muted,
         letterSpacing: 0.0,
       ),
-      // Caption 2 — 11pt regular
-      labelSmall: TextStyle(
-        fontFamily: font,
-        fontSize: 11,
-        fontWeight: FontWeight.w400,
-        color: muted,
+      labelSmall: _appTextStyle(
+        11,
+        FontWeight.w400,
+        muted,
         letterSpacing: 0.07,
       ),
     );
@@ -401,10 +375,7 @@ class RootShell extends StatefulWidget {
 class _WebEntryGate extends StatefulWidget {
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
-  const _WebEntryGate({
-    required this.toggleTheme,
-    required this.setLocale,
-  });
+  const _WebEntryGate({required this.toggleTheme, required this.setLocale});
 
   @override
   State<_WebEntryGate> createState() => _WebEntryGateState();
@@ -515,4 +486,3 @@ class _RootShellState extends State<RootShell> {
     );
   }
 }
-

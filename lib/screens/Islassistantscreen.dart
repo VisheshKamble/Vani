@@ -2,7 +2,7 @@
 //
 // ╔══════════════════════════════════════════════════════════════════════╗
 // ║  VANI — ISL Assistant Screen  · Premium Redesign v2               ║
-// ║  Font: Google Sans (UX4G standard)                                ║
+// ║  Font: Plus Jakarta Sans (UX4G standard)                                ║
 // ║  Powered by: Gemini 2.0 Flash API                                 ║
 // ║  Languages: 10 Indian Languages                                   ║
 // ╚══════════════════════════════════════════════════════════════════════╝
@@ -10,6 +10,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -21,7 +22,7 @@ import '../l10n/AppLocalizations.dart';
 // ─────────────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────────────
-const _fontFamily = 'Google Sans';
+const _fontFamily = 'Plus Jakarta Sans';
 
 // Brand
 const _primary = Color(0xFF1A56DB);
@@ -84,7 +85,7 @@ TextStyle _display(double size, Color c) => TextStyle(
   letterSpacing: -0.5,
 );
 
-TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w600}) =>
+TextStyle _heading(double size, Color c, {FontWeight w = FontWeight.w700}) =>
     TextStyle(
       fontFamily: _fontFamily,
       fontSize: size,
@@ -195,6 +196,120 @@ const _kQuickPromptKeys = [
   ('isl_quick_7', Icons.volunteer_activism_rounded),
   ('isl_quick_8', Icons.gavel_rounded),
 ];
+
+const Map<String, List<String>> _kQuickPromptTextByLang = {
+  'en': [
+    'Hello, can I help you?',
+    'Show me the sign for thank you.',
+    'How do I sign water?',
+    'I need medical help.',
+    'This is an emergency.',
+    'Teach me basic ISL phrases.',
+    'How can I support Deaf communication?',
+    'What are my accessibility rights?',
+  ],
+  'hi': [
+    'नमस्ते, क्या मैं आपकी मदद कर सकता हूँ?',
+    'मुझे धन्यवाद का संकेत दिखाइए।',
+    'पानी का संकेत कैसे करें?',
+    'मुझे चिकित्सकीय सहायता चाहिए।',
+    'यह आपातकाल है।',
+    'मुझे बुनियादी आईएसएल वाक्य सिखाइए।',
+    'मैं बधिर संचार में कैसे सहयोग करूँ?',
+    'मेरे सुलभता अधिकार क्या हैं?',
+  ],
+  'mr': [
+    'नमस्कार, मी तुमची मदत करू का?',
+    'मला धन्यवादचा साइन दाखवा.',
+    'पाण्याचा साइन कसा करायचा?',
+    'मला वैद्यकीय मदत हवी आहे.',
+    'ही आपत्कालीन स्थिती आहे.',
+    'मला मूलभूत ISL वाक्ये शिकवा.',
+    'बहिऱ्या संवादाला मी कसा पाठिंबा देऊ?',
+    'माझे ऍक्सेसिबिलिटी हक्क कोणते?',
+  ],
+  'bn': [
+    'নমস্কার, আমি কি সাহায্য করতে পারি?',
+    'আমাকে ধন্যবাদ এর সাইন দেখান।',
+    'পানি এর সাইন কীভাবে করব?',
+    'আমার চিকিৎসা সহায়তা দরকার।',
+    'এটি জরুরি অবস্থা।',
+    'আমাকে বেসিক ISL বাক্য শেখান।',
+    'আমি কীভাবে বধির যোগাযোগে সহায়তা করব?',
+    'আমার অ্যাক্সেসিবিলিটি অধিকার কী?',
+  ],
+  'ta': [
+    'வணக்கம், நான் உதவலாமா?',
+    'நன்றி சொல்லும் சைகையை காட்டுங்கள்.',
+    'தண்ணீர் சைகையை எப்படி செய்வது?',
+    'எனக்கு மருத்துவ உதவி வேண்டும்.',
+    'இது அவசர நிலை.',
+    'அடிப்படை ISL வாசகங்களை கற்பிக்கவும்.',
+    'கேளாதோர் தொடர்புக்கு நான் எப்படி உதவலாம்?',
+    'எனது அணுகல் உரிமைகள் என்ன?',
+  ],
+  'te': [
+    'నమస్తే, నేను సహాయం చేయనా?',
+    'థ్యాంక్యూ సంకేతం చూపించండి.',
+    'నీటి సంకేతం ఎలా చేయాలి?',
+    'నాకు వైద్య సహాయం కావాలి.',
+    'ఇది అత్యవసర పరిస్థితి.',
+    'నాకు ప్రాథమిక ISL వాక్యాలు నేర్పండి.',
+    'చెవిటి సంభాషణకు నేను ఎలా సహకరించాలి?',
+    'నా యాక్సెసిబిలిటీ హక్కులు ఏమిటి?',
+  ],
+  'kn': [
+    'ನಮಸ್ಕಾರ, ನಾನು ಸಹಾಯ ಮಾಡಬಹುದೇ?',
+    'ಧನ್ಯವಾದದ ಸಂಕೇತವನ್ನು ತೋರಿಸಿ.',
+    'ನೀರಿನ ಸಂಕೇತವನ್ನು ಹೇಗೆ ಮಾಡುವುದು?',
+    'ನನಗೆ ವೈದ್ಯಕೀಯ ಸಹಾಯ ಬೇಕು.',
+    'ಇದು ತುರ್ತು ಪರಿಸ್ಥಿತಿ.',
+    'ಮೂಲಭೂತ ISL ವಾಕ್ಯಗಳನ್ನು ಕಲಿಸಿ.',
+    'ಕಿವಿಮುಕರ ಸಂವಹನಕ್ಕೆ ನಾನು ಹೇಗೆ ನೆರವಾಗಲಿ?',
+    'ನನ್ನ ಪ್ರವೇಶ ಹಕ್ಕುಗಳು ಯಾವುವು?',
+  ],
+  'ml': [
+    'നമസ്കാരം, ഞാൻ സഹായിക്കട്ടേ?',
+    'നന്ദി എന്ന സൈൻ കാണിക്കൂ.',
+    'വെള്ളം എന്ന സൈൻ എങ്ങനെ ചെയ്യാം?',
+    'എനിക്ക് മെഡിക്കൽ സഹായം വേണം.',
+    'ഇത് അടിയന്തരാവസ്ഥയാണ്.',
+    'അടിസ്ഥാന ISL വാക്യങ്ങൾ പഠിപ്പിക്കൂ.',
+    'കേൾവി പ്രയാസമുള്ളവരുടെ ആശയവിനിമയത്തിന് ഞാൻ എങ്ങനെ പിന്തുണ നൽകാം?',
+    'എന്റെ ആക്സസിബിലിറ്റി അവകാശങ്ങൾ എന്താണ്?',
+  ],
+  'gu': [
+    'નમસ્તે, શું હું મદદ કરી શકું?',
+    'મને થેન્ક યુ નો સાઇન બતાવો.',
+    'પાણીનો સાઇન કેવી રીતે કરવો?',
+    'મને તાત્કાલિક તબીબી મદદ જોઈએ.',
+    'આ ઈમરજન્સી છે.',
+    'મને બેસિક ISL વાક્યો શીખવો.',
+    'હું બહેરા સંચારને કેવી રીતે સપોર્ટ કરું?',
+    'મારા ઍક્સેસિબિલિટી અધિકારો શું છે?',
+  ],
+  'pa': [
+    'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਕੀ ਮੈਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?',
+    'ਮੈਨੂੰ ਧੰਨਵਾਦ ਵਾਲਾ ਸਾਈਨ ਦਿਖਾਓ।',
+    'ਪਾਣੀ ਦਾ ਸਾਈਨ ਕਿਵੇਂ ਕਰੀਏ?',
+    'ਮੈਨੂੰ ਤੁਰੰਤ ਮੈਡੀਕਲ ਮਦਦ ਚਾਹੀਦੀ ਹੈ।',
+    'ਇਹ ਐਮਰਜੈਂਸੀ ਹੈ।',
+    'ਮੈਨੂੰ ਬੇਸਿਕ ISL ਵਾਕ ਸਿਖਾਓ।',
+    'ਮੈਂ ਬਹਿਰੇ ਸੰਚਾਰ ਨੂੰ ਕਿਵੇਂ ਸਹਾਇਤਾ ਦਿਆਂ?',
+    'ਮੇਰੇ ਐਕਸੈਸਬਿਲਟੀ ਹੱਕ ਕੀ ਹਨ?',
+  ],
+};
+
+List<(String, IconData)> _quickPromptsForLang(String lang, AppLocalizations l) {
+  final localized = _kQuickPromptTextByLang[lang];
+  if (localized == null || localized.length != _kQuickPromptKeys.length) {
+    return _kQuickPromptKeys.map((q) => (l.t(q.$1), q.$2)).toList();
+  }
+  return List.generate(
+    _kQuickPromptKeys.length,
+    (i) => (localized[i], _kQuickPromptKeys[i].$2),
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────
 //  10 INDIAN LANGUAGES
@@ -534,6 +649,11 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
     await _tts.setLanguage(ttsLang);
   }
 
+  void _onLangChanged(String langCode) {
+    setState(() => _lang = langCode);
+    _syncTtsLang();
+  }
+
   String _cleanForTts(String text) => text
       .replaceAll(RegExp(r'\*+'), '')
       .replaceAll(RegExp(r'#+\s'), '')
@@ -560,9 +680,9 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final w = MediaQuery.of(context).size.width;
-    return w < 700
-        ? _buildMobile(context, isDark)
-        : _buildWeb(context, isDark, w);
+    return kIsWeb || w >= 700
+        ? _buildWeb(context, isDark, w)
+        : _buildMobile(context, isDark);
   }
 
   // ════════════════════════════════════════════════════════════════════
@@ -577,11 +697,11 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
     final accent = isDark ? _purpleDark : _purple;
     final navBlue = isDark ? Color(0xFF4A8EFF) : _info;
     final topCard = isDark
-        ? _dSurface.withValues(alpha: 0.86)
-        : _lSurface.withValues(alpha: 0.94);
+        ? _dSurface.withOpacity(0.86)
+        : _lSurface.withOpacity(0.94);
     final topShadow = isDark
-        ? Colors.black.withValues(alpha: 0.22)
-        : Colors.black.withValues(alpha: 0.05);
+        ? Colors.black.withOpacity(0.22)
+        : Colors.black.withOpacity(0.05);
 
     return Scaffold(
       backgroundColor: bg,
@@ -593,7 +713,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
               top: -120,
               right: -70,
               child: _AssistantOrb(
-                color: accent.withValues(alpha: isDark ? 0.16 : 0.10),
+                color: accent.withOpacity(isDark ? 0.16 : 0.10),
                 size: 280,
               ),
             ),
@@ -601,7 +721,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
               top: 160,
               left: -90,
               child: _AssistantOrb(
-                color: _primary.withValues(alpha: isDark ? 0.14 : 0.09),
+                color: _primary.withOpacity(isDark ? 0.14 : 0.09),
                 size: 240,
               ),
             ),
@@ -614,12 +734,12 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                       end: Alignment.bottomCenter,
                       colors: isDark
                           ? [
-                              Colors.white.withValues(alpha: 0.02),
+                              Colors.white.withOpacity(0.02),
                               Colors.transparent,
                               Colors.transparent,
                             ]
                           : [
-                              _primary.withValues(alpha: 0.04),
+                              _primary.withOpacity(0.04),
                               Colors.transparent,
                               Colors.transparent,
                             ],
@@ -669,12 +789,12 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                                   _sp6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: accent.withValues(alpha: 
+                                  color: accent.withOpacity(
                                     isDark ? 0.15 : 0.09,
                                   ),
                                   borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
-                                    color: accent.withValues(alpha: 0.22),
+                                    color: accent.withOpacity(0.22),
                                     width: 1,
                                   ),
                                 ),
@@ -688,7 +808,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                                         gradient: LinearGradient(
                                           colors: [
                                             accent,
-                                            accent.withValues(alpha: 0.72),
+                                            accent.withOpacity(0.72),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -696,7 +816,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                                         shape: BoxShape.circle,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: accent.withValues(alpha: 0.24),
+                                            color: accent.withOpacity(0.24),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -718,7 +838,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                                           l.t('app_title_short'),
                                           style: _label(
                                             9.5,
-                                            textClr.withValues(alpha: 0.72),
+                                            textClr.withOpacity(0.72),
                                             w: FontWeight.w700,
                                           ),
                                         ),
@@ -751,10 +871,10 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                                         vertical: _sp8,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: navBlue.withValues(alpha: 0.08),
+                                        color: navBlue.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: navBlue.withValues(alpha: 0.2),
+                                          color: navBlue.withOpacity(0.2),
                                           width: 1,
                                         ),
                                       ),
@@ -800,14 +920,14 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                                       height: 38,
                                       decoration: BoxDecoration(
                                         color: _ttsEnabled
-                                            ? accent.withValues(alpha: 0.12)
+                                            ? accent.withOpacity(0.12)
                                             : (isDark
                                                   ? _dSurface2
                                                   : _lSurface2),
                                         borderRadius: BorderRadius.circular(11),
                                         border: Border.all(
                                           color: _ttsEnabled
-                                              ? accent.withValues(alpha: 0.3)
+                                              ? accent.withOpacity(0.3)
                                               : border,
                                           width: 1,
                                         ),
@@ -842,7 +962,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                   child: _LangPillRow(
                     selected: _lang,
                     isDark: isDark,
-                    onSelect: (l) => setState(() => _lang = l),
+                    onSelect: _onLangChanged,
                   ),
                 ),
 
@@ -853,6 +973,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                     child: _msgs.isEmpty
                         ? _EmptyState(
                             isDark: isDark,
+                            selectedLang: _lang,
                             onPrompt: _send,
                             compact: true,
                           )
@@ -888,7 +1009,11 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                 ),
 
                 if (_msgs.length <= 1)
-                  _QuickPromptsRow(isDark: isDark, onTap: _send),
+                  _QuickPromptsRow(
+                    isDark: isDark,
+                    selectedLang: _lang,
+                    onTap: _send,
+                  ),
 
                 _InputBar(
                   controller: _inputCtrl,
@@ -923,7 +1048,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
             top: -220,
             left: -180,
             child: _AssistantOrb(
-              color: _primary.withValues(alpha: isDark ? 0.15 : 0.10),
+              color: _primary.withOpacity(isDark ? 0.15 : 0.10),
               size: 760,
             ),
           ),
@@ -931,7 +1056,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
             top: 220,
             right: -160,
             child: _AssistantOrb(
-              color: _purple.withValues(alpha: isDark ? 0.14 : 0.09),
+              color: _purple.withOpacity(isDark ? 0.14 : 0.09),
               size: 620,
             ),
           ),
@@ -939,7 +1064,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
             bottom: 110,
             left: w * 0.28,
             child: _AssistantOrb(
-              color: _secondary.withValues(alpha: isDark ? 0.12 : 0.08),
+              color: _secondary.withOpacity(isDark ? 0.12 : 0.08),
               size: 500,
             ),
           ),
@@ -972,14 +1097,14 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                     end: Alignment.bottomCenter,
                     colors: isDark
                         ? [
-                            Colors.white.withValues(alpha: 0.018),
+                            Colors.white.withOpacity(0.018),
                             Colors.transparent,
-                            _primary.withValues(alpha: 0.024),
+                            _primary.withOpacity(0.024),
                           ]
                         : [
-                            _primary.withValues(alpha: 0.04),
+                            _primary.withOpacity(0.04),
                             Colors.transparent,
-                            _secondary.withValues(alpha: 0.02),
+                            _secondary.withOpacity(0.02),
                           ],
                   ),
                 ),
@@ -998,7 +1123,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
                       _sp12,
-                      _sp10,
+                      _sp4,
                       _sp12,
                       _sp12,
                     ),
@@ -1008,9 +1133,12 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                         constraints: BoxConstraints(
                           maxWidth: isDesktop ? 1520 : 1140,
                         ),
-                        child: isDesktop
-                            ? _webDesktopLayout(ctx, isDark)
-                            : _webTabletLayout(ctx, isDark),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: isDesktop
+                              ? _webDesktopLayout(ctx, isDark)
+                              : _webTabletLayout(ctx, isDark),
+                        ),
                       ),
                     ),
                   ),
@@ -1025,7 +1153,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
 
   Widget _webDesktopLayout(BuildContext ctx, bool isDark) => LayoutBuilder(
     builder: (context, constraints) {
-      const sidebarWidth = 300.0;
+      const sidebarWidth = 304.0;
       return Stack(
         children: [
           Positioned.fill(
@@ -1037,12 +1165,12 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
                     end: Alignment.bottomRight,
                     colors: isDark
                         ? [
-                            Colors.white.withValues(alpha: 0.020),
-                            _primary.withValues(alpha: 0.030),
+                            Colors.white.withOpacity(0.020),
+                            _primary.withOpacity(0.030),
                           ]
                         : [
-                            Colors.white.withValues(alpha: 0.46),
-                            _primary.withValues(alpha: 0.055),
+                            Colors.white.withOpacity(0.46),
+                            _primary.withOpacity(0.055),
                           ],
                   ),
                 ),
@@ -1063,40 +1191,55 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
               dark: isDark,
             ),
           ),
-          Row(
-            children: [
-              _WebSidebar(
-                isDark: isDark,
-                selectedLang: _lang,
-                ttsEnabled: _ttsEnabled,
-                onLangSelect: (l) => setState(() => _lang = l),
-                onTtsToggle: () {
-                  setState(() => _ttsEnabled = !_ttsEnabled);
-                  if (!_ttsEnabled) _tts.stop();
-                },
-                onClearChat: _clearChat,
-                onQuickPrompt: _send,
+          Container(
+            clipBehavior: Clip.antiAlias,
+            padding: const EdgeInsets.all(_sp10),
+            decoration: BoxDecoration(
+              color: (isDark ? _dSurface : _lSurface).withOpacity(
+                isDark ? 0.38 : 0.54,
               ),
-              Expanded(
-                child: _WebChatPane(
-                  msgs: _msgs,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: (isDark ? _dBorder : _lBorder).withOpacity(0.8),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                _WebSidebar(
                   isDark: isDark,
-                  isLoading: _isLoading,
-                  typingAnim: _typingAnim,
-                  scrollCtrl: _scrollCtrl,
-                  inputCtrl: _inputCtrl,
-                  isListening: _isListening,
-                  speechOk: _speechOk,
-                  onSend: _send,
-                  onVoice: _toggleVoice,
-                  onTapSign: (s) => _send(_askMoreSignPrompt(s)),
-                  onSpeak: (text) async {
-                    await _syncTtsLang();
-                    await _tts.speak(_cleanForTts(text));
+                  selectedLang: _lang,
+                  ttsEnabled: _ttsEnabled,
+                  onLangSelect: _onLangChanged,
+                  onTtsToggle: () {
+                    setState(() => _ttsEnabled = !_ttsEnabled);
+                    if (!_ttsEnabled) _tts.stop();
                   },
+                  onClearChat: _clearChat,
+                  onQuickPrompt: _send,
                 ),
-              ),
-            ],
+                Expanded(
+                  child: _WebChatPane(
+                    msgs: _msgs,
+                    isDark: isDark,
+                    selectedLang: _lang,
+                    isLoading: _isLoading,
+                    typingAnim: _typingAnim,
+                    scrollCtrl: _scrollCtrl,
+                    inputCtrl: _inputCtrl,
+                    isListening: _isListening,
+                    speechOk: _speechOk,
+                    onSend: _send,
+                    onVoice: _toggleVoice,
+                    onTapSign: (s) => _send(_askMoreSignPrompt(s)),
+                    onSpeak: (text) async {
+                      await _syncTtsLang();
+                      await _tts.speak(_cleanForTts(text));
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -1109,7 +1252,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
         isDark: isDark,
         selectedLang: _lang,
         ttsEnabled: _ttsEnabled,
-        onLangSelect: (l) => setState(() => _lang = l),
+        onLangSelect: _onLangChanged,
         onTtsToggle: () {
           setState(() => _ttsEnabled = !_ttsEnabled);
           if (!_ttsEnabled) _tts.stop();
@@ -1120,6 +1263,7 @@ class _ISLAssistantScreenState extends State<ISLAssistantScreen>
         child: _WebChatPane(
           msgs: _msgs,
           isDark: isDark,
+          selectedLang: _lang,
           isLoading: _isLoading,
           typingAnim: _typingAnim,
           scrollCtrl: _scrollCtrl,
@@ -1195,7 +1339,7 @@ class _AssistantArcPainter extends CustomPainter {
   void paint(Canvas canvas, Size s) {
     void arc(double r, double op) {
       final glow = Paint()
-        ..color = color.withValues(alpha: dark ? op * 0.05 : op * 0.035)
+        ..color = color.withOpacity(dark ? op * 0.05 : op * 0.035)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
@@ -1208,7 +1352,7 @@ class _AssistantArcPainter extends CustomPainter {
       );
 
       final p = Paint()
-        ..color = color.withValues(alpha: dark ? op * 0.40 : op * 0.30)
+        ..color = color.withOpacity(dark ? op * 0.40 : op * 0.30)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0;
       canvas.drawArc(
@@ -1247,7 +1391,7 @@ class _AssistantRing extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: color.withValues(alpha: dark ? 0.42 : 0.34),
+          color: color.withOpacity(dark ? 0.42 : 0.34),
           width: 1.5,
         ),
         color: Colors.transparent,
@@ -1280,7 +1424,7 @@ class _LangPillRow extends StatelessWidget {
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: bg.withValues(alpha: isDark ? 0.84 : 0.90),
+        color: bg.withOpacity(isDark ? 0.84 : 0.90),
         border: Border.all(color: border, width: 1.0),
         borderRadius: BorderRadius.circular(14),
       ),
@@ -1331,7 +1475,7 @@ class _LangPillRow extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: active
                               ? LinearGradient(
-                                  colors: [accent, accent.withValues(alpha: 0.76)],
+                                  colors: [accent, accent.withOpacity(0.76)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 )
@@ -1342,14 +1486,14 @@ class _LangPillRow extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: active
-                                ? accent.withValues(alpha: 0.35)
-                                : border.withValues(alpha: 0.85),
+                                ? accent.withOpacity(0.35)
+                                : border.withOpacity(0.85),
                             width: 1,
                           ),
                           boxShadow: active
                               ? [
                                   BoxShadow(
-                                    color: accent.withValues(alpha: 0.28),
+                                    color: accent.withOpacity(0.28),
                                     blurRadius: 10,
                                     offset: const Offset(0, 2),
                                   ),
@@ -1439,14 +1583,14 @@ class _MsgBubble extends StatelessWidget {
                       height: 24,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [accent, accent.withValues(alpha: 0.7)],
+                          colors: [accent, accent.withOpacity(0.7)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(7),
                         boxShadow: [
                           BoxShadow(
-                            color: accent.withValues(alpha: 0.25),
+                            color: accent.withOpacity(0.25),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -1502,7 +1646,7 @@ class _MsgBubble extends StatelessWidget {
                               : null),
                     color: isError
                         ? (isDark
-                              ? _dangerDark.withValues(alpha: 0.12)
+                              ? _dangerDark.withOpacity(0.12)
                               : _dangerLight)
                         : (_isUser ? null : aiBg),
                     borderRadius: BorderRadius.only(
@@ -1513,7 +1657,7 @@ class _MsgBubble extends StatelessWidget {
                     ),
                     border: isError
                         ? Border.all(
-                            color: (isDark ? _dangerDark : _danger).withValues(alpha: 
+                            color: (isDark ? _dangerDark : _danger).withOpacity(
                               0.35,
                             ),
                             width: 1,
@@ -1524,14 +1668,14 @@ class _MsgBubble extends StatelessWidget {
                     boxShadow: _isUser
                         ? [
                             BoxShadow(
-                              color: _primary.withValues(alpha: 0.20),
+                              color: _primary.withOpacity(0.20),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                           ]
                         : [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 
+                              color: Colors.black.withOpacity(
                                 isDark ? 0.15 : 0.04,
                               ),
                               blurRadius: 8,
@@ -1572,10 +1716,10 @@ class _MsgBubble extends StatelessWidget {
                               vertical: _sp4,
                             ),
                             decoration: BoxDecoration(
-                              color: signAccent.withValues(alpha: 0.10),
+                              color: signAccent.withOpacity(0.10),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: signAccent.withValues(alpha: 0.30),
+                                color: signAccent.withOpacity(0.30),
                                 width: 1,
                               ),
                             ),
@@ -1652,7 +1796,7 @@ class _TypingIndicator extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [accent, accent.withValues(alpha: 0.7)],
+                  colors: [accent, accent.withOpacity(0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1682,7 +1826,7 @@ class _TypingIndicator extends StatelessWidget {
               ),
               child: AnimatedBuilder(
                 animation: anim,
-                builder: (_, __) => Row(
+                builder: (_, _) => Row(
                   children: List.generate(3, (i) {
                     final phase = ((anim.value + i * 0.28) % 1.0);
                     final scale =
@@ -1696,7 +1840,7 @@ class _TypingIndicator extends StatelessWidget {
                           height: 6,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: accent.withValues(alpha: 0.3 + 0.7 * scale),
+                            color: accent.withOpacity(0.3 + 0.7 * scale),
                           ),
                         ),
                       ),
@@ -1765,21 +1909,24 @@ class _InputBarState extends State<_InputBar> {
         ? (widget.isDark ? _dangerDark : _danger)
         : subClr;
     final micBg = widget.isListening
-        ? (widget.isDark ? _dangerDark.withValues(alpha: 0.15) : _dangerLight)
+        ? (widget.isDark ? _dangerDark.withOpacity(0.15) : _dangerLight)
         : fill;
 
     return Container(
       decoration: BoxDecoration(
-        color: bg.withValues(alpha: compact ? 0.95 : 1.0),
-        border: Border(
-          top: BorderSide(color: border, width: compact ? 0.8 : 1.0),
-        ),
+        color: bg.withOpacity(compact ? 0.95 : 1.0),
+        borderRadius: compact ? null : BorderRadius.circular(22),
+        border: compact
+            ? Border(
+                top: BorderSide(color: border, width: compact ? 0.8 : 1.0),
+              )
+            : Border.all(color: border, width: 1.0),
         boxShadow: compact
             ? [
                 BoxShadow(
                   color: widget.isDark
-                      ? Colors.black.withValues(alpha: 0.24)
-                      : Colors.black.withValues(alpha: 0.06),
+                      ? Colors.black.withOpacity(0.24)
+                      : Colors.black.withOpacity(0.06),
                   blurRadius: 18,
                   offset: const Offset(0, -4),
                 ),
@@ -1816,14 +1963,14 @@ class _InputBarState extends State<_InputBar> {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: widget.isListening
-                            ? micColor.withValues(alpha: 0.40)
+                            ? micColor.withOpacity(0.40)
                             : border,
                         width: widget.isListening ? 1.5 : 1.0,
                       ),
                       boxShadow: widget.isListening
                           ? [
                               BoxShadow(
-                                color: micColor.withValues(alpha: 0.25),
+                                color: micColor.withOpacity(0.25),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -1913,7 +2060,7 @@ class _InputBarState extends State<_InputBar> {
                           decoration: BoxDecoration(
                             gradient: _hasText
                                 ? LinearGradient(
-                                    colors: [accent, accent.withValues(alpha: 0.75)],
+                                    colors: [accent, accent.withOpacity(0.75)],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   )
@@ -1929,7 +2076,7 @@ class _InputBarState extends State<_InputBar> {
                             boxShadow: _hasText
                                 ? [
                                     BoxShadow(
-                                      color: accent.withValues(alpha: 0.30),
+                                      color: accent.withOpacity(0.30),
                                       blurRadius: 10,
                                       offset: const Offset(0, 3),
                                     ),
@@ -1959,13 +2106,18 @@ class _InputBarState extends State<_InputBar> {
 // ══════════════════════════════════════════════════════════════════════
 class _QuickPromptsRow extends StatelessWidget {
   final bool isDark;
+  final String selectedLang;
   final void Function(String) onTap;
-  const _QuickPromptsRow({required this.isDark, required this.onTap});
+  const _QuickPromptsRow({
+    required this.isDark,
+    required this.selectedLang,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final prompts = _kQuickPromptKeys.map((q) => (l.t(q.$1), q.$2)).toList();
+    final prompts = _quickPromptsForLang(selectedLang, l);
     final bg = isDark ? _dSurface : _lSurface;
     final border = isDark ? _dBorder : _lBorder;
     final accent = isDark ? _infoDark : _info;
@@ -1973,7 +2125,7 @@ class _QuickPromptsRow extends StatelessWidget {
     return Container(
       height: 58,
       decoration: BoxDecoration(
-        color: bg.withValues(alpha: 0.96),
+        color: bg.withOpacity(0.96),
         border: Border(top: BorderSide(color: border, width: 0.8)),
       ),
       child: ListView.builder(
@@ -1996,15 +2148,15 @@ class _QuickPromptsRow extends StatelessWidget {
                     vertical: _sp6,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.08),
+                    color: accent.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: accent.withValues(alpha: 0.22),
+                      color: accent.withOpacity(0.22),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: accent.withValues(alpha: 0.08),
+                        color: accent.withOpacity(0.08),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -2034,17 +2186,19 @@ class _QuickPromptsRow extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   final bool isDark;
   final bool compact;
+  final String selectedLang;
   final void Function(String) onPrompt;
   const _EmptyState({
     required this.isDark,
     required this.onPrompt,
+    this.selectedLang = 'en',
     this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final prompts = _kQuickPromptKeys.map((q) => (l.t(q.$1), q.$2)).toList();
+    final prompts = _quickPromptsForLang(selectedLang, l);
     final accent = isDark ? _purpleDark : _purple;
     final textClr = isDark ? _dText : _lText;
     final subClr = isDark ? _dTextSub : _lTextSub;
@@ -2063,19 +2217,19 @@ class _EmptyState extends StatelessWidget {
               height: compact ? 68 : 80,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [accent, accent.withValues(alpha: 0.7)],
+                  colors: [accent, accent.withOpacity(0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withValues(alpha: 0.35),
+                    color: accent.withOpacity(0.35),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
                   BoxShadow(
-                    color: accent.withValues(alpha: 0.15),
+                    color: accent.withOpacity(0.15),
                     blurRadius: 48,
                     offset: const Offset(0, 16),
                   ),
@@ -2140,10 +2294,10 @@ class _EmptyState extends StatelessWidget {
                             vertical: _sp8,
                           ),
                           decoration: BoxDecoration(
-                            color: chipAccent.withValues(alpha: 0.07),
+                            color: chipAccent.withOpacity(0.07),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: chipAccent.withValues(alpha: 0.20),
+                              color: chipAccent.withOpacity(0.20),
                               width: 1,
                             ),
                           ),
@@ -2190,7 +2344,7 @@ class _WebSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final prompts = _kQuickPromptKeys.map((q) => (l.t(q.$1), q.$2)).toList();
+    final prompts = _quickPromptsForLang(selectedLang, l);
     final border = isDark ? _dBorder : _lBorder;
     final sep = isDark ? _dBorderSub : _lBorderSub;
     final textClr = isDark ? _dText : _lText;
@@ -2199,8 +2353,30 @@ class _WebSidebar extends StatelessWidget {
     final accent = isDark ? _purpleDark : _purple;
 
     return Container(
-      width: 300,
-      color: Colors.transparent,
+      width: 304,
+      margin: const EdgeInsets.only(right: _sp12),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [_dSurface.withOpacity(0.92), _dSurface2.withOpacity(0.90)]
+              : [_lSurface.withOpacity(0.95), _lSurface2.withOpacity(0.88)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: accent.withOpacity(isDark ? 0.22 : 0.16),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withOpacity(isDark ? 0.12 : 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: ListView(
         padding: EdgeInsets.zero,
         physics: const BouncingScrollPhysics(),
@@ -2209,7 +2385,7 @@ class _WebSidebar extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: sep.withValues(alpha: 0.45), width: 1),
+                bottom: BorderSide(color: sep.withOpacity(0.45), width: 1),
               ),
             ),
             padding: const EdgeInsets.all(_sp20),
@@ -2220,14 +2396,14 @@ class _WebSidebar extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [accent, accent.withValues(alpha: 0.7)],
+                      colors: [accent, accent.withOpacity(0.7)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(13),
                     boxShadow: [
                       BoxShadow(
-                        color: accent.withValues(alpha: 0.30),
+                        color: accent.withOpacity(0.30),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -2280,7 +2456,7 @@ class _WebSidebar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(_sp16, _sp14, _sp16, _sp8),
             child: Text(
-              'LANGUAGE',
+              'LANGUAGE / भाषा',
               style: _label(
                 9.5,
                 mutedClr,
@@ -2313,11 +2489,11 @@ class _WebSidebar extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: active
-                            ? accent.withValues(alpha: 0.12)
+                            ? accent.withOpacity(0.12)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: active ? accent.withValues(alpha: 0.30) : border,
+                          color: active ? accent.withOpacity(0.30) : border,
                           width: active ? 1.5 : 1,
                         ),
                       ),
@@ -2353,7 +2529,7 @@ class _WebSidebar extends StatelessWidget {
 
           Container(
             height: 1,
-            color: sep.withValues(alpha: 0.45),
+            color: sep.withOpacity(0.45),
             margin: const EdgeInsets.symmetric(
               vertical: _sp12,
               horizontal: _sp16,
@@ -2385,7 +2561,7 @@ class _WebSidebar extends StatelessWidget {
 
           Container(
             height: 1,
-            color: sep.withValues(alpha: 0.45),
+            color: sep.withOpacity(0.45),
             margin: const EdgeInsets.symmetric(
               vertical: _sp12,
               horizontal: _sp16,
@@ -2423,7 +2599,7 @@ class _WebSidebar extends StatelessWidget {
 
           Container(
             height: 1,
-            color: sep.withValues(alpha: 0.45),
+            color: sep.withOpacity(0.45),
             margin: const EdgeInsets.only(top: _sp12),
           ),
 
@@ -2444,7 +2620,7 @@ class _WebSidebar extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: (isDark ? _dangerDark : _danger).withValues(alpha: 
+                        color: (isDark ? _dangerDark : _danger).withOpacity(
                           0.10,
                         ),
                         borderRadius: BorderRadius.circular(8),
@@ -2509,7 +2685,7 @@ class _SidebarToggle extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: value
-                      ? accent.withValues(alpha: 0.12)
+                      ? accent.withOpacity(0.12)
                       : (isDark ? _dSurface2 : _lSurface2),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -2545,7 +2721,7 @@ class _SidebarToggle extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: Colors.black.withOpacity(0.15),
                           blurRadius: 4,
                         ),
                       ],
@@ -2601,7 +2777,7 @@ class _SidebarPromptBtnState extends State<_SidebarPromptBtn> {
             ),
             decoration: BoxDecoration(
               color: _hovered
-                  ? widget.accent.withValues(alpha: 0.07)
+                  ? widget.accent.withOpacity(0.07)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
@@ -2611,7 +2787,7 @@ class _SidebarPromptBtnState extends State<_SidebarPromptBtn> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: widget.accent.withValues(alpha: _hovered ? 0.15 : 0.08),
+                    color: widget.accent.withOpacity(_hovered ? 0.15 : 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(widget.icon, size: 12, color: widget.accent),
@@ -2645,6 +2821,7 @@ class _SidebarPromptBtnState extends State<_SidebarPromptBtn> {
 // ══════════════════════════════════════════════════════════════════════
 class _WebChatPane extends StatelessWidget {
   final List<_Msg> msgs;
+  final String selectedLang;
   final bool isDark, isLoading, isListening, speechOk;
   final Animation<double> typingAnim;
   final ScrollController scrollCtrl;
@@ -2654,6 +2831,7 @@ class _WebChatPane extends StatelessWidget {
   const _WebChatPane({
     required this.msgs,
     required this.isDark,
+    required this.selectedLang,
     required this.isLoading,
     required this.isListening,
     required this.speechOk,
@@ -2672,15 +2850,40 @@ class _WebChatPane extends StatelessWidget {
       children: [
         Expanded(
           child: Container(
-            color: Colors.transparent,
+            margin: const EdgeInsets.only(bottom: _sp10),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        _dSurface.withOpacity(0.70),
+                        _dSurface2.withOpacity(0.56),
+                      ]
+                    : [
+                        _lSurface.withOpacity(0.58),
+                        _lSurface2.withOpacity(0.44),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: (isDark ? _dBorder : _lBorder).withOpacity(0.75),
+                width: 1,
+              ),
+            ),
             child: msgs.isEmpty
-                ? _EmptyState(isDark: isDark, onPrompt: onSend)
+                ? _EmptyState(
+                    isDark: isDark,
+                    selectedLang: selectedLang,
+                    onPrompt: onSend,
+                  )
                 : ListView.builder(
                     controller: scrollCtrl,
                     padding: const EdgeInsets.fromLTRB(
-                      _sp32,
                       _sp24,
-                      _sp32,
+                      _sp24,
+                      _sp24,
                       _sp12,
                     ),
                     physics: const BouncingScrollPhysics(),
@@ -2699,7 +2902,9 @@ class _WebChatPane extends StatelessWidget {
                         );
                       }
                       return Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: msgs[i].role == _Role.user
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 920),
                           child: _MsgBubble(
@@ -2714,14 +2919,17 @@ class _WebChatPane extends StatelessWidget {
                   ),
           ),
         ),
-        _InputBar(
-          controller: inputCtrl,
-          isDark: isDark,
-          isLoading: isLoading,
-          isListening: isListening,
-          speechOk: speechOk,
-          onSend: onSend,
-          onVoice: onVoice,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: _InputBar(
+            controller: inputCtrl,
+            isDark: isDark,
+            isLoading: isLoading,
+            isListening: isListening,
+            speechOk: speechOk,
+            onSend: onSend,
+            onVoice: onVoice,
+          ),
         ),
       ],
     );
@@ -2834,11 +3042,11 @@ class _WebTopBar extends StatelessWidget {
                 height: 34,
                 decoration: BoxDecoration(
                   color: ttsEnabled
-                      ? accent.withValues(alpha: 0.10)
+                      ? accent.withOpacity(0.10)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: ttsEnabled ? accent.withValues(alpha: 0.25) : border,
+                    color: ttsEnabled ? accent.withOpacity(0.25) : border,
                     width: 1,
                   ),
                 ),
@@ -2920,7 +3128,7 @@ class _OptionsMenuButton extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: redClr.withValues(alpha: 0.10),
+                  color: redClr.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -2946,7 +3154,7 @@ class _OptionsMenuButton extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: subClr.withValues(alpha: 0.10),
+                  color: subClr.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -2967,4 +3175,3 @@ class _OptionsMenuButton extends StatelessWidget {
     );
   }
 }
-

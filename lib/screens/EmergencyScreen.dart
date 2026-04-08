@@ -6,6 +6,7 @@
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../components/GlobalNavbar.dart';
@@ -19,7 +20,7 @@ import '../models/EmergencyContact.dart';
 // ─────────────────────────────────────────────────────────────────────
 //  DESIGN TOKENS — Apple iOS palette
 // ─────────────────────────────────────────────────────────────────────
-const _fontFamily = 'Google Sans';
+const _fontFamily = 'Plus Jakarta Sans';
 
 // Semantic — Apple system colors
 const _danger      = Color(0xFFFF3B30);
@@ -84,7 +85,7 @@ TextStyle _title2(Color c) => TextStyle(
     color: c, height: 1.3, letterSpacing: 0.35);
 
 TextStyle _headline(Color c) => TextStyle(
-    fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.w600,
+  fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.w700,
     color: c, height: 1.3, letterSpacing: -0.41);
 
 TextStyle _body(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
@@ -283,9 +284,9 @@ class _EmergencyScreenState extends State<EmergencyScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final w      = MediaQuery.of(context).size.width;
-    return w < 700
-        ? _buildMobile(context, isDark)
-        : _buildWeb(context, isDark, w);
+    return kIsWeb || w >= 700
+      ? _buildWeb(context, isDark, w)
+      : _buildMobile(context, isDark);
   }
 
   // ══════════════════════════════════════════════════════════════════
@@ -395,7 +396,8 @@ class _EmergencyScreenState extends State<EmergencyScreen>
   // ══════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext ctx, bool isDark, double w) {
     final isDesktop = w > 1100;
-    final hPad = isDesktop ? 80.0 : 40.0;
+    final compactWeb = w < 700;
+    final hPad = isDesktop ? 80.0 : (compactWeb ? 16.0 : 40.0);
     final bg   = isDark ? _dBg : _lBg;
 
     return Scaffold(
@@ -499,9 +501,9 @@ class _EmergencyScreenState extends State<EmergencyScreen>
   void _pushSetup(BuildContext ctx) => Navigator.push(
     ctx,
     PageRouteBuilder(
-      pageBuilder: (_, __, ___) => EmergencySetupScreen(
+      pageBuilder: (_, _, _) => EmergencySetupScreen(
           toggleTheme: widget.toggleTheme, setLocale: widget.setLocale),
-      transitionsBuilder: (_, a, __, c) =>
+      transitionsBuilder: (_, a, _, c) =>
           FadeTransition(opacity: a, child: c),
       transitionDuration: const Duration(milliseconds: 240),
     ),
@@ -521,7 +523,7 @@ class _MobileTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l       = AppLocalizations.of(context);
-    final bg      = isDark ? _dSurface.withValues(alpha: 0.94) : Colors.white.withValues(alpha: 0.94);
+    final bg      = isDark ? _dSurface.withOpacity(0.94) : Colors.white.withOpacity(0.94);
     final border  = isDark ? _dBorder : _lBorder;
     final textClr = isDark ? _dText   : _lText;
     final subClr  = isDark ? _dTextSub : _lTextSub;
@@ -554,13 +556,13 @@ class _MobileTopBar extends StatelessWidget {
         const Spacer(),
         // Title + live dot
         Row(mainAxisSize: MainAxisSize.min, children: [
-          AnimatedBuilder(animation: pulseAnim, builder: (_, __) =>
+          AnimatedBuilder(animation: pulseAnim, builder: (_, _) =>
               Container(
                 width: 7, height: 7,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle, color: accent,
                   boxShadow: [BoxShadow(
-                      color: accent.withValues(alpha: pulseAnim.value * 0.6),
+                      color: accent.withOpacity(pulseAnim.value * 0.6),
                       blurRadius: 8, spreadRadius: 1)],
                 ),
               )),
@@ -659,14 +661,14 @@ class _ScenarioCardState extends State<_ScenarioCard> {
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                     color: isActive
-                        ? accent.withValues(alpha: 0.35)
+                        ? accent.withOpacity(0.35)
                         : border,
                     width: isActive ? 1.0 : 0.5),
                 boxShadow: [
                   BoxShadow(
                     color: isActive
-                        ? accent.withValues(alpha: isDark ? 0.15 : 0.08)
-                        : Colors.black.withValues(alpha: isDark ? 0.20 : 0.05),
+                        ? accent.withOpacity(isDark ? 0.15 : 0.08)
+                        : Colors.black.withOpacity(isDark ? 0.20 : 0.05),
                     blurRadius: isActive ? 20 : 12,
                     offset: const Offset(0, 4),
                   ),
@@ -684,7 +686,7 @@ class _ScenarioCardState extends State<_ScenarioCard> {
                       Container(
                         width: 42, height: 42,
                         decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.10),
+                          color: accent.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -700,7 +702,7 @@ class _ScenarioCardState extends State<_ScenarioCard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: _sp8, vertical: _sp4),
                         decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.08),
+                          color: accent.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(s.helpline,
@@ -772,12 +774,12 @@ class _WebHero extends StatelessWidget {
       // Live badge — subtle pill
       AnimatedBuilder(
         animation: pulseAnim,
-        builder: (_, __) => Container(
+        builder: (_, _) => Container(
           padding: const EdgeInsets.symmetric(horizontal: _sp12, vertical: _sp6),
           decoration: BoxDecoration(
-            color: accent.withValues(alpha: isDark ? 0.10 : 0.07),
+            color: accent.withOpacity(isDark ? 0.10 : 0.07),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: accent.withValues(alpha: 0.20), width: 0.5),
+            border: Border.all(color: accent.withOpacity(0.20), width: 0.5),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Container(
@@ -785,7 +787,7 @@ class _WebHero extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle, color: accent,
                 boxShadow: [BoxShadow(
-                    color: accent.withValues(alpha: pulseAnim.value * 0.50),
+                    color: accent.withOpacity(pulseAnim.value * 0.50),
                     blurRadius: 6, spreadRadius: 1)],
               ),
             ),
@@ -855,7 +857,7 @@ class _HelplinesCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: border, width: 0.5),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.18 : 0.04),
                 blurRadius: 16, offset: const Offset(0, 3)),
           ]),
       child: ClipRRect(
@@ -911,9 +913,9 @@ class _AutoDetectCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withValues(alpha: 0.30), width: 1.0),
+          border: Border.all(color: accent.withOpacity(0.30), width: 1.0),
           boxShadow: [
-            BoxShadow(color: accent.withValues(alpha: isDark ? 0.10 : 0.06),
+            BoxShadow(color: accent.withOpacity(isDark ? 0.10 : 0.06),
                 blurRadius: 16, offset: const Offset(0, 4)),
           ],
         ),
@@ -921,7 +923,7 @@ class _AutoDetectCard extends StatelessWidget {
           Container(
               width: 42, height: 42,
               decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.10),
+                  color: accent.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(12)),
               child: Icon(scenario.icon, color: accent, size: 20)),
           const SizedBox(width: _sp12),
@@ -952,9 +954,9 @@ class _StatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final color  = ok ? (isDark ? _successD : _success) : (isDark ? _dangerD : _danger);
     final bgClr  = ok
-        ? (isDark ? _successD.withValues(alpha: 0.10) : _successSoft)
-        : (isDark ? _dangerD.withValues(alpha: 0.10)  : _dangerSoft);
-    final borderC = color.withValues(alpha: 0.25);
+        ? (isDark ? _successD.withOpacity(0.10) : _successSoft)
+        : (isDark ? _dangerD.withOpacity(0.10)  : _dangerSoft);
+    final borderC = color.withOpacity(0.25);
     final icon   = ok ? Icons.check_circle_rounded : Icons.error_outline_rounded;
 
     return TweenAnimationBuilder<double>(
@@ -993,8 +995,8 @@ class _NoContactsBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
     final amber  = isDark ? _warningD : _warning;
-    final bgClr  = isDark ? _warningD.withValues(alpha: 0.08) : _warningSoft;
-    final border = amber.withValues(alpha: 0.20);
+    final bgClr  = isDark ? _warningD.withOpacity(0.08) : _warningSoft;
+    final border = amber.withOpacity(0.20);
 
     return GestureDetector(
       onTap: onTap,
@@ -1043,14 +1045,14 @@ class _ShakeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: border, width: 0.5),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
+            BoxShadow(color: Colors.black.withOpacity(isDark ? 0.18 : 0.04),
                 blurRadius: 14, offset: const Offset(0, 3)),
           ]),
       child: Row(children: [
         Container(
             width: 42, height: 42,
             decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.08),
+                color: accent.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12)),
             child: Icon(Icons.vibration_rounded, color: accent, size: 20)),
         const SizedBox(width: _sp14),
@@ -1107,7 +1109,7 @@ class _ContactsButtonState extends State<_ContactsButton> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
                 color: (_hovered || _pressed)
-                    ? accent.withValues(alpha: 0.25) : border,
+                    ? accent.withOpacity(0.25) : border,
                 width: 0.5),
           ),
           child: Row(children: [

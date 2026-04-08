@@ -47,6 +47,7 @@ dependencies:
   # ── ISL Assistant ─────────────────────────
   # Voice input for ISL Assistant
   speech_to_text: ^7.3.0
+  google_fonts: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -62,16 +63,22 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   fonts:
-    - family: Google Sans
+    - family: Plus Jakarta Sans
       fonts:
-        - asset: assets/fonts/GoogleSans-Regular.ttf
+        - asset: assets/fonts/PlusJakartaSans-Light.ttf
+          weight: 300
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
           weight: 400
-        - asset: assets/fonts/GoogleSans-Medium.ttf
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
           weight: 500
-        - asset: assets/fonts/GoogleSans-SemiBold.ttf
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/GoogleSans-Bold.ttf
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
           weight: 700
+        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/PlusJakartaSans-Italic[wght].ttf
+          style: italic
 
 flutter_launcher_icons:
   android: true

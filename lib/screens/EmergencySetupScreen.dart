@@ -7,6 +7,7 @@
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import '../components/GlobalNavbar.dart';
 import '../l10n/AppLocalizations.dart';
@@ -17,7 +18,7 @@ import '../utils/PlatformHelper.dart';
 // ─────────────────────────────────────────────────────────────────────
 //  DESIGN TOKENS — Apple-inspired refined palette
 // ─────────────────────────────────────────────────────────────────────
-const _fontFamily = 'Google Sans';
+const _fontFamily = 'Plus Jakarta Sans';
 
 // Semantic
 const _danger      = Color(0xFFFF3B30);  // iOS red
@@ -90,15 +91,15 @@ TextStyle _title1(Color c) => TextStyle(
     color: c, height: 1.2, letterSpacing: 0.34);
 
 TextStyle _title2(Color c) => TextStyle(
-    fontFamily: _fontFamily, fontSize: 22, fontWeight: FontWeight.w600,
+  fontFamily: _fontFamily, fontSize: 22, fontWeight: FontWeight.w700,
     color: c, height: 1.3, letterSpacing: 0.35);
 
 TextStyle _title3(Color c) => TextStyle(
-    fontFamily: _fontFamily, fontSize: 20, fontWeight: FontWeight.w600,
+  fontFamily: _fontFamily, fontSize: 20, fontWeight: FontWeight.w700,
     color: c, height: 1.3, letterSpacing: 0.38);
 
 TextStyle _headline(Color c) => TextStyle(
-    fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.w600,
+  fontFamily: _fontFamily, fontSize: 17, fontWeight: FontWeight.w700,
     color: c, height: 1.3, letterSpacing: -0.41);
 
 TextStyle _body(Color c, {FontWeight w = FontWeight.w400}) => TextStyle(
@@ -181,9 +182,9 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
     final isDark   = Theme.of(context).brightness == Brightness.dark;
     final contacts = _service.getContacts();
     final w        = MediaQuery.of(context).size.width;
-    return w < 700
-        ? _buildMobile(context, contacts, isDark)
-        : _buildWeb(context, contacts, isDark, w > 1100);
+    return kIsWeb || w >= 700
+      ? _buildWeb(context, contacts, isDark, w > 1100)
+      : _buildMobile(context, contacts, isDark);
   }
 
   // ════════════════════════════════════════════════════════════════════
@@ -277,7 +278,9 @@ class _EmergencySetupScreenState extends State<EmergencySetupScreen>
   // ════════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext ctx, List<EmergencyContact> contacts,
       bool isDark, bool isDesktop) {
-    final hPad = isDesktop ? 80.0 : 40.0;
+    final w = MediaQuery.of(ctx).size.width;
+    final compactWeb = w < 700;
+    final hPad = isDesktop ? 80.0 : (compactWeb ? 16.0 : 40.0);
     final bg   = isDark ? _dBg : _lBg;
 
     return Scaffold(

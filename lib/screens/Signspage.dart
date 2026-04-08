@@ -24,7 +24,7 @@ import '../l10n/AppLocalizations.dart';
 // ─────────────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────────────
-const _ff = 'Google Sans';
+const _ff = 'Plus Jakarta Sans';
 
 // Brand palette
 const _blue = Color(0xFF1A56DB);
@@ -900,7 +900,9 @@ class _SignsPageState extends State<SignsPage> with TickerProviderStateMixin {
     final d = Theme.of(context).brightness == Brightness.dark;
     final w = MediaQuery.of(context).size.width;
     final l = AppLocalizations.of(context);
-    return w < 700 ? _buildMobile(context, d, l) : _buildWeb(context, d, l, w);
+    return kIsWeb || w >= 700
+        ? _buildWeb(context, d, l, w)
+        : _buildMobile(context, d, l);
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -1055,10 +1057,11 @@ class _SignsPageState extends State<SignsPage> with TickerProviderStateMixin {
   // ════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext ctx, bool d, AppLocalizations l, double w) {
     final isWide = w > 1200;
+    final compactWeb = w < 700;
     final bg = d ? _dBg : _lBg;
     final muted = d ? _dMuted : _lMuted;
     final filtered = _filtered;
-    final hPad = isWide ? 64.0 : 30.0;
+    final hPad = isWide ? 64.0 : (compactWeb ? 16.0 : 30.0);
     final cols = isWide ? 4 : (w > 980 ? 3 : 2);
     final progress = _kSigns.isEmpty ? 0.0 : _viewed.length / _kSigns.length;
     final contentMax = isWide ? 1400.0 : 1160.0;

@@ -14,6 +14,7 @@
 
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -22,6 +23,7 @@ import '../components/GlobalNavbar.dart';
 import '../components/SOSFloatingButton.dart';
 import '../l10n/AppLocalizations.dart';
 import '../models/EmergencyContact.dart';
+import '../services/web_home_nav.dart';
 import 'TranslateScreen.dart';
 import 'TwoWayScreen.dart';
 import 'EmergencyScreen.dart';
@@ -37,7 +39,7 @@ import 'objectives/EducationPage.dart';
 // ─────────────────────────────────────────────────────────────────────
 //  DESIGN TOKENS — Fintech palette
 // ─────────────────────────────────────────────────────────────────────
-const _ff = 'Google Sans';
+const _ff = 'Plus Jakarta Sans';
 
 // Electric blue family
 const _elBlue = Color(0xFF2563EB);
@@ -89,9 +91,11 @@ const _s10 = 10.0;
 const _s12 = 12.0;
 const _s14 = 14.0;
 const _s16 = 16.0;
+const _s18 = 18.0;
 const _s20 = 20.0;
 const _s24 = 24.0;
 const _s32 = 32.0;
+const _s40 = 40.0;
 const _s48 = 48.0;
 
 // ── Typography ────────────────────────────────────────────────────────
@@ -103,7 +107,7 @@ TextStyle _disp(double sz, Color c) => TextStyle(
   height: 1.15,
   letterSpacing: -0.6,
 );
-TextStyle _h(double sz, Color c, {FontWeight w = FontWeight.w600}) => TextStyle(
+TextStyle _h(double sz, Color c, {FontWeight w = FontWeight.w700}) => TextStyle(
   fontFamily: _ff,
   fontSize: sz,
   fontWeight: w,
@@ -126,6 +130,45 @@ TextStyle _lbl(double sz, Color c, {FontWeight w = FontWeight.w500}) =>
       color: c,
       height: 1.4,
       letterSpacing: 0.1,
+    );
+
+TextStyle _wDisp(double sz, Color c) => TextStyle(
+  fontFamily: _ff,
+  fontSize: sz,
+  fontWeight: FontWeight.w800,
+  color: c,
+  height: 1.08,
+  letterSpacing: -0.9,
+);
+
+TextStyle _wHead(double sz, Color c, {FontWeight w = FontWeight.w700}) =>
+    TextStyle(
+      fontFamily: _ff,
+      fontSize: sz,
+      fontWeight: w,
+      color: c,
+      height: 1.14,
+      letterSpacing: -0.45,
+    );
+
+TextStyle _wBody(double sz, Color c, {FontWeight w = FontWeight.w400}) =>
+    TextStyle(
+      fontFamily: _ff,
+      fontSize: sz,
+      fontWeight: w,
+      color: c,
+      height: 1.85,
+      letterSpacing: 0.0,
+    );
+
+TextStyle _wKicker(double sz, Color c, {FontWeight w = FontWeight.w700}) =>
+    TextStyle(
+      fontFamily: _ff,
+      fontSize: sz,
+      fontWeight: w,
+      color: c,
+      height: 1.3,
+      letterSpacing: 1.3,
     );
 
 // ── Token helpers ─────────────────────────────────────────────────────
@@ -165,6 +208,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<Offset> _slide;
   int _tab = 0;
   final _scrollCtrl = ScrollController();
+  final _heroKey = GlobalKey();
+  final _featuresKey = GlobalKey();
+  final _howItWorksKey = GlobalKey();
+  final _objectivesKey = GlobalKey();
+  final _visionKey = GlobalKey();
+  final _footerKey = GlobalKey();
+  bool _revealMarquee = true;
+  bool _revealFeatures = false;
+  bool _revealHowItWorks = false;
+  bool _revealObjectives = false;
+  bool _revealVision = false;
+  bool _revealFooter = false;
 
   @override
   void initState() {
@@ -212,6 +267,97 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _entCtrl.forward();
     _tabCtrl.forward();
+
+    if (kIsWeb) {
+      WebHomeNav.listenable.addListener(_onWebHomeNavRequest);
+      _scrollCtrl.addListener(_updateWebRevealStates);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _updateWebRevealStates(),
+      );
+    }
+  }
+
+  void _updateWebRevealStates() {
+    if (!kIsWeb || !mounted) return;
+    var changed = false;
+
+    bool visible(GlobalKey key, {double triggerRatio = 0.86}) {
+      final ctx = key.currentContext;
+      if (ctx == null) return false;
+      final rb = ctx.findRenderObject();
+      if (rb is! RenderBox || !rb.hasSize) return false;
+      final top = rb.localToGlobal(Offset.zero).dy;
+      final vh = MediaQuery.of(context).size.height;
+      return top < vh * triggerRatio;
+    }
+
+    if (!_revealMarquee && visible(_featuresKey, triggerRatio: 1.12)) {
+      _revealMarquee = true;
+      changed = true;
+    }
+    if (!_revealFeatures && visible(_featuresKey)) {
+      _revealFeatures = true;
+      changed = true;
+    }
+    if (!_revealHowItWorks && visible(_howItWorksKey)) {
+      _revealHowItWorks = true;
+      changed = true;
+    }
+    if (!_revealObjectives && visible(_objectivesKey)) {
+      _revealObjectives = true;
+      changed = true;
+    }
+    if (!_revealVision && visible(_visionKey, triggerRatio: 0.9)) {
+      _revealVision = true;
+      changed = true;
+    }
+    if (!_revealFooter && visible(_footerKey, triggerRatio: 0.95)) {
+      _revealFooter = true;
+      changed = true;
+    }
+
+    if (changed) setState(() {});
+  }
+
+  void _onWebHomeNavRequest() {
+    final section = WebHomeNav.requestedSection;
+    if (section == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToWebSection(section);
+      WebHomeNav.clear();
+    });
+  }
+
+  void _scrollToWebSection(WebHomeSection section) {
+    if (!_scrollCtrl.hasClients) return;
+
+    if (section == WebHomeSection.home) {
+      _scrollCtrl.animateTo(
+        0,
+        duration: const Duration(milliseconds: 520),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
+    final key = switch (section) {
+      WebHomeSection.features => _featuresKey,
+      WebHomeSection.howItWorks => _howItWorksKey,
+      WebHomeSection.objectives => _objectivesKey,
+      WebHomeSection.vision => _visionKey,
+      WebHomeSection.contact => _footerKey,
+      WebHomeSection.home => _heroKey,
+    };
+
+    final ctx = key.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 560),
+        curve: Curves.easeOutCubic,
+        alignment: 0.03,
+      );
+    }
   }
 
   void _switchTab(int i) {
@@ -227,6 +373,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    if (kIsWeb) {
+      WebHomeNav.listenable.removeListener(_onWebHomeNavRequest);
+      _scrollCtrl.removeListener(_updateWebRevealStates);
+    }
     _entCtrl.dispose();
     _pulseCtrl.dispose();
     _tabCtrl.dispose();
@@ -240,7 +390,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final d = Theme.of(context).brightness == Brightness.dark;
-    return w < 700 ? _buildMobile(context, d) : _buildWeb(context, d, w);
+    return kIsWeb || w >= 700
+        ? _buildWeb(context, d, w)
+        : _buildMobile(context, d);
   }
 
   // ══════════════════════════════════════════════════════════════════
@@ -294,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           subtitle: l.t('home_terminal_sub'),
           aL: _elBlue,
           aD: _elBlueD,
-          launchLabel: l.t('get_started'),
+          launchLabel: l.t('nav_terminal'),
           onLaunch: () => _push(
             ctx,
             TranslateScreen(
@@ -302,26 +454,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setLocale: widget.setLocale,
             ),
           ),
-          bullets: [
+          bullets: const [
             (
-              Icons.crop_free_rounded,
-              l.t('home_terminal_b1_title'),
-              l.t('home_terminal_b1_desc'),
+              Icons.mic_none_rounded,
+              'Voice to Text',
+              'Translate spoken language into accessible text in real time.',
             ),
             (
-              Icons.lock_rounded,
-              l.t('home_terminal_b2_title'),
-              l.t('home_terminal_b2_desc'),
+              Icons.wifi_tethering_rounded,
+              'Live Session',
+              'Run seamless conversation sessions with low-latency responses.',
             ),
             (
-              Icons.translate_rounded,
-              l.t('home_terminal_b3_title'),
-              l.t('home_terminal_b3_desc'),
-            ),
-            (
-              Icons.receipt_long_rounded,
-              l.t('home_terminal_b4_title'),
-              l.t('home_terminal_b4_desc'),
+              Icons.shield_outlined,
+              'Private Processing',
+              'Sensitive translation runs with strong privacy defaults.',
             ),
           ],
         );
@@ -334,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           subtitle: l.t('home_signs_sub'),
           aL: _teal,
           aD: _tealD,
-          launchLabel: l.t('home_browse_signs'),
+          launchLabel: l.t('nav_signs'),
           onLaunch: () => _push(
             ctx,
             SignsPage(
@@ -342,26 +489,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setLocale: widget.setLocale,
             ),
           ),
-          bullets: [
+          bullets: const [
             (
-              Icons.grid_view_rounded,
-              l.t('home_signs_b1_title'),
-              l.t('home_signs_b1_desc'),
+              Icons.pan_tool_alt_rounded,
+              'Guided Signs',
+              'Browse practical ISL signs with category-based discovery.',
             ),
             (
-              Icons.flip_to_front_rounded,
-              l.t('home_signs_b2_title'),
-              l.t('home_signs_b2_desc'),
+              Icons.center_focus_strong_rounded,
+              'Handshape Clarity',
+              'Visual cues help maintain precise handshape and motion.',
             ),
             (
-              Icons.search_rounded,
-              l.t('home_signs_b3_title'),
-              l.t('home_signs_b3_desc'),
-            ),
-            (
-              Icons.sort_rounded,
-              l.t('home_signs_b4_title'),
-              l.t('home_signs_b4_desc'),
+              Icons.school_rounded,
+              'Practice Friendly',
+              'Built for day-to-day learning and quick refresher sessions.',
             ),
           ],
         );
@@ -374,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           subtitle: l.t('home_bridge_sub'),
           aL: _emerald,
           aD: _emeraldD,
-          launchLabel: l.t('home_open_bridge'),
+          launchLabel: l.t('nav_bridge'),
           onLaunch: () => _push(
             ctx,
             TwoWayScreen(
@@ -382,26 +524,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setLocale: widget.setLocale,
             ),
           ),
-          bullets: [
+          bullets: const [
+            (
+              Icons.hearing_rounded,
+              'Hearing Side',
+              'Convert sign output into clear text and voice for listeners.',
+            ),
             (
               Icons.sign_language_rounded,
-              l.t('home_bridge_b1_title'),
-              l.t('home_bridge_b1_desc'),
+              'Signing Side',
+              'Translate speech or text into accessible sign-friendly output.',
             ),
             (
-              Icons.keyboard_alt_rounded,
-              l.t('home_bridge_b2_title'),
-              l.t('home_bridge_b2_desc'),
-            ),
-            (
-              Icons.chat_bubble_outline_rounded,
-              l.t('home_bridge_b3_title'),
-              l.t('home_bridge_b3_desc'),
-            ),
-            (
-              Icons.flash_on_rounded,
-              l.t('home_bridge_b4_title'),
-              l.t('home_bridge_b4_desc'),
+              Icons.sync_alt_rounded,
+              'Bidirectional Flow',
+              'Keep both participants in sync throughout the conversation.',
             ),
           ],
         );
@@ -409,9 +546,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return _MobFeatureDetail(
           isDark: d,
           l: l,
-          icon: Icons.sign_language_rounded,
+          icon: Icons.auto_awesome_rounded,
           title: l.t('assistant_title'),
-          subtitle: l.t('assistant_feature_sub'),
+          subtitle: l.t('assistant_banner_desc'),
           aL: _violet,
           aD: _violetD,
           launchLabel: l.t('assistant_open'),
@@ -422,49 +559,57 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setLocale: widget.setLocale,
             ),
           ),
-          bullets: [
+          bullets: const [
             (
-              Icons.auto_awesome_rounded,
-              l.t('assistant_bullet_ai_title'),
-              l.t('assistant_bullet_ai_desc'),
-            ),
-            (
-              Icons.mic_rounded,
-              l.t('assistant_bullet_voice_input_title'),
-              l.t('assistant_bullet_voice_input_desc'),
+              Icons.psychology_alt_rounded,
+              'Context Aware AI',
+              'Get smart assistance tuned for accessibility and ISL usage.',
             ),
             (
               Icons.record_voice_over_rounded,
-              l.t('assistant_bullet_voice_output_title'),
-              l.t('assistant_bullet_voice_output_desc'),
+              'Voice + Sign Workflow',
+              'Bridge voice and signs using one guided assistant experience.',
             ),
             (
-              Icons.front_hand_rounded,
-              l.t('assistant_bullet_sign_steps_title'),
-              l.t('assistant_bullet_sign_steps_desc'),
+              Icons.bolt_rounded,
+              'Fast Actions',
+              'Launch translation tools and workflows without extra steps.',
             ),
           ],
         );
       default:
-        return const SizedBox.shrink();
+        return _MobileHomeFeed(
+          isDark: d,
+          fade: _fade,
+          slide: _slide,
+          pulse: _pulse,
+          shim: _shim,
+          l: l,
+          toggleTheme: widget.toggleTheme,
+          setLocale: widget.setLocale,
+        );
     }
   }
 
-  void _push(BuildContext ctx, Widget p) => Navigator.push(
-    ctx,
-    PageRouteBuilder(
-      pageBuilder: (_, __, ___) => p,
-      transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
-      transitionDuration: const Duration(milliseconds: 260),
-    ),
-  );
+  void _push(BuildContext ctx, Widget p) {
+    Navigator.push(
+      ctx,
+      PageRouteBuilder(
+        pageBuilder: (_, _, _) => p,
+        transitionsBuilder: (_, a, _, c) =>
+            FadeTransition(opacity: a, child: c),
+        transitionDuration: const Duration(milliseconds: 260),
+      ),
+    );
+  }
 
   // ══════════════════════════════════════════════════════════════════
   //  WEB
   // ══════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext ctx, bool d, double w) {
     final desktop = w > 1100;
-    final hPad = desktop ? 88.0 : 44.0;
+    final compactWeb = w < 700;
+    final hPad = desktop ? 88.0 : (compactWeb ? 16.0 : 44.0);
     final l = AppLocalizations.of(ctx);
 
     return Scaffold(
@@ -475,17 +620,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Positioned(
             top: -200,
             left: -200,
-            child: _Orb(color: _elBlue.withValues(alpha: d ? 0.18 : 0.12), size: 680),
+            child: _Orb(color: _elBlue.withOpacity(d ? 0.18 : 0.12), size: 680),
           ),
           Positioned(
             top: 200,
             right: -150,
-            child: _Orb(color: _violet.withValues(alpha: d ? 0.14 : 0.09), size: 560),
+            child: _Orb(color: _violet.withOpacity(d ? 0.14 : 0.09), size: 560),
           ),
           Positioned(
             bottom: 100,
             left: w * 0.26,
-            child: _Orb(color: _cyan.withValues(alpha: d ? 0.12 : 0.08), size: 460),
+            child: _Orb(color: _cyan.withOpacity(d ? 0.12 : 0.08), size: 460),
           ),
           Positioned(
             top: 132,
@@ -500,12 +645,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Positioned(
             bottom: 180,
             right: w * 0.22,
-            child: _AmbientBeam(
-              width: 360,
-              height: 150,
-              color: _cyan,
-              dark: d,
-            ),
+            child: _AmbientBeam(width: 360, height: 150, color: _cyan, dark: d),
           ),
           Positioned.fill(
             child: IgnorePointer(
@@ -516,14 +656,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     end: Alignment.bottomCenter,
                     colors: d
                         ? [
-                            Colors.white.withValues(alpha: 0.02),
+                            Colors.white.withOpacity(0.02),
                             Colors.transparent,
-                            _elBlue.withValues(alpha: 0.02),
+                            _elBlue.withOpacity(0.02),
                           ]
                         : [
-                            _elBlue.withValues(alpha: 0.04),
+                            _elBlue.withOpacity(0.04),
                             Colors.transparent,
-                            _cyan.withValues(alpha: 0.025),
+                            _cyan.withOpacity(0.025),
                           ],
                   ),
                 ),
@@ -535,8 +675,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: CustomPaint(
               painter: _DotGridPainter(
                 color: d
-                    ? Colors.white.withValues(alpha: 0.025)
-                    : _elBlue.withValues(alpha: 0.04),
+                    ? Colors.white.withOpacity(0.025)
+                    : _elBlue.withOpacity(0.04),
               ),
             ),
           ),
@@ -575,12 +715,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Positioned(
             bottom: 120,
             right: 58,
-            child: _BorderCircle(
-              size: 118,
-              color: _cyan,
-              dark: d,
-              stroke: 0.9,
-            ),
+            child: _BorderCircle(size: 118, color: _cyan, dark: d, stroke: 0.9),
           ),
           Positioned(
             top: 268,
@@ -606,65 +741,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
 
                   // Hero
-                  _WebHero(
-                    desktop: desktop,
-                    dark: d,
-                    l: l,
-                    fade: _fade,
-                    slide: _slide,
-                    pulse: _pulse,
-                    float: _float,
-                    shim: _shim,
-                    hPad: hPad,
-                    onCTA: () => _push(
-                      ctx,
-                      TranslateScreen(
-                        toggleTheme: widget.toggleTheme,
-                        setLocale: widget.setLocale,
-                      ),
-                    ),
-                    onAssistant: () => _push(
-                      ctx,
-                      ISLAssistantScreen(
-                        toggleTheme: widget.toggleTheme,
-                        setLocale: widget.setLocale,
-                      ),
-                    ),
-                  ),
-
-                  // Marquee strip
-                  _MarqueeStrip(dark: d),
-
-                  // Stats
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: _WebStats(desktop: desktop, dark: d, l: l),
-                  ),
-                  SizedBox(height: desktop ? 80 : 60),
-
-                  // Features
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: _WebFeatures(
+                  KeyedSubtree(
+                    key: _heroKey,
+                    child: _WebHero(
                       desktop: desktop,
                       dark: d,
                       l: l,
-                      toggleTheme: widget.toggleTheme,
-                      setLocale: widget.setLocale,
-                      push: (p) => _push(ctx, p),
-                    ),
-                  ),
-                  SizedBox(height: desktop ? 80 : 60),
-
-                  // AI Assistant Banner
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: _WebAIBanner(
-                      desktop: desktop,
-                      dark: d,
-                      l: l,
+                      fade: _fade,
+                      slide: _slide,
+                      pulse: _pulse,
                       float: _float,
-                      onTap: () => _push(
+                      shim: _shim,
+                      hPad: hPad,
+                      onCTA: () => _push(
+                        ctx,
+                        TranslateScreen(
+                          toggleTheme: widget.toggleTheme,
+                          setLocale: widget.setLocale,
+                        ),
+                      ),
+                      onAssistant: () => _push(
                         ctx,
                         ISLAssistantScreen(
                           toggleTheme: widget.toggleTheme,
@@ -673,49 +769,128 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
+
+                  // Marquee strip
+                  _ScrollReveal(
+                    visible: _revealMarquee,
+                    child: _MarqueeStrip(dark: d),
+                  ),
+
+                  // Stats
+                  _ScrollReveal(
+                    visible: _revealMarquee,
+                    delayMs: 70,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: hPad),
+                      child: _WebStats(desktop: desktop, dark: d, l: l),
+                    ),
+                  ),
+                  SizedBox(height: desktop ? 80 : 60),
+
+                  // Features
+                  KeyedSubtree(
+                    key: _featuresKey,
+                    child: _ScrollReveal(
+                      visible: _revealFeatures,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: hPad),
+                        child: _WebFeatures(
+                          desktop: desktop,
+                          dark: d,
+                          l: l,
+                          toggleTheme: widget.toggleTheme,
+                          setLocale: widget.setLocale,
+                          push: (p) => _push(ctx, p),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: desktop ? 80 : 60),
+
+                  // AI Assistant Banner
+                  KeyedSubtree(
+                    key: _howItWorksKey,
+                    child: _ScrollReveal(
+                      visible: _revealHowItWorks,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: hPad),
+                        child: _WebAIBanner(
+                          desktop: desktop,
+                          dark: d,
+                          l: l,
+                          float: _float,
+                          onTap: () => _push(
+                            ctx,
+                            ISLAssistantScreen(
+                              toggleTheme: widget.toggleTheme,
+                              setLocale: widget.setLocale,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   SizedBox(height: desktop ? 80 : 60),
 
                   // Objectives
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: _WebObjectives(
-                      desktop: desktop,
-                      dark: d,
-                      l: l,
-                      toggleTheme: widget.toggleTheme,
-                      setLocale: widget.setLocale,
+                  KeyedSubtree(
+                    key: _objectivesKey,
+                    child: _ScrollReveal(
+                      visible: _revealObjectives,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: hPad),
+                        child: _WebObjectives(
+                          desktop: desktop,
+                          dark: d,
+                          l: l,
+                          toggleTheme: widget.toggleTheme,
+                          setLocale: widget.setLocale,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: desktop ? 80 : 60),
 
                   // Vision
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: desktop ? hPad * 0.55 : hPad * 0.8,
-                    ),
-                    child: _WebHoverLift(
-                      lift: 8,
-                      scale: 1.008,
-                      child: _WebVision(dark: d, l: l),
+                  KeyedSubtree(
+                    key: _visionKey,
+                    child: _ScrollReveal(
+                      visible: _revealVision,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: desktop ? hPad * 0.55 : hPad * 0.8,
+                        ),
+                        child: _WebHoverLift(
+                          lift: 8,
+                          scale: 1.008,
+                          child: _WebVision(dark: d, l: l),
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: desktop ? 56 : 40),
 
                   // Footer
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: hPad),
-                    child: _WebFooter(
-                      dark: d,
-                      l: l,
-                      onBackToTop: () {
-                        if (_scrollCtrl.hasClients) {
-                          _scrollCtrl.animateTo(
-                            0,
-                            duration: const Duration(milliseconds: 520),
-                            curve: Curves.easeOutCubic,
-                          );
-                        }
-                      },
+                  KeyedSubtree(
+                    key: _footerKey,
+                    child: _ScrollReveal(
+                      visible: _revealFooter,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: hPad),
+                        child: _WebFooter(
+                          dark: d,
+                          l: l,
+                          onBackToTop: () {
+                            if (_scrollCtrl.hasClients) {
+                              _scrollCtrl.animateTo(
+                                0,
+                                duration: const Duration(milliseconds: 520),
+                                curve: Curves.easeOutCubic,
+                              );
+                            }
+                          },
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: _s48),
@@ -725,6 +900,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AssistantMiniTag extends StatelessWidget {
+  final String label;
+  const _AssistantMiniTag({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final accent = dark ? _violetD : _violet;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [accent.withOpacity(0.18), accent.withOpacity(0.08)],
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withOpacity(0.28), width: 1),
+      ),
+      child: Text(label, style: _lbl(10.8, accent, w: FontWeight.w700)),
     );
   }
 }
@@ -770,12 +967,12 @@ class _BorderCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: color.withValues(alpha: dark ? 0.20 : 0.14),
+          color: color.withOpacity(dark ? 0.20 : 0.14),
           width: stroke,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: dark ? 0.06 : 0.04),
+            color: color.withOpacity(dark ? 0.06 : 0.04),
             blurRadius: 14,
             spreadRadius: 0.5,
           ),
@@ -811,13 +1008,13 @@ class _AmbientBeam extends StatelessWidget {
             end: Alignment.centerRight,
             colors: [
               Colors.transparent,
-              color.withValues(alpha: dark ? 0.06 : 0.05),
+              color.withOpacity(dark ? 0.06 : 0.05),
               Colors.transparent,
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: dark ? 0.07 : 0.05),
+              color: color.withOpacity(dark ? 0.07 : 0.05),
               blurRadius: 28,
               spreadRadius: 2,
             ),
@@ -888,6 +1085,32 @@ class _WebHoverLiftState extends State<_WebHoverLift> {
   }
 }
 
+class _ScrollReveal extends StatelessWidget {
+  final Widget child;
+  final bool visible;
+  final int delayMs;
+
+  const _ScrollReveal({
+    required this.child,
+    required this.visible,
+    this.delayMs = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: visible ? 1 : 0),
+      duration: Duration(milliseconds: 420 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, ch) => Opacity(
+        opacity: v,
+        child: Transform.translate(offset: Offset(0, (1 - v) * 24), child: ch),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _ArcDecor extends StatelessWidget {
   final double size;
   final Color color;
@@ -926,7 +1149,7 @@ class _ArcPainter extends CustomPainter {
   void paint(Canvas canvas, Size s) {
     void arc(double r, double op) {
       final glow = Paint()
-        ..color = color.withValues(alpha: dark ? op * 0.05 : op * 0.034)
+        ..color = color.withOpacity(dark ? op * 0.05 : op * 0.034)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
@@ -939,7 +1162,7 @@ class _ArcPainter extends CustomPainter {
       );
 
       final p = Paint()
-        ..color = color.withValues(alpha: dark ? op * 0.38 : op * 0.29)
+        ..color = color.withOpacity(dark ? op * 0.38 : op * 0.29)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.92;
       canvas.drawArc(
@@ -989,122 +1212,265 @@ class _WebHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final acc = _acc(dark);
     final sub = _txts(dark);
+    final title = _txt(dark);
 
     return Container(
       padding: EdgeInsets.only(
         left: hPad,
         right: hPad,
-        top: desktop ? 90 : 60,
+        top: desktop ? 78 : 60,
         bottom: desktop ? 80 : 56,
       ),
       child: FadeTransition(
         opacity: fade,
         child: SlideTransition(
           position: slide,
-          child: Column(
-            children: [
-              // ── Status pill ─────────────────────────────────────────
-              AnimatedBuilder(
-                animation: pulse,
-                builder: (_, __) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _surf(dark),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: _bord(dark), width: 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: acc.withValues(alpha: dark ? 0.12 : 0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF22C55E),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF22C55E,
-                              ).withValues(alpha: pulse.value * 0.60),
-                              blurRadius: 7,
-                              spreadRadius: 1.5,
+          child: desktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 11,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedBuilder(
+                            animation: pulse,
+                            builder: (_, _) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _surf(dark),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: _bord(dark),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFF10B981),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF10B981,
+                                          ).withOpacity(pulse.value * 0.6),
+                                          blurRadius: 7,
+                                          spreadRadius: 1.2,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l.t('badge'),
+                                    style: _wBody(
+                                      12.5,
+                                      sub,
+                                      w: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
+                          ),
+                          const SizedBox(height: 24),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 640),
+                            child: _HeroText(
+                              desktop: desktop,
+                              dark: dark,
+                              l: l,
+                              align: TextAlign.left,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 520),
+                            child: Text(
+                              l.t('hero_sub'),
+                              style: _wBody(17, sub),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _GlowBtn(
+                                label: l.t('get_started'),
+                                icon: Icons.arrow_forward_rounded,
+                                grad: [_teal, _elBlue],
+                                onTap: onCTA,
+                              ),
+                              _OutlineBtn(
+                                label: l.t('assistant_open'),
+                                icon: Icons.auto_awesome_rounded,
+                                accent: _accV(dark),
+                                dark: dark,
+                                onTap: onAssistant,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 36),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: _surf(dark),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: _bord(dark), width: 1),
+                            ),
+                            child: Row(
+                              children: [
+                                _HeroMetricTile(
+                                  val: '63M+',
+                                  label: l.t('stat_mute_label'),
+                                  color: acc,
+                                  text: title,
+                                ),
+                                _HeroMetricTile(
+                                  val: '3',
+                                  label: l.t('home_trust_indian_languages'),
+                                  color: acc,
+                                  text: title,
+                                ),
+                                _HeroMetricTile(
+                                  val: 'ISL',
+                                  label: 'Certified Signs',
+                                  color: acc,
+                                  text: title,
+                                ),
+                                _HeroMetricTile(
+                                  val: 'AI',
+                                  label: 'Powered',
+                                  color: acc,
+                                  text: title,
+                                  last: true,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 42),
+                    Expanded(
+                      flex: 9,
+                      child: AnimatedBuilder(
+                        animation: float,
+                        builder: (_, _) => Transform.translate(
+                          offset: Offset(0, -float.value * 0.45),
+                          child: Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: _surf(dark),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: _bord(dark), width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: acc.withOpacity(dark ? 0.14 : 0.08),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 16),
+                                ),
+                              ],
+                            ),
+                            child: _AIChatMockup(accent: acc, dark: dark),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(l.t('badge'), style: _b(12.5, sub)),
-                      const SizedBox(width: 10),
-                      Container(width: 1, height: 14, color: _bord(dark)),
-                      const SizedBox(width: 10),
-                      Icon(Icons.auto_awesome_rounded, size: 12, color: acc),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Vani AI',
-                        style: _lbl(12, acc, w: FontWeight.w700),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 680),
+                      child: _HeroText(desktop: desktop, dark: dark, l: l),
+                    ),
+                    const SizedBox(height: 14),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: Text(
+                        l.t('hero_sub'),
+                        textAlign: TextAlign.center,
+                        style: _wBody(15, sub),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 28),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        _GlowBtn(
+                          label: l.t('get_started'),
+                          icon: Icons.arrow_forward_rounded,
+                          grad: [_teal, _elBlue],
+                          onTap: onCTA,
+                        ),
+                        _OutlineBtn(
+                          label: l.t('assistant_open'),
+                          icon: Icons.auto_awesome_rounded,
+                          accent: _accV(dark),
+                          dark: dark,
+                          onTap: onAssistant,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 34),
+                    _TrustStrip(dark: dark, desktop: desktop, l: l),
+                  ],
                 ),
-              ),
-              SizedBox(height: desktop ? 32 : 22),
+        ),
+      ),
+    );
+  }
+}
 
-              // ── Headline ─────────────────────────────────────────────
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: desktop ? 860 : 680),
-                child: _HeroText(desktop: desktop, dark: dark, l: l),
-              ),
-              SizedBox(height: desktop ? 20 : 14),
+class _HeroMetricTile extends StatelessWidget {
+  final String val;
+  final String label;
+  final Color color;
+  final Color text;
+  final bool last;
 
-              // ── Sub ──────────────────────────────────────────────────
-              ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: desktop ? 520 : 440),
-                child: Text(
-                  l.t('hero_sub'),
-                  textAlign: TextAlign.center,
-                  style: _b(desktop ? 17 : 15, sub),
+  const _HeroMetricTile({
+    required this.val,
+    required this.label,
+    required this.color,
+    required this.text,
+    this.last = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : Border(
+                  right: BorderSide(color: color.withOpacity(0.16), width: 1),
                 ),
-              ),
-              SizedBox(height: desktop ? 40 : 28),
-
-              // ── CTAs ──────────────────────────────────────────────────
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _GlowBtn(
-                    label: l.t('get_started'),
-                    icon: Icons.arrow_forward_rounded,
-                    grad: [_elBlue, _elBlue2],
-                    onTap: onCTA,
-                  ),
-                  _OutlineBtn(
-                    label: l.t('assistant_open'),
-                    icon: Icons.auto_awesome_rounded,
-                    accent: _accV(dark),
-                    dark: dark,
-                    onTap: onAssistant,
-                  ),
-                ],
-              ),
-              SizedBox(height: desktop ? 56 : 44),
-
-              // ── Trust strip ──────────────────────────────────────────
-              _TrustStrip(dark: dark, desktop: desktop, l: l),
-            ],
-          ),
+        ),
+        child: Column(
+          children: [
+            Text(val, style: _wHead(24, color, w: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: _wBody(11.5, text.withOpacity(0.62), w: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );
@@ -1114,7 +1480,13 @@ class _WebHero extends StatelessWidget {
 class _HeroText extends StatelessWidget {
   final bool desktop, dark;
   final AppLocalizations l;
-  const _HeroText({required this.desktop, required this.dark, required this.l});
+  final TextAlign align;
+  const _HeroText({
+    required this.desktop,
+    required this.dark,
+    required this.l,
+    this.align = TextAlign.center,
+  });
   @override
   Widget build(BuildContext context) {
     final t = _txt(dark);
@@ -1128,9 +1500,9 @@ class _HeroText extends StatelessWidget {
         final t2 = l.t('hero_title_2').replaceAll('\n', ' ');
         TextSpan s(double sz) => TextSpan(
           children: [
-            if (t1.isNotEmpty) TextSpan(text: '$t1 ', style: _disp(sz, t)),
-            TextSpan(text: tH, style: _disp(sz, a)),
-            if (t2.isNotEmpty) TextSpan(text: ' $t2', style: _disp(sz, t)),
+            if (t1.isNotEmpty) TextSpan(text: '$t1 ', style: _wDisp(sz, t)),
+            TextSpan(text: tH, style: _wDisp(sz, a)),
+            if (t2.isNotEmpty) TextSpan(text: ' $t2', style: _wDisp(sz, t)),
           ],
         );
         double sz = fs;
@@ -1145,12 +1517,53 @@ class _HeroText extends StatelessWidget {
           if (sz <= (desktop ? 38 : 28)) break;
         }
         return RichText(
-          textAlign: TextAlign.center,
+          textAlign: align,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           text: s(sz),
         );
       },
+    );
+  }
+}
+
+class _GradientLastWordHeadline extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+  final Gradient gradient;
+
+  const _GradientLastWordHeadline({
+    required this.text,
+    required this.style,
+    required this.gradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final clean = text.trim();
+    final split = clean.lastIndexOf(' ');
+    if (split <= 0) return Text(clean, style: style);
+
+    final lead = clean.substring(0, split + 1);
+    final tail = clean.substring(split + 1);
+
+    return RichText(
+      text: TextSpan(
+        style: style,
+        children: [
+          TextSpan(text: lead),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: ShaderMask(
+              shaderCallback: (bounds) => gradient.createShader(
+                Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+              ),
+              child: Text(tail, style: style.copyWith(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1248,7 +1661,6 @@ class _MarqueeStripState extends State<_MarqueeStrip>
       '✦ ISLRTC Approved',
       '✦ Voice I/O',
       '✦ Privacy First',
-      '✦ 98% Accuracy',
     ];
     final bg = widget.dark ? _navy4 : _lSurf2;
     final bd = widget.dark ? _navyB : _lBorder;
@@ -1269,7 +1681,7 @@ class _MarqueeStripState extends State<_MarqueeStrip>
           width: double.infinity,
           child: AnimatedBuilder(
             animation: _ctrl,
-            builder: (_, __) {
+            builder: (_, _) {
               final offset = -_ctrl.value * 360;
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -1286,7 +1698,7 @@ class _MarqueeStripState extends State<_MarqueeStrip>
                               s,
                               style: _lbl(
                                 12,
-                                s.contains('✦') ? a.withValues(alpha: 0.70) : m,
+                                s.contains('✦') ? a.withOpacity(0.70) : m,
                               ),
                             ),
                           ),
@@ -1414,7 +1826,7 @@ class _StatCardState extends State<_StatCard>
         ),
         child: AnimatedBuilder(
           animation: _anim,
-          builder: (_, __) => Container(
+          builder: (_, _) => Container(
             padding: EdgeInsets.symmetric(
               vertical: widget.desktop ? 36 : 24,
               horizontal: 20,
@@ -1426,28 +1838,32 @@ class _StatCardState extends State<_StatCard>
                 colors: [
                   bg,
                   widget.dark
-                      ? _navy4.withValues(alpha: 0.92)
-                      : _lSurf2.withValues(alpha: 0.72),
+                      ? _navy4.withOpacity(0.92)
+                      : _lSurf2.withOpacity(0.72),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _hov
-                    ? widget.color.withValues(alpha: widget.dark ? 0.42 : 0.26)
-                    : bd.withValues(alpha: widget.dark ? 0.88 : 0.96),
+                    ? widget.color.withOpacity(widget.dark ? 0.42 : 0.26)
+                    : bd.withOpacity(widget.dark ? 0.88 : 0.96),
                 width: _hov ? 1.4 : 1.1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withValues(alpha: 
-                    _hov ? (widget.dark ? 0.20 : 0.15) : (widget.dark ? 0.12 : 0.09),
+                  color: widget.color.withOpacity(
+                    _hov
+                        ? (widget.dark ? 0.20 : 0.15)
+                        : (widget.dark ? 0.12 : 0.09),
                   ),
                   blurRadius: _hov ? 34 : 24,
                   offset: Offset(0, _hov ? 10 : 6),
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 
-                    _hov ? (widget.dark ? 0.32 : 0.08) : (widget.dark ? 0.26 : 0.05),
+                  color: Colors.black.withOpacity(
+                    _hov
+                        ? (widget.dark ? 0.32 : 0.08)
+                        : (widget.dark ? 0.26 : 0.05),
                   ),
                   blurRadius: _hov ? 30 : 20,
                   offset: Offset(0, _hov ? 18 : 12),
@@ -1456,39 +1872,44 @@ class _StatCardState extends State<_StatCard>
             ),
             child: Column(
               children: [
-            // Compact accent capsule for a cleaner premium header detail.
-            Container(
-              width: widget.desktop ? 92 : 74,
-              height: 6,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [widget.color.withValues(alpha: 0.95), widget.color.withValues(alpha: 0.42)],
-                ),
-                borderRadius: BorderRadius.circular(999),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.color.withValues(alpha: widget.dark ? 0.28 : 0.16),
-                    blurRadius: 14,
-                    offset: const Offset(0, 2),
+                // Compact accent capsule for a cleaner premium header detail.
+                Container(
+                  width: widget.desktop ? 92 : 74,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        widget.color.withOpacity(0.95),
+                        widget.color.withOpacity(0.42),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.color.withOpacity(
+                          widget.dark ? 0.28 : 0.16,
+                        ),
+                        blurRadius: 14,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              '${_fmt(_anim.value.toInt())}${widget.suffix}',
-              style: _h(
-                widget.desktop ? 42 : 28,
-                widget.color,
-                w: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: _s8),
-            Text(
-              widget.label,
-              textAlign: TextAlign.center,
-              style: _b(13, _txts(widget.dark)),
-            ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  '${_fmt(_anim.value.toInt())}${widget.suffix}',
+                  style: _h(
+                    widget.desktop ? 42 : 28,
+                    widget.color,
+                    w: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: _s8),
+                Text(
+                  widget.label,
+                  textAlign: TextAlign.center,
+                  style: _b(13, _txts(widget.dark)),
+                ),
               ],
             ),
           ),
@@ -1544,7 +1965,7 @@ class _WebFeatures extends StatelessWidget {
         l.t('nav_bridge'),
         l.t('home_bridge_sub'),
         TwoWayScreen(toggleTheme: toggleTheme, setLocale: setLocale),
-        ['Bidirectional', 'Voice + Signs'],
+        [l.t('bidirectional'), l.t('voice_and_signs')],
       ),
       (
         Icons.emergency_rounded,
@@ -1553,7 +1974,7 @@ class _WebFeatures extends StatelessWidget {
         l.t('nav_emergency'),
         l.t('home_emergency_sub'),
         EmergencyScreen(toggleTheme: toggleTheme, setLocale: setLocale),
-        ['SOS Alerts', 'Emergency Signs'],
+        [l.t('sos_alerts'), l.t('emergency_signs')],
       ),
     ];
     return Column(
@@ -1565,10 +1986,10 @@ class _WebFeatures extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: _acc(dark).withValues(alpha: 0.10),
+                color: _acc(dark).withOpacity(0.10),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: _acc(dark).withValues(alpha: 0.22),
+                  color: _acc(dark).withOpacity(0.22),
                   width: 1,
                 ),
               ),
@@ -1578,19 +1999,27 @@ class _WebFeatures extends StatelessWidget {
                   10.5,
                   _acc(dark),
                   w: FontWeight.w700,
-                ).copyWith(letterSpacing: 1.5),
+                ).copyWith(fontFamily: _ff, letterSpacing: 1.35),
               ),
             ),
           ],
         ),
         const SizedBox(height: _s14),
-        Text(l.t('home_features_title'), style: _h(desktop ? 36 : 26, _txt(dark))),
+        _GradientLastWordHeadline(
+          text: l.t('home_features_title'),
+          style: _wHead(desktop ? 38 : 28, _txt(dark), w: FontWeight.w800),
+          gradient: const LinearGradient(
+            colors: [_cyan, _elBlue, _violet],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
         const SizedBox(height: _s8),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Text(
             l.t('home_features_sub'),
-            style: _b(15, _txts(dark)),
+            style: _wBody(15.5, _txts(dark)),
           ),
         ),
         SizedBox(height: desktop ? 48 : 36),
@@ -1598,9 +2027,9 @@ class _WebFeatures extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: desktop ? 2 : 1,
-          mainAxisSpacing: _s16,
-          crossAxisSpacing: _s16,
-          childAspectRatio: desktop ? 2.1 : 3.2,
+          mainAxisSpacing: desktop ? 18 : _s14,
+          crossAxisSpacing: desktop ? 18 : _s14,
+          childAspectRatio: desktop ? 1.96 : 2.7,
           children: feats.map((f) {
             final a = dark ? f.$3 : f.$2;
             return _WebFeatCard(
@@ -1646,11 +2075,31 @@ class _WebFeatCardState extends State<_WebFeatCard> {
   bool _hov = false;
   @override
   Widget build(BuildContext context) {
-    final bg = _surf(widget.dark);
-    final bgH = _surf2(widget.dark);
     final t = _txt(widget.dark);
     final s = _txts(widget.dark);
     final bd = _bord(widget.dark);
+    const cardRadius = 36.0;
+    final glow = widget.accent.withOpacity(widget.dark ? 0.15 : 0.10);
+    final panelGradient = widget.dark
+        ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF111B31),
+              Color.lerp(const Color(0xFF111B31), widget.accent, 0.10)!,
+              const Color(0xFF0C1528),
+            ],
+          )
+        : LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFFFFFFFF),
+              Color.lerp(const Color(0xFFF7FAFF), widget.accent, 0.07)!,
+              const Color(0xFFF1F6FF),
+            ],
+          );
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hov = true),
       onExit: (_) => setState(() => _hov = false),
@@ -1666,160 +2115,230 @@ class _WebFeatCardState extends State<_WebFeatCard> {
             child: AnimatedScale(
               duration: const Duration(milliseconds: 190),
               curve: Curves.easeOutCubic,
-              scale: _hov ? 1.014 : 1.0,
+              scale: _hov ? 1.012 : 1.0,
               child: child,
             ),
           ),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(_s24),
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: _hov
-                    ? [
-                        bgH,
-                        widget.dark
-                            ? _navy5.withValues(alpha: 0.92)
-                            : _lSurf2.withValues(alpha: 0.84),
-                      ]
-                    : [
-                        bg,
-                        widget.dark
-                            ? _navy4.withValues(alpha: 0.88)
-                            : _lSurf2.withValues(alpha: 0.58),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(20),
+              gradient: panelGradient,
+              borderRadius: BorderRadius.circular(cardRadius),
               border: Border.all(
-                color: _hov ? widget.accent.withValues(alpha: 0.46) : bd,
-                width: _hov ? 1.5 : 1.0,
+                color: _hov
+                    ? widget.accent.withOpacity(widget.dark ? 0.34 : 0.24)
+                    : bd.withOpacity(widget.dark ? 0.96 : 0.90),
+                width: _hov ? 1.35 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
                   color: _hov
-                      ? widget.accent.withValues(alpha: 0.20)
-                      : Colors.black.withValues(alpha: widget.dark ? 0.15 : 0.04),
-                  blurRadius: _hov ? 34 : 12,
-                  offset: Offset(0, _hov ? 12 : 4),
+                      ? widget.accent.withOpacity(widget.dark ? 0.21 : 0.14)
+                      : Colors.black.withOpacity(widget.dark ? 0.16 : 0.07),
+                  blurRadius: _hov ? 34 : 20,
+                  offset: Offset(0, _hov ? 16 : 10),
                 ),
                 BoxShadow(
-                  color: widget.accent.withValues(alpha: _hov ? 0.15 : 0.05),
-                  blurRadius: _hov ? 44 : 18,
-                  offset: Offset(0, _hov ? 18 : 10),
+                  color: Colors.black.withOpacity(widget.dark ? 0.17 : 0.04),
+                  blurRadius: _hov ? 26 : 16,
+                  offset: Offset(0, _hov ? 14 : 9),
                 ),
               ],
             ),
-            child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: 3,
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      widget.accent.withValues(alpha: 0.96),
-                      widget.accent.withValues(alpha: 0.24),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: _s16),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      widget.accent.withValues(alpha: _hov ? 0.20 : 0.12),
-                      widget.accent.withValues(alpha: _hov ? 0.08 : 0.04),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: widget.accent.withValues(alpha: _hov ? 0.30 : 0.18),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(widget.icon, color: widget.accent, size: 26),
-              ),
-              const SizedBox(width: _s20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(widget.title, style: _h(17, t)),
-                    const SizedBox(height: _s6),
-                    Text(
-                      widget.desc,
-                      style: _b(13, s),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white.withOpacity(widget.dark ? 0.04 : 0.09),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.35],
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: _s12),
-                    Wrap(
-                      spacing: _s6,
-                      runSpacing: _s6,
-                      children: widget.tags
-                          .map(
-                            (tg) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: _s8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: widget.accent.withValues(alpha: 0.09),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: widget.accent.withValues(alpha: 0.22),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                tg,
-                                style: _lbl(
-                                  11,
-                                  widget.accent,
-                                  w: FontWeight.w600,
-                                ),
-                              ),
+                  ),
+                ),
+                Positioned(
+                  right: -18,
+                  top: -22,
+                  child: Container(
+                    width: 126,
+                    height: 126,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [glow, Colors.transparent],
+                        stops: const [0.0, 0.78],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 14,
+                  top: 14,
+                  bottom: 14,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 4.2,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          widget.accent.withOpacity(0.98),
+                          widget.accent.withOpacity(0.46),
+                          widget.accent.withOpacity(0.12),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.accent.withOpacity(0.24),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 30),
+                  child: Row(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              widget.accent.withOpacity(_hov ? 0.26 : 0.19),
+                              widget.accent.withOpacity(_hov ? 0.12 : 0.07),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: widget.accent.withOpacity(
+                              _hov ? 0.42 : 0.24,
                             ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-              AnimatedOpacity(
-                opacity: _hov ? 1.0 : 0.85,
-                duration: const Duration(milliseconds: 180),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: widget.accent.withValues(alpha: _hov ? 0.16 : 0.10),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: widget.accent.withValues(alpha: _hov ? 0.26 : 0.18),
-                      width: 1,
-                    ),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.accent.withOpacity(
+                                _hov ? 0.20 : 0.10,
+                              ),
+                              blurRadius: _hov ? 18 : 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          widget.icon,
+                          color: widget.accent,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: _wHead(19, t, w: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.desc,
+                              style: _wBody(12.8, s),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 7,
+                              runSpacing: 7,
+                              children: widget.tags
+                                  .map(
+                                    (tg) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: widget.accent.withOpacity(
+                                          widget.dark ? 0.15 : 0.10,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: widget.accent.withOpacity(
+                                            widget.dark ? 0.32 : 0.24,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        tg,
+                                        style: _lbl(
+                                          11.1,
+                                          widget.accent,
+                                          w: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      AnimatedOpacity(
+                        opacity: _hov ? 1.0 : 0.88,
+                        duration: const Duration(milliseconds: 180),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                widget.accent.withOpacity(_hov ? 0.26 : 0.16),
+                                widget.accent.withOpacity(_hov ? 0.14 : 0.08),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(13),
+                            border: Border.all(
+                              color: widget.accent.withOpacity(
+                                _hov ? 0.36 : 0.20,
+                              ),
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            color: widget.accent,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    color: widget.accent,
-                    size: 18,
-                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1872,116 +2391,76 @@ class _WebAIBannerState extends State<_WebAIBanner> {
               child: child,
             ),
           ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: widget.dark
-                    ? [
-                        const Color(0xFF0F1B33),
-                        const Color(0xFF111E38),
-                        const Color(0xFF0D172B),
-                      ]
-                    : [
-                        const Color(0xFFFFFFFF),
-                        const Color(0xFFF6F9FF),
-                        const Color(0xFFEEF4FF),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: _hov ? a.withValues(alpha: 0.32) : a.withValues(alpha: 0.16),
-                width: _hov ? 1.25 : 1.0,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: a.withValues(alpha: _hov ? 0.18 : 0.04),
-                  blurRadius: _hov ? 38 : 18,
-                  offset: Offset(0, _hov ? 14 : 10),
+          child: widget.desktop
+              ? _bannerDesktop(widget.l, a)
+              : AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: widget.dark
+                          ? [
+                              const Color(0xFF0F1B33),
+                              const Color(0xFF111E38),
+                              const Color(0xFF0D172B),
+                            ]
+                          : [
+                              const Color(0xFFFFFFFF),
+                              const Color(0xFFF6F9FF),
+                              const Color(0xFFEEF4FF),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: _hov ? a.withOpacity(0.32) : a.withOpacity(0.16),
+                      width: _hov ? 1.25 : 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: a.withOpacity(_hov ? 0.18 : 0.04),
+                        blurRadius: _hov ? 38 : 18,
+                        offset: Offset(0, _hov ? 14 : 10),
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(
+                          widget.dark
+                              ? (_hov ? 0.22 : 0.16)
+                              : (_hov ? 0.08 : 0.04),
+                        ),
+                        blurRadius: _hov ? 44 : 24,
+                        offset: Offset(0, _hov ? 20 : 16),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: _bannerMobile(widget.l, a, t, s),
+                  ),
                 ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: widget.dark ? (_hov ? 0.22 : 0.16) : (_hov ? 0.08 : 0.04)),
-                  blurRadius: _hov ? 44 : 24,
-                  offset: Offset(0, _hov ? 20 : 16),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(widget.desktop ? 48 : 28),
-              child: widget.desktop
-                  ? _bannerDesktop(widget.l, a, t, s)
-                  : _bannerMobile(widget.l, a, t, s),
-            ),
-          ),
         ),
       ),
     );
   }
 
-  Widget _bannerDesktop(AppLocalizations l, Color a, Color t, Color s) => Row(
+  Widget _bannerDesktop(AppLocalizations l, Color a) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Expanded(
-        flex: 3,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: a.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: a.withValues(alpha: 0.18), width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.auto_awesome_rounded, size: 12, color: a),
-                  const SizedBox(width: 6),
-                  Text(
-                    'AI-Powered ISL Assistant',
-                    style: _lbl(11, a, w: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: _s20),
-            Text(l.t('assistant_banner_title'), style: _disp(30, t)),
-            const SizedBox(height: _s12),
-            Text(
-              l.t('assistant_banner_desc'),
-              style: _b(15, s).copyWith(height: 1.55),
-            ),
-            const SizedBox(height: _s20),
-            Row(
-              children: [
-                Icon(Icons.language_rounded, size: 14, color: a),
-                const SizedBox(width: 8),
-                Text(
-                  'Supports 3 Languages',
-                  style: _lbl(13, a, w: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: _s24),
-            _GlowBtn(
-              label: l.t('assistant_open'),
-              icon: Icons.arrow_forward_rounded,
-              grad: [_elBlue, _cyan.withValues(alpha: 0.85)],
-              onTap: widget.onTap,
-            ),
-          ],
+        child: _AssistantFeatureCard(
+          dark: widget.dark,
+          accent: a,
+          l: l,
+          onTap: widget.onTap,
         ),
       ),
-      const SizedBox(width: _s48),
+      const SizedBox(width: _s24),
       Expanded(
-        flex: 2,
         child: AnimatedBuilder(
           animation: widget.float,
-          builder: (_, __) => Transform.translate(
+          builder: (_, _) => Transform.translate(
             offset: Offset(0, -widget.float.value * 0.5),
-            child: _AIChatMockup(accent: a, dark: widget.dark),
+            child: _ISLAssistantWorkflowCard(accent: a, dark: widget.dark),
           ),
         ),
       ),
@@ -1998,14 +2477,14 @@ class _WebAIBannerState extends State<_WebAIBanner> {
             height: 52,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [a, _cyan.withValues(alpha: 0.7)],
+                colors: [a, _cyan.withOpacity(0.7)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: a.withValues(alpha: 0.30),
+                  color: a.withOpacity(0.30),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -2024,7 +2503,7 @@ class _WebAIBannerState extends State<_WebAIBanner> {
               children: [
                 Text(l.t('assistant_title'), style: _h(20, t)),
                 Text(
-                  '3 Languages',
+                  l.t('ten_languages'),
                   style: _lbl(12, a, w: FontWeight.w600),
                 ),
               ],
@@ -2038,7 +2517,7 @@ class _WebAIBannerState extends State<_WebAIBanner> {
       _GlowBtn(
         label: l.t('assistant_open'),
         icon: Icons.arrow_forward_rounded,
-        grad: [a, _cyan.withValues(alpha: 0.7)],
+        grad: [a, _cyan.withOpacity(0.7)],
         onTap: widget.onTap,
       ),
     ],
@@ -2049,123 +2528,848 @@ class _AIChatMockup extends StatelessWidget {
   final Color accent;
   final bool dark;
   const _AIChatMockup({required this.accent, required this.dark});
+
   @override
   Widget build(BuildContext context) {
-    final bg1 = dark ? const Color(0xFF15223D) : const Color(0xFFF6F9FF);
-    final bg2 = dark ? const Color(0xFF111B32) : const Color(0xFFF3F7FF);
-    final s = _txts(dark);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    final l = AppLocalizations.of(context);
+    final txt = _txt(dark);
+    final sub = _txts(dark);
+    final panel = dark ? const Color(0xFF1B2740) : const Color(0xFFF7F9FF);
+    final line = dark ? _navyB : const Color(0xFFDCE4F4);
+    final bubble = dark ? _navy5 : const Color(0xFFEDF1F8);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: panel,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: line, width: 1),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+            child: Row(
+              children: [
+                Row(
+                  children: const [
+                    _DotDot(Color(0xFFFF5F57)),
+                    SizedBox(width: 6),
+                    _DotDot(Color(0xFFFEBB2E)),
+                    SizedBox(width: 6),
+                    _DotDot(Color(0xFF22C55E)),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  l.t('terminal_title'),
+                  style: _lbl(13, _txt(dark), w: FontWeight.bold),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(
+                      0xFF06B6D4,
+                    ).withOpacity(dark ? 0.24 : 0.15),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: const Color(
+                        0xFF06B6D4,
+                      ).withOpacity(dark ? 0.42 : 0.30),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    l.t('accessibility_live'),
+                    style: _lbl(
+                      11.5,
+                      const Color(0xFF0891B2),
+                      w: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: line),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AiBadge(dark: dark, label: 'U'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bubble,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: line, width: 1),
+                        ),
+                        child: Text(
+                          l.t('terminal_user_signs_help'),
+                          style: _wBody(12.4, txt, w: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AiBadge(dark: dark, label: 'AI'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bubble,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: line, width: 1),
+                        ),
+                        child: Text(
+                          l.t('terminal_ai_conversion_confidence'),
+                          style: _wBody(12.4, txt, w: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: dark ? _navy4 : const Color(0xFFE9EEF8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: line, width: 1),
+                    ),
+                    child: Text(
+                      l.t('terminal_hearing_reply_back'),
+                      style: _wBody(12.1, txt, w: FontWeight.w500),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Divider(height: 1, thickness: 1, color: line),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _FlowChip(
+                      icon: Icons.front_hand_rounded,
+                      label: l.t('sign_capture'),
+                    ),
+                    _FlowChip(
+                      icon: Icons.text_fields_rounded,
+                      label: l.t('text_output'),
+                    ),
+                    _FlowChip(
+                      icon: Icons.volume_up_rounded,
+                      label: l.t('voice_output'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l.t('live_terminal_events'),
+                    style: _lbl(10.8, sub, w: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 128,
+                  child: _MockTerminalAutoScroll(dark: dark),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ISLAssistantWorkflowCard extends StatelessWidget {
+  final Color accent;
+  final bool dark;
+  const _ISLAssistantWorkflowCard({required this.accent, required this.dark});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final txt = _txt(dark);
+    final sub = _txts(dark);
+    final panel = dark ? const Color(0xFF1B2740) : const Color(0xFFF7F9FF);
+    final line = dark ? _navyB : const Color(0xFFDCE4F4);
+    final bubble = dark ? _navy5 : const Color(0xFFEDF1F8);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: panel,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: line, width: 1),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+            child: Row(
+              children: [
+                Row(
+                  children: const [
+                    _DotDot(Color(0xFFFF5F57)),
+                    SizedBox(width: 6),
+                    _DotDot(Color(0xFFFEBB2E)),
+                    SizedBox(width: 6),
+                    _DotDot(Color(0xFF22C55E)),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  l.t('workflow_title'),
+                  style: _lbl(13, _txt(dark), w: FontWeight.bold),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(
+                      0xFF06B6D4,
+                    ).withOpacity(dark ? 0.24 : 0.15),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: const Color(
+                        0xFF06B6D4,
+                      ).withOpacity(dark ? 0.42 : 0.30),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    l.t('workflow_live'),
+                    style: _lbl(
+                      11.5,
+                      const Color(0xFF0891B2),
+                      w: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: line),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AiBadge(dark: dark, label: 'U'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bubble,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: line, width: 1),
+                        ),
+                        child: Text(
+                          l.t('workflow_user_signs_emergency'),
+                          style: _wBody(12.4, txt, w: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AiBadge(dark: dark, label: 'AI'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bubble,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: line, width: 1),
+                        ),
+                        child: Text(
+                          l.t('workflow_ai_realtime_output'),
+                          style: _wBody(12.4, txt, w: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: dark ? _navy4 : const Color(0xFFE9EEF8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: line, width: 1),
+                    ),
+                    child: Text(
+                      l.t('workflow_response_guidance'),
+                      style: _wBody(12.1, txt, w: FontWeight.w500),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Divider(height: 1, thickness: 1, color: line),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _FlowChip(
+                      icon: Icons.front_hand_rounded,
+                      label: l.t('sign_input'),
+                    ),
+                    _FlowChip(
+                      icon: Icons.memory_rounded,
+                      label: l.t('ai_process'),
+                    ),
+                    _FlowChip(
+                      icon: Icons.volume_up_rounded,
+                      label: l.t('voice_text_out'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l.t('workflow_events'),
+                    style: _lbl(10.8, sub, w: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 128,
+                  child: _MockTerminalAutoScroll(dark: dark),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AssistantFeatureCard extends StatefulWidget {
+  final bool dark;
+  final Color accent;
+  final AppLocalizations l;
+  final VoidCallback onTap;
+
+  const _AssistantFeatureCard({
+    required this.dark,
+    required this.accent,
+    required this.l,
+    required this.onTap,
+  });
+
+  @override
+  State<_AssistantFeatureCard> createState() => _AssistantFeatureCardState();
+}
+
+class _AssistantFeatureCardState extends State<_AssistantFeatureCard> {
+  bool _hov = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _txt(widget.dark);
+    final s = _txts(widget.dark);
+    final bd = _bord(widget.dark);
+    const cardRadius = 30.0;
+    final glow = widget.accent.withOpacity(widget.dark ? 0.15 : 0.10);
+    final panelGradient = widget.dark
+        ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF111B31),
+              Color.lerp(const Color(0xFF111B31), widget.accent, 0.10)!,
+              const Color(0xFF0C1528),
+            ],
+          )
+        : LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFFFFFFFF),
+              Color.lerp(const Color(0xFFF7FAFF), widget.accent, 0.07)!,
+              const Color(0xFFF1F6FF),
+            ],
+          );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hov = true),
+      onExit: (_) => setState(() => _hov = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: _hov ? -9 : 0),
+          duration: const Duration(milliseconds: 190),
+          curve: Curves.easeOutCubic,
+          builder: (_, dy, child) => Transform.translate(
+            offset: Offset(0, dy),
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 190),
+              curve: Curves.easeOutCubic,
+              scale: _hov ? 1.012 : 1.0,
+              child: child,
+            ),
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            constraints: const BoxConstraints(minHeight: 194, maxHeight: 202),
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [_elBlue, Color(0xFF4338CA)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(4),
+              gradient: panelGradient,
+              borderRadius: BorderRadius.circular(cardRadius),
+              border: Border.all(
+                color: _hov
+                    ? widget.accent.withOpacity(widget.dark ? 0.34 : 0.24)
+                    : bd.withOpacity(widget.dark ? 0.96 : 0.90),
+                width: _hov ? 1.35 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _elBlue.withValues(alpha: 0.16),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+                  color: _hov
+                      ? widget.accent.withOpacity(widget.dark ? 0.21 : 0.14)
+                      : Colors.black.withOpacity(widget.dark ? 0.16 : 0.07),
+                  blurRadius: _hov ? 34 : 20,
+                  offset: Offset(0, _hov ? 16 : 10),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(widget.dark ? 0.17 : 0.04),
+                  blurRadius: _hov ? 26 : 16,
+                  offset: Offset(0, _hov ? 14 : 9),
                 ),
               ],
             ),
-            child: Text(AppLocalizations.of(context).t('assistant_mock_user_message'), style: _b(13, Colors.white)),
-          ),
-        ),
-        const SizedBox(height: _s12),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: bg1,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(16),
-              ),
-              border: Border.all(color: accent.withValues(alpha: 0.14), width: 1),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(
-                        Icons.sign_language_rounded,
-                        color: Colors.white,
-                        size: 11,
+                // Gradient vignette effect from top
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.center,
+                        colors: [
+                          widget.accent.withOpacity(widget.dark ? 0.08 : 0.04),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text('VANI', style: _lbl(11, accent, w: FontWeight.w700)),
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 5,
-                      height: 5,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF22C55E),
+                  ),
+                ),
+                // Gradient vignette effect from bottom
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.center,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(widget.dark ? 0.08 : 0.03),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context).t('assistant_mock_ai_message'),
-                  style: _b(12, s),
-                  maxLines: 2,
+                // Animated glow circle
+                Positioned(
+                  right: _hov ? -8 : -12,
+                  top: _hov ? -8 : -12,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: _hov ? 116 : 104,
+                    height: _hov ? 116 : 104,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          glow.withOpacity(_hov ? 0.24 : 0.16),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.78],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  children: [
-                    _MiniChip(AppLocalizations.of(context).t('assistant_mock_chip_help'), accent),
-                    _MiniChip(AppLocalizations.of(context).t('assistant_mock_chip_emergency'), accent),
-                  ],
+                // Left accent bar
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 4,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(cardRadius),
+                        bottomLeft: Radius.circular(cardRadius),
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          widget.accent.withOpacity(0.98),
+                          widget.accent.withOpacity(_hov ? 0.48 : 0.34),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.accent.withOpacity(_hov ? 0.28 : 0.18),
+                          blurRadius: _hov ? 20 : 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Content
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 10, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Icon Row
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Row(
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      widget.accent.withOpacity(
+                                        _hov ? 0.20 : 0.14,
+                                      ),
+                                      widget.accent.withOpacity(
+                                        _hov ? 0.08 : 0.03,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: widget.accent.withOpacity(
+                                      _hov ? 0.32 : 0.18,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.sign_language_rounded,
+                                  color: widget.accent,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      widget.l.t('assistant_title'),
+                                      style: _wHead(17, t, w: FontWeight.w800)
+                                          .copyWith(
+                                            height: 1.08,
+                                            letterSpacing: -0.06,
+                                            wordSpacing: 2.0,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      widget.l.t('assistant_feature_sub'),
+                                      style: _wBody(12.7, s, w: FontWeight.w500)
+                                          .copyWith(
+                                            height: 1.30,
+                                            letterSpacing: -0.04,
+                                          ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        // Tags Row
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _AssistantMiniTag(
+                                      label: widget.l.t('ten_languages'),
+                                    ),
+                                    _AssistantMiniTag(
+                                      label: widget.l.t('voice_and_signs'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              AnimatedOpacity(
+                                opacity: _hov ? 1.0 : 0.82,
+                                duration: const Duration(milliseconds: 180),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        widget.accent.withOpacity(
+                                          _hov ? 0.18 : 0.10,
+                                        ),
+                                        widget.accent.withOpacity(
+                                          _hov ? 0.08 : 0.03,
+                                        ),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: widget.accent.withOpacity(
+                                        _hov ? 0.28 : 0.16,
+                                      ),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: widget.accent,
+                                    size: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: _s12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: bg2,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: accent.withValues(alpha: 0.12), width: 1),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: ['EN', 'हि', 'म']
-                .map(
-                  (la) => Text(la, style: _lbl(12, accent, w: FontWeight.w700)),
-                )
-                .toList(),
+      ),
+    );
+  }
+}
+
+class _DotDot extends StatelessWidget {
+  final Color color;
+  const _DotDot(this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 9,
+      height: 9,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _AiBadge extends StatelessWidget {
+  final bool dark;
+  final String label;
+  const _AiBadge({required this.dark, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final a = dark ? _cyanD : _cyan;
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: a.withOpacity(0.20),
+        shape: BoxShape.circle,
+        border: Border.all(color: a.withOpacity(0.35), width: 1),
+      ),
+      child: Center(
+        child: Text(label, style: _lbl(10.5, a, w: FontWeight.w800)),
+      ),
+    );
+  }
+}
+
+class _FlowChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _FlowChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final d = Theme.of(context).brightness == Brightness.dark;
+    final a = d ? _cyanD : _cyan;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: a.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: a.withOpacity(0.24), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: a),
+          const SizedBox(width: 5),
+          Text(label, style: _lbl(10.5, a, w: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MockTerminalAutoScroll extends StatefulWidget {
+  final bool dark;
+  const _MockTerminalAutoScroll({required this.dark});
+
+  @override
+  State<_MockTerminalAutoScroll> createState() =>
+      _MockTerminalAutoScrollState();
+}
+
+class _MockTerminalAutoScrollState extends State<_MockTerminalAutoScroll>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 11),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const loop = 186.0;
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, __) => Transform.translate(
+          offset: Offset(0, -_ctrl.value * loop),
+          child: Column(
+            children: [
+              _MockTerminalBlock(dark: widget.dark),
+              const SizedBox(height: 12),
+              _MockTerminalBlock(dark: widget.dark),
+            ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _MockTerminalBlock extends StatelessWidget {
+  final bool dark;
+  const _MockTerminalBlock({required this.dark});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final m = _txts(dark);
+    final line = dark ? _navyB : const Color(0xFFDCE4F4);
+    final codeBg = dark ? const Color(0xFF11243A) : const Color(0xFFEFF4FB);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: codeBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: line, width: 1),
+      ),
+      child: Text(
+        [
+          l.t('terminal_log_frame_help'),
+          l.t('terminal_log_vision_stable'),
+          l.t('terminal_log_classifier_conf'),
+          l.t('terminal_log_translate_help'),
+          l.t('terminal_log_tts_hearing'),
+          l.t('terminal_log_bridge_synced'),
+          l.t('terminal_log_privacy_active'),
+        ].join('\n'),
+        style: _lbl(
+          11.2,
+          dark ? const Color(0xFF7DD3FC) : const Color(0xFF0F766E),
+          w: FontWeight.w600,
+        ).copyWith(height: 1.5, fontFamily: 'Plus Jakarta Sans'),
+      ),
     );
   }
 }
@@ -2178,9 +3382,9 @@ class _MiniChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: accent.withValues(alpha: 0.12),
+      color: accent.withOpacity(0.12),
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: accent.withValues(alpha: 0.25), width: 1),
+      border: Border.all(color: accent.withOpacity(0.25), width: 1),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -2227,39 +3431,43 @@ class _WebObjectives extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: _acc(dark).withValues(alpha: 0.10),
+                color: _acc(dark).withOpacity(0.10),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: _acc(dark).withValues(alpha: 0.22),
+                  color: _acc(dark).withOpacity(0.22),
                   width: 1,
                 ),
               ),
               child: Text(
                 'OUR MISSION',
-                style: _lbl(
-                  10.5,
-                  _acc(dark),
-                  w: FontWeight.w700,
-                ).copyWith(letterSpacing: 1.5),
+                style: _wKicker(10.5, _acc(dark), w: FontWeight.w700),
               ),
             ),
           ],
         ),
         const SizedBox(height: _s14),
-        Text(l.t('obj_heading'), style: _h(desktop ? 36 : 26, _txt(dark))),
+        _GradientLastWordHeadline(
+          text: l.t('obj_heading'),
+          style: _wHead(desktop ? 38 : 28, _txt(dark), w: FontWeight.w800),
+          gradient: const LinearGradient(
+            colors: [_cyan, _elBlue, _violet],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
         const SizedBox(height: _s8),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
-          child: Text(l.t('obj_sub'), style: _b(15, _txts(dark))),
+          child: Text(l.t('obj_sub'), style: _wBody(15.5, _txts(dark))),
         ),
         SizedBox(height: desktop ? 48 : 36),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: desktop ? 3 : 2,
-          mainAxisSpacing: _s14,
-          crossAxisSpacing: _s14,
-          childAspectRatio: desktop ? 1.55 : 1.35,
+          mainAxisSpacing: desktop ? 16 : _s12,
+          crossAxisSpacing: desktop ? 16 : _s12,
+          childAspectRatio: desktop ? 1.45 : 1.24,
           children: cards.asMap().entries.map((e) {
             final i = e.key;
             final c = e.value;
@@ -2302,7 +3510,6 @@ class _WebObjCardState extends State<_WebObjCard> {
   @override
   Widget build(BuildContext context) {
     final bg = _surf(widget.dark);
-    final bgH = _surf2(widget.dark);
     final t = _txt(widget.dark);
     final s = _txts(widget.dark);
     final bd = _bord(widget.dark);
@@ -2314,8 +3521,8 @@ class _WebObjCardState extends State<_WebObjCard> {
         onTap: () => Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => widget.page,
-            transitionsBuilder: (_, a, __, c) =>
+            pageBuilder: (_, _, _) => widget.page,
+            transitionsBuilder: (_, a, _, c) =>
                 FadeTransition(opacity: a, child: c),
             transitionDuration: const Duration(milliseconds: 240),
           ),
@@ -2337,40 +3544,19 @@ class _WebObjCardState extends State<_WebObjCard> {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.all(_s20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: _hov
-                    ? [
-                        bgH,
-                        widget.dark
-                            ? _navy5.withValues(alpha: 0.90)
-                            : _lSurf2.withValues(alpha: 0.82),
-                      ]
-                    : [
-                        bg,
-                        widget.dark
-                            ? _navy4.withValues(alpha: 0.86)
-                            : _lSurf2.withValues(alpha: 0.56),
-                      ],
-              ),
+              color: bg,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: _hov ? widget.accent.withValues(alpha: 0.46) : bd,
-                width: _hov ? 1.5 : 1.0,
+                color: _hov ? widget.accent.withOpacity(0.40) : bd,
+                width: _hov ? 1.35 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
                   color: _hov
-                      ? widget.accent.withValues(alpha: 0.18)
-                      : Colors.black.withValues(alpha: widget.dark ? 0.12 : 0.03),
-                  blurRadius: _hov ? 30 : 8,
-                  offset: Offset(0, _hov ? 10 : 4),
-                ),
-                BoxShadow(
-                  color: widget.accent.withValues(alpha: _hov ? 0.14 : 0.04),
-                  blurRadius: _hov ? 38 : 14,
-                  offset: Offset(0, _hov ? 16 : 10),
+                      ? widget.accent.withOpacity(widget.dark ? 0.14 : 0.11)
+                      : Colors.black.withOpacity(widget.dark ? 0.11 : 0.03),
+                  blurRadius: _hov ? 28 : 14,
+                  offset: Offset(0, _hov ? 12 : 7),
                 ),
               ],
             ),
@@ -2379,14 +3565,14 @@ class _WebObjCardState extends State<_WebObjCard> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 56,
-                  height: 3,
+                  width: 52,
+                  height: 4,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
                     gradient: LinearGradient(
                       colors: [
-                        widget.accent.withValues(alpha: 0.92),
-                        widget.accent.withValues(alpha: 0.30),
+                        widget.accent.withOpacity(0.92),
+                        widget.accent.withOpacity(0.30),
                       ],
                     ),
                   ),
@@ -2397,15 +3583,10 @@ class _WebObjCardState extends State<_WebObjCard> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            widget.accent.withValues(alpha: _hov ? 0.22 : 0.14),
-                            widget.accent.withValues(alpha: _hov ? 0.10 : 0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
+                        color: widget.accent.withOpacity(_hov ? 0.14 : 0.09),
+                        borderRadius: BorderRadius.circular(13),
                         border: Border.all(
-                          color: widget.accent.withValues(alpha: _hov ? 0.30 : 0.20),
+                          color: widget.accent.withOpacity(_hov ? 0.28 : 0.20),
                           width: 1,
                         ),
                       ),
@@ -2419,10 +3600,12 @@ class _WebObjCardState extends State<_WebObjCard> {
                         width: 26,
                         height: 26,
                         decoration: BoxDecoration(
-                          color: widget.accent.withValues(alpha: _hov ? 0.15 : 0.09),
-                          borderRadius: BorderRadius.circular(8),
+                          color: widget.accent.withOpacity(_hov ? 0.15 : 0.09),
+                          borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                            color: widget.accent.withValues(alpha: _hov ? 0.25 : 0.17),
+                            color: widget.accent.withOpacity(
+                              _hov ? 0.25 : 0.17,
+                            ),
                             width: 1,
                           ),
                         ),
@@ -2436,11 +3619,11 @@ class _WebObjCardState extends State<_WebObjCard> {
                   ],
                 ),
                 const SizedBox(height: _s14),
-                Text(widget.title, style: _lbl(14.5, t, w: FontWeight.w700)),
+                Text(widget.title, style: _wHead(18, t, w: FontWeight.w800)),
                 const SizedBox(height: _s6),
                 Text(
                   widget.desc,
-                  style: _b(12, s),
+                  style: _wBody(12.8, s),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2465,186 +3648,313 @@ class _WebVision extends StatelessWidget {
     final a = _acc(dark);
     final t = _txt(dark);
     final s = _txts(dark);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 48),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: dark
-              ? [
-                  const Color(0xFF101A30),
-                  const Color(0xFF0D172A),
-                  const Color(0xFF111B31),
-                ]
-              : [
-                  const Color(0xFFFFFFFF),
-                  const Color(0xFFF8FBFF),
-                  const Color(0xFFF2F7FF),
-                ],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: a.withValues(alpha: dark ? 0.24 : 0.16), width: 1.05),
-        boxShadow: [
-          BoxShadow(
-            color: a.withValues(alpha: dark ? 0.10 : 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? 0.16 : 0.04),
-            blurRadius: 32,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 76,
-            height: 3,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              gradient: LinearGradient(
-                colors: [a.withValues(alpha: 0.90), a.withValues(alpha: 0.30)],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: a.withValues(alpha: dark ? 0.12 : 0.08),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: a.withValues(alpha: dark ? 0.24 : 0.16), width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.insights_rounded, color: a, size: 14),
-                const SizedBox(width: 6),
-                Text(
-                  l.t('home_mission_label'),
-                  style: _lbl(11.5, a, w: FontWeight.w700).copyWith(letterSpacing: 1.0),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [a.withValues(alpha: 0.16), a.withValues(alpha: 0.06)],
+    return LayoutBuilder(
+      builder: (_, c) {
+        final compact = c.maxWidth < 980;
+
+        final shellGradient = dark
+            ? const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: a.withValues(alpha: dark ? 0.30 : 0.20), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: a.withValues(alpha: dark ? 0.18 : 0.10),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
+                colors: [Color(0xFF0E182B), Color(0xFF111F36)],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFFFFFF), Color(0xFFF5F8FF)],
+              );
+
+        final sideGradient = dark
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  a.withOpacity(0.16),
+                  const Color(0xFF1A2740),
+                  const Color(0xFF0F1A30),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  a.withOpacity(0.09),
+                  const Color(0xFFF7FAFF),
+                  const Color(0xFFEFF4FF),
+                ],
+              );
+
+        final trustChips = Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _VisionChip(
+              dark: dark,
+              accent: a,
+              icon: Icons.groups_rounded,
+              text: l.t('home_trust_deaf_community'),
+            ),
+            _VisionChip(
+              dark: dark,
+              accent: a,
+              icon: Icons.language_rounded,
+              text: l.t('home_trust_indian_languages'),
+            ),
+            _VisionChip(
+              dark: dark,
+              accent: a,
+              icon: Icons.verified_rounded,
+              text: l.t('home_trust_certified_signs'),
+            ),
+            _VisionChip(
+              dark: dark,
+              accent: a,
+              icon: Icons.bolt_rounded,
+              text: l.t('home_trust_powered'),
+            ),
+          ],
+        );
+
+        final titleStyle = _wHead(compact ? 30 : 36, t, w: FontWeight.w800);
+        final titleGradient = const LinearGradient(
+          colors: [_cyan, _elBlue, _violet],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        );
+
+        Widget buildVisionTitle() {
+          final title = l.t('vision_title');
+          final lower = title.toLowerCase();
+          const key = 'vani ai';
+          final idx = lower.indexOf(key);
+          if (idx < 0) {
+            return _GradientLastWordHeadline(
+              text: title,
+              style: titleStyle,
+              gradient: titleGradient,
+            );
+          }
+
+          final lead = title.substring(0, idx);
+          final hit = title.substring(idx, idx + key.length);
+          final tail = title.substring(idx + key.length);
+
+          return RichText(
+            text: TextSpan(
+              style: titleStyle,
+              children: [
+                if (lead.isNotEmpty) TextSpan(text: lead),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => titleGradient.createShader(
+                      Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                    ),
+                    child: Text(
+                      hit,
+                      style: titleStyle.copyWith(color: Colors.white),
+                    ),
+                  ),
                 ),
+                if (tail.isNotEmpty) TextSpan(text: tail),
               ],
             ),
-            child: Icon(Icons.volunteer_activism_rounded, color: a, size: 24),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            l.t('vision_title'),
-            textAlign: TextAlign.center,
-            style: _h(30, t, w: FontWeight.w700),
-          ),
-          const SizedBox(height: 10),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 880),
-            child: Text(
-              l.t('vision_body'),
-              textAlign: TextAlign.center,
-              style: _b(14.5, s).copyWith(height: 1.58),
+          );
+        }
+
+        final crisisTag = Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: dark
+                  ? [
+                      _red.withOpacity(0.18),
+                      const Color(0xFF451C26).withOpacity(0.24),
+                    ]
+                  : [const Color(0xFFFFEEF0), const Color(0xFFFFF7F8)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _red.withOpacity(dark ? 0.32 : 0.18),
+              width: 1,
             ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _VisionChip(
-                dark: dark,
-                accent: a,
-                icon: Icons.groups_rounded,
-                text: l.t('home_trust_deaf_community'),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: dark ? _redD : _red,
+                size: 17,
               ),
-              _VisionChip(
-                dark: dark,
-                accent: a,
-                icon: Icons.language_rounded,
-                text: l.t('home_trust_indian_languages'),
-              ),
-              _VisionChip(
-                dark: dark,
-                accent: a,
-                icon: Icons.verified_rounded,
-                text: l.t('home_trust_certified_signs'),
-              ),
-              _VisionChip(
-                dark: dark,
-                accent: a,
-                icon: Icons.bolt_rounded,
-                text: l.t('home_trust_powered'),
+              const SizedBox(width: 8),
+              Text(
+                l.t('obj_crisis_stat'),
+                style: _lbl(12.6, dark ? _redD : _red, w: FontWeight.w700),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: dark
-                    ? [
-                        _red.withValues(alpha: 0.16),
-                        const Color(0xFF451C26).withValues(alpha: 0.20),
-                      ]
-                    : [
-                        const Color(0xFFFFEEF0),
-                        const Color(0xFFFFF6F7),
-                      ],
+        );
+
+        final leftContent = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: a.withOpacity(dark ? 0.14 : 0.08),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: a.withOpacity(dark ? 0.26 : 0.18),
+                  width: 1,
+                ),
               ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _red.withValues(alpha: dark ? 0.30 : 0.20),
-                width: 1,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_graph_rounded, color: a, size: 14),
+                  const SizedBox(width: 6),
+                  Text(
+                    l.t('home_mission_label'),
+                    style: _lbl(
+                      11.2,
+                      a,
+                      w: FontWeight.w700,
+                    ).copyWith(letterSpacing: 0.9),
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: _red.withValues(alpha: dark ? 0.14 : 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: dark ? _redD : _red,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l.t('obj_crisis_stat'),
-                  style: _lbl(13, dark ? _redD : _red, w: FontWeight.w700),
-                ),
-              ],
+            const SizedBox(height: 14),
+            buildVisionTitle(),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: compact ? 760 : 700),
+              child: Text(l.t('vision_body'), style: _wBody(14.1, s)),
             ),
+            const SizedBox(height: 14),
+            trustChips,
+            const SizedBox(height: 14),
+            crisisTag,
+          ],
+        );
+
+        return Container(
+          padding: EdgeInsets.all(compact ? 24 : 28),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            gradient: shellGradient,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: _bord(dark).withOpacity(dark ? 0.95 : 0.90),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: a.withOpacity(dark ? 0.11 : 0.09),
+                blurRadius: 34,
+                offset: const Offset(0, 14),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(dark ? 0.24 : 0.05),
+                blurRadius: 26,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
-        ],
-      ),
+          child: compact
+              ? leftContent
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: leftContent),
+                    const SizedBox(width: 18),
+                    Container(
+                      width: 248,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: sideGradient,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: a.withOpacity(dark ? 0.24 : 0.18),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: a.withOpacity(dark ? 0.20 : 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.volunteer_activism_rounded,
+                                  color: a,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Accessibility Index',
+                                  style: _lbl(12, t, w: FontWeight.w700),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '1 : 33,000+',
+                            style: _wHead(
+                              30,
+                              dark ? _redD : _red,
+                              w: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Translator coverage today',
+                            style: _lbl(11.5, s, w: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: _bordS(dark),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: FractionallySizedBox(
+                              widthFactor: 0.22,
+                              alignment: Alignment.centerLeft,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  gradient: LinearGradient(
+                                    colors: [a, _cyan.withOpacity(0.85)],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            l.t('obj_crisis_stat'),
+                            style: _lbl(11.2, s, w: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }
@@ -2666,9 +3976,12 @@ class _VisionChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: dark ? 0.12 : 0.08),
+        color: accent.withOpacity(dark ? 0.12 : 0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: dark ? 0.24 : 0.16), width: 1),
+        border: Border.all(
+          color: accent.withOpacity(dark ? 0.24 : 0.16),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2689,7 +4002,11 @@ class _WebFooter extends StatelessWidget {
   final bool dark;
   final AppLocalizations l;
   final VoidCallback onBackToTop;
-  const _WebFooter({required this.dark, required this.l, required this.onBackToTop});
+  const _WebFooter({
+    required this.dark,
+    required this.l,
+    required this.onBackToTop,
+  });
   @override
   Widget build(BuildContext context) {
     final t = _txt(dark);
@@ -2703,7 +4020,7 @@ class _WebFooter extends StatelessWidget {
             gradient: LinearGradient(
               colors: [
                 Colors.transparent,
-                d.withValues(alpha: 0.85),
+                d.withOpacity(0.85),
                 Colors.transparent,
               ],
             ),
@@ -2852,7 +4169,7 @@ class _GlowBtnState extends State<_GlowBtn> {
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: widget.grad.first.withValues(alpha: _hov ? 0.50 : 0.30),
+              color: widget.grad.first.withOpacity(_hov ? 0.50 : 0.30),
               blurRadius: _hov ? 22 : 14,
               offset: const Offset(0, 4),
             ),
@@ -2908,10 +4225,10 @@ class _OutlineBtnState extends State<_OutlineBtn> {
           height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 24),
           decoration: BoxDecoration(
-            color: _hov ? widget.accent.withValues(alpha: 0.08) : bg,
+            color: _hov ? widget.accent.withOpacity(0.08) : bg,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: _hov ? widget.accent.withValues(alpha: 0.42) : bd,
+              color: _hov ? widget.accent.withOpacity(0.42) : bd,
               width: _hov ? 1.5 : 1.0,
             ),
           ),
@@ -3065,7 +4382,7 @@ class _MobileHomeFeed extends StatelessWidget {
           top: -80,
           left: -80,
           child: _Orb(
-            color: _elBlue.withValues(alpha: isDark ? 0.10 : 0.06),
+            color: _elBlue.withOpacity(isDark ? 0.10 : 0.06),
             size: 280,
           ),
         ),
@@ -3073,7 +4390,7 @@ class _MobileHomeFeed extends StatelessWidget {
           top: 200,
           right: -60,
           child: _Orb(
-            color: _violet.withValues(alpha: isDark ? 0.08 : 0.05),
+            color: _violet.withOpacity(isDark ? 0.08 : 0.05),
             size: 220,
           ),
         ),
@@ -3082,8 +4399,8 @@ class _MobileHomeFeed extends StatelessWidget {
           child: CustomPaint(
             painter: _DotGridPainter(
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.02)
-                  : _elBlue.withValues(alpha: 0.03),
+                  ? Colors.white.withOpacity(0.02)
+                  : _elBlue.withOpacity(0.03),
             ),
           ),
         ),
@@ -3257,14 +4574,16 @@ class _MobTopBar extends StatelessWidget {
                 children: [
                   Text(
                     'VANI',
-                    style: _h(19, t, w: FontWeight.w800).copyWith(
-                      letterSpacing: 1.6,
-                    ),
+                    style: _h(
+                      19,
+                      t,
+                      w: FontWeight.w800,
+                    ).copyWith(letterSpacing: 1.6),
                   ),
                   const SizedBox(width: 8),
                   AnimatedBuilder(
                     animation: pulse,
-                    builder: (_, __) => Container(
+                    builder: (_, _) => Container(
                       width: 7,
                       height: 7,
                       decoration: BoxDecoration(
@@ -3274,7 +4593,7 @@ class _MobTopBar extends StatelessWidget {
                           BoxShadow(
                             color: const Color(
                               0xFF22C55E,
-                            ).withValues(alpha: pulse.value * 0.60),
+                            ).withOpacity(pulse.value * 0.60),
                             blurRadius: 6,
                             spreadRadius: 1.5,
                           ),
@@ -3362,9 +4681,9 @@ class _MobLangMenuBtn extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: a.withValues(alpha: 0.08),
+          color: a.withOpacity(0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: a.withValues(alpha: 0.25), width: 1),
+          border: Border.all(color: a.withOpacity(0.25), width: 1),
         ),
         child: Center(
           child: Text(cur['flag']!, style: const TextStyle(fontSize: 18)),
@@ -3512,12 +4831,12 @@ class _MobHeroCard extends StatelessWidget {
                 colors: [Color(0xFF2F6BFF), Color(0xFF1748C8)],
               ),
         border: Border.all(
-          color: isDark ? _navyB : Colors.white.withValues(alpha: 0.18),
+          color: isDark ? _navyB : Colors.white.withOpacity(0.18),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: _elBlue.withValues(alpha: isDark ? 0.20 : 0.24),
+            color: _elBlue.withOpacity(isDark ? 0.20 : 0.24),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -3546,7 +4865,7 @@ class _MobHeroCard extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -3572,12 +4891,12 @@ class _MobHeroCard extends StatelessWidget {
               Text(l.t('hero_title_line1'), style: _disp(26, Colors.white)),
               Text(
                 l.t('hero_title_line2'),
-                style: _disp(26, Colors.white.withValues(alpha: 0.80)),
+                style: _disp(26, Colors.white.withOpacity(0.80)),
               ),
               const SizedBox(height: _s10),
               Text(
                 l.t('hero_sub'),
-                style: _b(13.5, Colors.white.withValues(alpha: 0.79)),
+                style: _b(13.5, Colors.white.withOpacity(0.79)),
               ),
               const SizedBox(height: _s24),
               // Mini stats row
@@ -3596,11 +4915,11 @@ class _MobHeroCard extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => TranslateScreen(
+                    pageBuilder: (_, _, _) => TranslateScreen(
                       toggleTheme: toggleTheme,
                       setLocale: setLocale,
                     ),
-                    transitionsBuilder: (_, a, __, c) =>
+                    transitionsBuilder: (_, a, _, c) =>
                         FadeTransition(opacity: a, child: c),
                     transitionDuration: const Duration(milliseconds: 260),
                   ),
@@ -3609,11 +4928,11 @@ class _MobHeroCard extends StatelessWidget {
                   height: 48,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.96),
+                    color: Colors.white.withOpacity(0.96),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: Colors.white.withOpacity(0.18),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -3652,7 +4971,7 @@ class _MobHeroStat extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(val, style: _h(18, Colors.white, w: FontWeight.w800)),
-      Text(lab, style: _lbl(10, Colors.white.withValues(alpha: 0.65))),
+      Text(lab, style: _lbl(10, Colors.white.withOpacity(0.65))),
     ],
   );
 }
@@ -3716,14 +5035,14 @@ class _MobStatsStripState extends State<_MobStatsStrip>
     ];
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, __) => Container(
+      builder: (_, _) => Container(
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: bd, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: widget.isDark ? 0.18 : 0.04),
+              color: Colors.black.withOpacity(widget.isDark ? 0.18 : 0.04),
               blurRadius: 12,
               offset: const Offset(0, 3),
             ),
@@ -3806,7 +5125,7 @@ class _MobFeatureMarquee extends StatelessWidget {
         itemCount: items.length,
         itemBuilder: (_, i) => Padding(
           padding: const EdgeInsets.only(right: 16),
-          child: Text(items[i], style: _lbl(12, a.withValues(alpha: 0.70))),
+          child: Text(items[i], style: _lbl(12, a.withOpacity(0.70))),
         ),
       ),
     );
@@ -3908,8 +5227,8 @@ class _MobQuickAccess extends StatelessWidget {
                 onTap: () => Navigator.push(
                   ctx,
                   PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => d(),
-                    transitionsBuilder: (_, a, __, ch) =>
+                    pageBuilder: (_, _, _) => d(),
+                    transitionsBuilder: (_, a, _, ch) =>
                         FadeTransition(opacity: a, child: ch),
                     transitionDuration: const Duration(milliseconds: 240),
                   ),
@@ -3971,7 +5290,7 @@ class _MobQuickTileState extends State<_MobQuickTile> {
               border: Border.all(color: bd, width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: widget.isDark ? 0.22 : 0.05),
+                  color: Colors.black.withOpacity(widget.isDark ? 0.22 : 0.05),
                   blurRadius: 14,
                   offset: const Offset(0, 4),
                 ),
@@ -3985,10 +5304,10 @@ class _MobQuickTileState extends State<_MobQuickTile> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: widget.a.withValues(alpha: widget.isDark ? 0.16 : 0.10),
+                    color: widget.a.withOpacity(widget.isDark ? 0.16 : 0.10),
                     borderRadius: BorderRadius.circular(13),
                     border: Border.all(
-                      color: widget.a.withValues(alpha: 0.24),
+                      color: widget.a.withOpacity(0.24),
                       width: 1,
                     ),
                   ),
@@ -4072,11 +5391,11 @@ class _MobAICardState extends State<_MobAICard>
           Navigator.push(
             context,
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => ISLAssistantScreen(
+              pageBuilder: (_, _, _) => ISLAssistantScreen(
                 toggleTheme: widget.toggleTheme,
                 setLocale: widget.setLocale,
               ),
-              transitionsBuilder: (_, a, __, c) =>
+              transitionsBuilder: (_, a, _, c) =>
                   FadeTransition(opacity: a, child: c),
               transitionDuration: const Duration(milliseconds: 260),
             ),
@@ -4095,10 +5414,10 @@ class _MobAICardState extends State<_MobAICard>
                 end: Alignment.bottomRight,
                 colors: [bg1, bg2],
               ),
-              border: Border.all(color: a.withValues(alpha: 0.22), width: 1),
+              border: Border.all(color: a.withOpacity(0.22), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: d ? 0.24 : 0.06),
+                  color: Colors.black.withOpacity(d ? 0.24 : 0.06),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
@@ -4113,19 +5432,19 @@ class _MobAICardState extends State<_MobAICard>
                       // Glowing avatar
                       AnimatedBuilder(
                         animation: _pa,
-                        builder: (_, __) => Container(
+                        builder: (_, _) => Container(
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [a, _cyan.withValues(alpha: 0.7)],
+                              colors: [a, _cyan.withOpacity(0.7)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: a.withValues(alpha: _pa.value * 0.36),
+                                color: a.withOpacity(_pa.value * 0.36),
                                 blurRadius: 14,
                                 spreadRadius: 1,
                               ),
@@ -4153,7 +5472,7 @@ class _MobAICardState extends State<_MobAICard>
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: a.withValues(alpha: 0.14),
+                                    color: a.withOpacity(0.14),
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                   child: Text(
@@ -4164,7 +5483,7 @@ class _MobAICardState extends State<_MobAICard>
                                 const SizedBox(width: 6),
                                 AnimatedBuilder(
                                   animation: _pa,
-                                  builder: (_, __) => Container(
+                                  builder: (_, _) => Container(
                                     width: 6,
                                     height: 6,
                                     decoration: BoxDecoration(
@@ -4174,7 +5493,7 @@ class _MobAICardState extends State<_MobAICard>
                                         BoxShadow(
                                           color: const Color(
                                             0xFF22C55E,
-                                          ).withValues(alpha: _pa.value * 0.6),
+                                          ).withOpacity(_pa.value * 0.6),
                                           blurRadius: 5,
                                           spreadRadius: 1,
                                         ),
@@ -4196,7 +5515,7 @@ class _MobAICardState extends State<_MobAICard>
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: a.withValues(alpha: 0.12),
+                          color: a.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -4208,7 +5527,7 @@ class _MobAICardState extends State<_MobAICard>
                     ],
                   ),
                 ),
-                Divider(height: 1, thickness: 1, color: a.withValues(alpha: 0.10)),
+                Divider(height: 1, thickness: 1, color: a.withOpacity(0.10)),
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
@@ -4261,9 +5580,9 @@ class _MobAIChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
     decoration: BoxDecoration(
-      color: color.withValues(alpha: dark ? 0.10 : 0.07),
+      color: color.withOpacity(dark ? 0.10 : 0.07),
       borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: color.withValues(alpha: 0.20), width: 1),
+      border: Border.all(color: color.withOpacity(0.20), width: 1),
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -4368,8 +5687,8 @@ class _MobObjCardState extends State<_MobObjCard> {
           Navigator.push(
             context,
             PageRouteBuilder(
-              pageBuilder: (_, __, ___) => widget.page,
-              transitionsBuilder: (_, a, __, c) =>
+              pageBuilder: (_, _, _) => widget.page,
+              transitionsBuilder: (_, a, _, c) =>
                   FadeTransition(opacity: a, child: c),
               transitionDuration: const Duration(milliseconds: 240),
             ),
@@ -4389,7 +5708,7 @@ class _MobObjCardState extends State<_MobObjCard> {
               border: Border.all(color: bd, width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: widget.accent.withValues(alpha: 0.05),
+                  color: widget.accent.withOpacity(0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
@@ -4404,13 +5723,13 @@ class _MobObjCardState extends State<_MobObjCard> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        widget.accent.withValues(alpha: 0.14),
-                        widget.accent.withValues(alpha: 0.05),
+                        widget.accent.withOpacity(0.14),
+                        widget.accent.withOpacity(0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: widget.accent.withValues(alpha: 0.20),
+                      color: widget.accent.withOpacity(0.20),
                       width: 1,
                     ),
                   ),
@@ -4457,10 +5776,10 @@ class _MobMissionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: a.withValues(alpha: 0.20), width: 1),
+        border: Border.all(color: a.withOpacity(0.20), width: 1),
         boxShadow: [
           BoxShadow(
-            color: a.withValues(alpha: 0.06),
+            color: a.withOpacity(0.06),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -4487,9 +5806,9 @@ class _MobMissionCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: _red.withValues(alpha: isDark ? 0.12 : 0.07),
+              color: _red.withOpacity(isDark ? 0.12 : 0.07),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _red.withValues(alpha: 0.25), width: 1),
+              border: Border.all(color: _red.withOpacity(0.25), width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -4564,14 +5883,18 @@ class _MobFeatureDetail extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(_s20),
             decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _a.withValues(alpha: 0.32), width: 1.5),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [bg, Color.lerp(bg, _a, isDark ? 0.08 : 0.05)!],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _a.withOpacity(0.28), width: 1.25),
               boxShadow: [
                 BoxShadow(
-                  color: _a.withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  color: _a.withOpacity(0.10),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -4579,14 +5902,23 @@ class _MobFeatureDetail extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: 54,
+                  height: 54,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [_a.withValues(alpha: 0.15), _a.withValues(alpha: 0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [_a.withOpacity(0.18), _a.withOpacity(0.06)],
                     ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: _a.withValues(alpha: 0.25), width: 1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _a.withOpacity(0.28), width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _a.withOpacity(0.10),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Icon(icon, color: _a, size: 26),
                 ),
@@ -4616,8 +5948,12 @@ class _MobFeatureDetail extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [bg, Color.lerp(bg, _a, isDark ? 0.05 : 0.03)!],
+              ),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(color: bd, width: 1),
             ),
             child: Column(
@@ -4628,26 +5964,35 @@ class _MobFeatureDetail extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
+                        horizontal: 14,
+                        vertical: 15,
                       ),
                       child: Row(
                         children: [
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: 42,
+                            height: 42,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                                 colors: [
-                                  _a.withValues(alpha: 0.14),
-                                  _a.withValues(alpha: 0.05),
+                                  _a.withOpacity(0.16),
+                                  _a.withOpacity(0.06),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _a.withValues(alpha: 0.22),
+                                color: _a.withOpacity(0.24),
                                 width: 1,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _a.withOpacity(0.06),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
                             child: Icon(f.$1, color: _a, size: 18),
                           ),
@@ -4668,7 +6013,7 @@ class _MobFeatureDetail extends StatelessWidget {
                           Icon(
                             Icons.arrow_forward_ios_rounded,
                             size: 13,
-                            color: _txtm(isDark),
+                            color: _txtm(isDark).withOpacity(0.85),
                           ),
                         ],
                       ),
@@ -4727,14 +6072,14 @@ class _MobCTABtnState extends State<_MobCTABtn> {
           height: 50,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [widget.acc, _cyan.withValues(alpha: 0.8)],
+              colors: [widget.acc, _cyan.withOpacity(0.8)],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: widget.acc.withValues(alpha: 0.30),
+                color: widget.acc.withOpacity(0.30),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -4812,4 +6157,3 @@ List<(Color, IconData, String, String, Widget)> _objCards(
     EducationPage(toggleTheme: toggleTheme, setLocale: setLocale),
   ),
 ];
-

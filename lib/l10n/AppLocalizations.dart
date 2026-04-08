@@ -313,12 +313,12 @@ class AppLocalizations {
           'Life-saving signs and one-tap SOS for critical moments.',
       'home_mission_label': 'OUR MISSION',
       'home_trust_deaf_community': 'Deaf Community',
-    'home_trust_indian_languages': 'Languages',
+      'home_trust_indian_languages': 'Languages',
       'home_trust_certified_signs': 'Certified Signs',
       'home_trust_powered': 'Powered',
       'home_tag_life_saving_signs': 'Life-saving signs',
       'home_tag_one_tap_sos': 'One-tap SOS',
-    'home_back_to_top': 'Back to top',
+      'home_back_to_top': 'Back to top',
       'home_footer_project_line':
           'Final Year Project · Computer Engineering · 2025-26',
       'home_footer_stack_line': 'Built with Python, FastAPI, Flutter, AI',
@@ -332,8 +332,8 @@ class AppLocalizations {
           'Sign HELP: Extend both hands flat,\npalms facing up, raise upward twice.',
       'assistant_mock_chip_help': 'HELP',
       'assistant_mock_chip_emergency': 'EMERGENCY',
-    'assistant_mute': 'Mute',
-    'assistant_unmute': 'Unmute',
+      'assistant_mute': 'Mute',
+      'assistant_unmute': 'Unmute',
 
       'sos_sms_general_template':
           'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
@@ -422,14 +422,14 @@ class AppLocalizations {
       'auth_sign_in': 'Sign In',
       'auth_create_account': 'Create Account',
       'auth_footer_tagline': 'Built for accuracy. Designed for dignity.',
-    'auth_footer_community': 'Empowering India\'s deaf & mute community',
+      'auth_footer_community': 'Empowering India\'s deaf & mute community',
       'auth_login_or_signup': 'Login or sign up',
       'auth_welcome_back': 'Welcome back!',
       'auth_account_created': 'Account created!',
 
       // ── Translate additional labels
       'translate_screen_title': 'Sign Language Translator',
-    'translate_loader_tagline': 'Sign Language · Real-Time AI',
+      'translate_loader_tagline': 'Sign Language · Real-Time AI',
       'translate_loader_camera': 'Loading camera modules...',
       'translate_loader_ai': 'Initializing AI engine...',
       'translate_loader_calibrate': 'Calibrating gesture model...',
@@ -694,8 +694,7 @@ class AppLocalizations {
       'signs_progress_label': 'Progress',
       'signs_progress_count': '{viewed} / {total} explored',
       'signs_learning_vault_title': 'Learning Vault',
-      'signs_learning_vault_subtitle':
-          'Practice and memorize ISL signs faster',
+      'signs_learning_vault_subtitle': 'Practice and memorize ISL signs faster',
       'signs_islrtc_resources': 'ISLRTC Resources',
       'signs_visible_label': 'signs visible',
       'signs_viewed_badge': 'Viewed',
@@ -1303,6 +1302,47 @@ class AppLocalizations {
       'edu_t6_year': '2026',
       'edu_t6_event':
           'Vani v1.0 — First accessible AI-powered ISL learning feedback tool',
+
+      // ── Additional localization keys (no hardcoded strings)
+      'voice_and_signs': 'Voice + Signs',
+      'ten_languages': '10 Languages',
+      'bidirectional': 'Bidirectional',
+      'version_number': 'v 0.0.1 · Beta',
+      'app_name_short': 'VANI',
+      'features_label': 'FEATURES',
+      'objectives_label': 'OBJECTIVES',
+      'sos_alerts': 'SOS Alerts',
+      'emergency_signs': 'Emergency Signs',
+      'accessibility_live': 'Accessibility Live',
+      'sign_capture': 'Sign Capture',
+      'text_output': 'Text Output',
+      'voice_output': 'Voice Output',
+      'live_terminal_events': 'LIVE TERMINAL EVENTS',
+      'workflow_live': 'Workflow Live',
+      'sign_input': 'Sign Input',
+      'ai_process': 'AI Process',
+      'voice_text_out': 'Voice/Text Out',
+      'workflow_events': 'WORKFLOW EVENTS',
+      'terminal_title': 'VANI Terminal',
+      'terminal_user_signs_help': 'Deaf / mute user signs: HELP',
+      'terminal_ai_conversion_confidence':
+          'AI converts sign to readable text + voice for hearing people. Confidence 98.2%',
+      'terminal_hearing_reply_back':
+          'Hearing user replies by voice/text -> VANI shows response back for deaf user.',
+      'workflow_title': 'ISL Assistant Workflow',
+      'workflow_user_signs_emergency': 'User signs: "Need emergency support"',
+      'workflow_ai_realtime_output':
+          'ISL -> text + voice generated in real-time for hearing listener.',
+      'workflow_response_guidance':
+          'Response captured and shown back as readable ISL guidance.',
+      'terminal_log_frame_help': r'$ frame_024 -> HELP',
+      'terminal_log_vision_stable': '[vision] hand landmarks stable',
+      'terminal_log_classifier_conf': '[classifier] label=HELP conf=0.982',
+      'terminal_log_translate_help':
+          '[translate] isl->text: "I need assistance"',
+      'terminal_log_tts_hearing': '[assistive] tts played for hearing listener',
+      'terminal_log_bridge_synced': '[bridge] reply synced back for deaf user',
+      'terminal_log_privacy_active': '[privacy] on-device inference active',
     },
 
     // ═══════════════════════════════════════════════════
@@ -1580,12 +1620,12 @@ class AppLocalizations {
       'home_emergency_sub': 'गंभीर समय में जीवनरक्षक संकेत और एक-टैप SOS।',
       'home_mission_label': 'OUR MISSION',
       'home_trust_deaf_community': 'Deaf Community',
-    'home_trust_indian_languages': 'भाषाएँ',
+      'home_trust_indian_languages': 'भाषाएँ',
       'home_trust_certified_signs': 'Certified Signs',
       'home_trust_powered': 'Powered',
       'home_tag_life_saving_signs': 'Life-saving signs',
       'home_tag_one_tap_sos': 'One-tap SOS',
-    'home_back_to_top': 'ऊपर वापस जाएँ',
+      'home_back_to_top': 'ऊपर वापस जाएँ',
       'home_footer_project_line':
           'अंतिम वर्ष परियोजना · कंप्यूटर इंजीनियरिंग · 2025-26',
       'home_footer_stack_line': 'Python, FastAPI, Flutter, AI के साथ निर्मित',
@@ -1599,8 +1639,8 @@ class AppLocalizations {
           'Sign HELP: Extend both hands flat,\npalms facing up, raise upward twice.',
       'assistant_mock_chip_help': 'HELP',
       'assistant_mock_chip_emergency': 'EMERGENCY',
-    'assistant_mute': 'म्यूट',
-    'assistant_unmute': 'अनम्यूट',
+      'assistant_mute': 'म्यूट',
+      'assistant_unmute': 'अनम्यूट',
 
       'sos_sms_general_template':
           'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
@@ -1694,7 +1734,7 @@ class AppLocalizations {
       'auth_account_created': 'खाता बन गया!',
 
       'translate_screen_title': 'सांकेतिक भाषा अनुवादक',
-    'translate_loader_tagline': 'सांकेतिक भाषा · रियल-टाइम AI',
+      'translate_loader_tagline': 'सांकेतिक भाषा · रियल-टाइम AI',
       'translate_loader_camera': 'कैमरा मॉड्यूल लोड हो रहे हैं...',
       'translate_loader_ai': 'AI इंजन प्रारंभ हो रहा है...',
       'translate_loader_calibrate': 'जेस्चर मॉडल कैलिब्रेट हो रहा है...',
@@ -2407,6 +2447,50 @@ class AppLocalizations {
       'edu_t4_year': '2015', 'edu_t4_event': 'ISLRTC',
       'edu_t5_year': '2020', 'edu_t5_event': 'NEP 2020',
       'edu_t6_year': '2026', 'edu_t6_event': 'वाणी v1.0',
+
+      // ── अतिरिक्त स्थानीयकरण कुंजियाँ (बिना हार्डकोडित स्ट्रिंग्स)
+      'voice_and_signs': 'वॉइस + संकेत',
+      'ten_languages': '10 भाषाएं',
+      'bidirectional': 'द्विदिशात्मक',
+      'version_number': 'v 0.0.1 · बीटा',
+      'app_name_short': 'वाणी',
+      'features_label': 'सुविधाएं',
+      'objectives_label': 'उद्देश्य',
+      'sos_alerts': 'SOS सतर्कता',
+      'emergency_signs': 'आपातकालीन संकेत',
+      'accessibility_live': 'पहुंच लाइव',
+      'sign_capture': 'संकेत कैप्चर',
+      'text_output': 'पाठ आउटपुट',
+      'voice_output': 'वॉइस आउटपुट',
+      'live_terminal_events': 'लाइव टर्मिनल इवेंट',
+      'workflow_live': 'वर्कफ्लो लाइव',
+      'sign_input': 'संकेत इनपुट',
+      'ai_process': 'AI प्रक्रिया',
+      'voice_text_out': 'वॉइस/टेक्स्ट आउट',
+      'workflow_events': 'वर्कफ्लो इवेंट',
+      'terminal_title': 'वाणी टर्मिनल',
+      'terminal_user_signs_help': 'बहरा / मूक उपयोगकर्ता संकेत करता है: HELP',
+      'terminal_ai_conversion_confidence':
+          'AI संकेत को पढ़ने योग्य पाठ + आवाज़ में बदलता है। विश्वसनीयता 98.2%',
+      'terminal_hearing_reply_back':
+          'सुनने वाला उपयोगकर्ता आवाज़/टेक्स्ट से जवाब देता है -> वाणी प्रतिक्रिया वापस बहरे उपयोगकर्ता को दिखाती है।',
+      'workflow_title': 'ISL असिस्टेंट वर्कफ्लो',
+      'workflow_user_signs_emergency':
+          'उपयोगकर्ता संकेत करता है: "मुझे आपातकालीन सहायता चाहिए"',
+      'workflow_ai_realtime_output':
+          'ISL -> टेक्स्ट + वॉइस सुनने वाले के लिए रियल-टाइम में जनरेट होता है।',
+      'workflow_response_guidance':
+          'प्रतिक्रिया कैप्चर होकर पढ़ने योग्य ISL मार्गदर्शन के रूप में वापस दिखाई जाती है।',
+      'terminal_log_frame_help': r'$ frame_024 -> HELP',
+      'terminal_log_vision_stable': '[vision] hand landmarks stable',
+      'terminal_log_classifier_conf': '[classifier] label=HELP conf=0.982',
+      'terminal_log_translate_help':
+          '[translate] isl->text: "मुझे सहायता चाहिए"',
+      'terminal_log_tts_hearing':
+          '[assistive] tts सुनने वाले श्रोता के लिए चलाया गया',
+      'terminal_log_bridge_synced':
+          '[bridge] उत्तर बहरे उपयोगकर्ता के लिए सिंक किया गया',
+      'terminal_log_privacy_active': '[privacy] on-device inference active',
     },
 
     // ═══════════════════════════════════════════════════
@@ -2676,16 +2760,15 @@ class AppLocalizations {
       'home_features_title': 'Everything you need to communicate',
       'home_features_sub':
           'Powerful tools designed for India\'s 63 million deaf and mute community',
-      'home_emergency_sub':
-          'गंभीर क्षणी जीव वाचवणाऱ्या खुणा आणि वन-टॅप SOS.',
+      'home_emergency_sub': 'गंभीर क्षणी जीव वाचवणाऱ्या खुणा आणि वन-टॅप SOS.',
       'home_mission_label': 'OUR MISSION',
       'home_trust_deaf_community': 'Deaf Community',
-    'home_trust_indian_languages': 'भाषा',
+      'home_trust_indian_languages': 'भाषा',
       'home_trust_certified_signs': 'Certified Signs',
       'home_trust_powered': 'Powered',
       'home_tag_life_saving_signs': 'Life-saving signs',
       'home_tag_one_tap_sos': 'One-tap SOS',
-    'home_back_to_top': 'वर जा',
+      'home_back_to_top': 'वर जा',
       'home_footer_project_line':
           'अंतिम वर्ष प्रकल्प · संगणक अभियांत्रिकी · 2025-26',
       'home_footer_stack_line': 'Python, FastAPI, Flutter, AI सह तयार',
@@ -2699,8 +2782,8 @@ class AppLocalizations {
           'Sign HELP: Extend both hands flat,\npalms facing up, raise upward twice.',
       'assistant_mock_chip_help': 'HELP',
       'assistant_mock_chip_emergency': 'EMERGENCY',
-    'assistant_mute': 'म्यूट',
-    'assistant_unmute': 'अनम्यूट',
+      'assistant_mute': 'म्यूट',
+      'assistant_unmute': 'अनम्यूट',
 
       'sos_sms_general_template':
           'URGENT — EMERGENCY ALERT\n\nSent via VANI. The sender is DEAF or MUTE.\n\nActions:\n  1. Call them back.\n  2. Go to their location.\n  3. Dial 112.\n\nLocation: {LOCATION}\nTime: {TIME}\n\n— VANI Emergency SOS',
@@ -2794,7 +2877,7 @@ class AppLocalizations {
       'auth_account_created': 'खाते तयार झाले!',
 
       'translate_screen_title': 'सांकेतिक भाषा अनुवादक',
-    'translate_loader_tagline': 'सांकेतिक भाषा · रिअल-टाइम AI',
+      'translate_loader_tagline': 'सांकेतिक भाषा · रिअल-टाइम AI',
       'translate_loader_camera': 'कॅमेरा मॉड्यूल लोड होत आहेत...',
       'translate_loader_ai': 'AI इंजिन सुरू होत आहे...',
       'translate_loader_calibrate': 'जेश्चर मॉडेल कॅलिब्रेट होत आहे...',
@@ -3503,6 +3586,49 @@ class AppLocalizations {
       'edu_t4_year': '2015', 'edu_t4_event': 'ISLRTC — ISL शिक्षक प्रशिक्षण',
       'edu_t5_year': '2020', 'edu_t5_event': 'NEP 2020',
       'edu_t6_year': '2026', 'edu_t6_event': 'वाणी v1.0',
+
+      // ── अतिरिक्त स्थानीयकरण चाव्या (कोणतीही हार्डकोडेड स्ट्रिंग नाही)
+      'voice_and_signs': 'व्हॉइस + खुणा',
+      'ten_languages': '10 भाषा',
+      'bidirectional': 'द्विमार्गी',
+      'version_number': 'v 0.0.1 · बीटा',
+      'app_name_short': 'वाणी',
+      'features_label': 'वैशिष्ट्य',
+      'objectives_label': 'उद्देश्य',
+      'sos_alerts': 'SOS सतर्कता',
+      'emergency_signs': 'आपातकालीन खुणा',
+      'accessibility_live': 'सुलभता लाइव',
+      'sign_capture': 'खुणा कॅप्चर',
+      'text_output': 'मजकूर आउटपुट',
+      'voice_output': 'व्हॉइस आउटपुट',
+      'live_terminal_events': 'लाईव्ह टर्मिनल इव्हेंट्स',
+      'workflow_live': 'वर्कफ्लो लाईव्ह',
+      'sign_input': 'खुणा इनपुट',
+      'ai_process': 'AI प्रक्रिया',
+      'voice_text_out': 'व्हॉइस/मजकूर आउट',
+      'workflow_events': 'वर्कफ्लो इव्हेंट्स',
+      'terminal_title': 'वाणी टर्मिनल',
+      'terminal_user_signs_help': 'बहिरा / मुक वापरकर्ता खूण करतो: HELP',
+      'terminal_ai_conversion_confidence':
+          'AI खूण वाचता येणाऱ्या मजकूर + आवाजात रूपांतरित करतो. विश्वासपातळी 98.2%',
+      'terminal_hearing_reply_back':
+          'ऐकू शकणारा वापरकर्ता आवाज/मजकूराने उत्तर देतो -> वाणी उत्तर पुन्हा बहिऱ्या वापरकर्त्यास दाखवते.',
+      'workflow_title': 'ISL असिस्टंट वर्कफ्लो',
+      'workflow_user_signs_emergency':
+          'वापरकर्ता खूण करतो: "मला आपत्कालीन मदत हवी आहे"',
+      'workflow_ai_realtime_output':
+          'ISL -> मजकूर + आवाज ऐकणाऱ्या व्यक्तीसाठी रिअल-टाइममध्ये तयार होतो.',
+      'workflow_response_guidance':
+          'प्रतिसाद कॅप्चर होऊन वाचण्यायोग्य ISL मार्गदर्शन म्हणून परत दाखवला जातो.',
+      'terminal_log_frame_help': r'$ frame_024 -> HELP',
+      'terminal_log_vision_stable': '[vision] hand landmarks stable',
+      'terminal_log_classifier_conf': '[classifier] label=HELP conf=0.982',
+      'terminal_log_translate_help': '[translate] isl->text: "मला मदत हवी आहे"',
+      'terminal_log_tts_hearing':
+          '[assistive] tts ऐकणाऱ्या श्रोत्यासाठी वाजवले',
+      'terminal_log_bridge_synced':
+          '[bridge] उत्तर बहिऱ्या वापरकर्त्यासाठी सिंक केले',
+      'terminal_log_privacy_active': '[privacy] on-device inference active',
     },
   };
 

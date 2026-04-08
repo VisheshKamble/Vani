@@ -2,7 +2,7 @@
 //
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  VANI — Objective Pages · Apple-Inspired Premium UI        ║
-// ║  Font: Google Sans (SF Pro equivalent)                     ║
+// ║  Font: Plus Jakarta Sans (SF Pro equivalent)                     ║
 // ║                                                            ║
 // ║  This single file powers all 6 objective pages.           ║
 // ║  Individual pages only pass accent colour + content.      ║
@@ -20,6 +20,7 @@
 // ╚══════════════════════════════════════════════════════════════╝
 
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../components/GlobalNavbar.dart';
@@ -59,7 +60,7 @@ const kAmber   = _orange;
 
 TextStyle _t(double size, FontWeight w, Color c,
     {double ls = 0, double? h}) =>
-    TextStyle(fontFamily: 'Google Sans',
+    TextStyle(fontFamily: 'Plus Jakarta Sans',
         fontSize: size, fontWeight: w, color: c,
         letterSpacing: ls, height: h);
 
@@ -168,9 +169,9 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
     final w      = MediaQuery.of(context).size.width;
     final accent = _resolve(widget.accentColor, isDark);
 
-    return w < 700
-        ? _buildMobile(context, isDark, accent)
-        : _buildWeb(context, isDark, accent, w);
+    return kIsWeb || w >= 700
+      ? _buildWeb(context, isDark, accent, w)
+      : _buildMobile(context, isDark, accent);
   }
 
   // ════════════════════════════════════════════
@@ -179,7 +180,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
   Widget _buildMobile(BuildContext ctx, bool isDark, Color accent) {
     final bg    = isDark ? _dBg      : _lBg;
     final navBg = isDark ? _dSurface : _lSurface;
-    final sep   = isDark ? _dSep     : _lSep.withValues(alpha: 0.5);
+    final sep   = isDark ? _dSep     : _lSep.withOpacity(0.5);
     final blueA = isDark ? _blue_D   : _blue;
 
     return Scaffold(
@@ -190,7 +191,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
             top: -120,
             left: -140,
             child: _ObjOrb(
-              color: accent.withValues(alpha: isDark ? 0.13 : 0.09),
+              color: accent.withOpacity(isDark ? 0.13 : 0.09),
               size: 360,
             ),
           ),
@@ -198,7 +199,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
             bottom: 120,
             right: -120,
             child: _ObjOrb(
-              color: _blue.withValues(alpha: isDark ? 0.11 : 0.08),
+              color: _blue.withOpacity(isDark ? 0.11 : 0.08),
               size: 300,
             ),
           ),
@@ -228,7 +229,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
               // iOS navigation bar
               Container(
                 decoration: BoxDecoration(
-                    color: navBg.withValues(alpha: isDark ? 0.96 : 0.94),
+                    color: navBg.withOpacity(isDark ? 0.96 : 0.94),
                     border: Border(bottom: BorderSide(color: sep, width: 0.5))),
                 padding: const EdgeInsets.fromLTRB(8, 10, 16, 10),
                 child: Row(children: [
@@ -247,9 +248,9 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.10),
+                        color: accent.withOpacity(0.10),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: accent.withValues(alpha: 0.22), width: 0.5)),
+                        border: Border.all(color: accent.withOpacity(0.22), width: 0.5)),
                     child: Text(widget.category,
                         style: _t(11, FontWeight.w600, accent, ls: 0.2)),
                   ),
@@ -305,7 +306,8 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
   //  WEB / TABLET  (≥700px)
   Widget _buildWeb(BuildContext ctx, bool isDark, Color accent, double w) {
     final isDesktop = w > 1100;
-    final hPad      = isDesktop ? 72.0 : 56.0;
+    final compactWeb = w < 700;
+    final hPad      = isDesktop ? 72.0 : (compactWeb ? 16.0 : 56.0);
     final bg        = isDark ? _dBg : _lBg;
     return Scaffold(
       backgroundColor: bg,
@@ -315,7 +317,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
             top: -220,
             left: -180,
             child: _ObjOrb(
-              color: accent.withValues(alpha: isDark ? 0.16 : 0.12),
+              color: accent.withOpacity(isDark ? 0.16 : 0.12),
               size: 760,
             ),
           ),
@@ -323,7 +325,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
             top: 260,
             right: -170,
             child: _ObjOrb(
-              color: _blue.withValues(alpha: isDark ? 0.13 : 0.10),
+              color: _blue.withOpacity(isDark ? 0.13 : 0.10),
               size: 620,
             ),
           ),
@@ -331,7 +333,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
             bottom: 120,
             left: w * 0.24,
             child: _ObjOrb(
-              color: accent.withValues(alpha: isDark ? 0.11 : 0.08),
+              color: accent.withOpacity(isDark ? 0.11 : 0.08),
               size: 460,
             ),
           ),
@@ -364,14 +366,14 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
                     end: Alignment.bottomCenter,
                     colors: isDark
                         ? [
-                            Colors.white.withValues(alpha: 0.018),
+                            Colors.white.withOpacity(0.018),
                             Colors.transparent,
-                            accent.withValues(alpha: 0.025),
+                            accent.withOpacity(0.025),
                           ]
                         : [
-                            accent.withValues(alpha: 0.038),
+                            accent.withOpacity(0.038),
                             Colors.transparent,
-                            _blue.withValues(alpha: 0.02),
+                            _blue.withOpacity(0.02),
                           ],
                   ),
                 ),
@@ -484,14 +486,14 @@ class _ObjArcPainter extends CustomPainter {
   void paint(Canvas canvas, Size s) {
     void arc(double r, double op) {
       final glow = Paint()
-        ..color = color.withValues(alpha: dark ? op * 0.045 : op * 0.03)
+        ..color = color.withOpacity(dark ? op * 0.045 : op * 0.03)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
       canvas.drawArc(Rect.fromCircle(center: Offset.zero, radius: r), 0, math.pi / 2, false, glow);
 
       final p = Paint()
-        ..color = color.withValues(alpha: dark ? op * 0.36 : op * 0.28)
+        ..color = color.withOpacity(dark ? op * 0.36 : op * 0.28)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0;
       canvas.drawArc(Rect.fromCircle(center: Offset.zero, radius: r), 0, math.pi / 2, false, p);
@@ -540,9 +542,9 @@ class _MobileHero extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-              color: accent.withValues(alpha: isDark ? 0.26 : 0.17), width: 0.8),
+              color: accent.withOpacity(isDark ? 0.26 : 0.17), width: 0.8),
           boxShadow: [BoxShadow(
-              color: accent.withValues(alpha: isDark ? 0.12 : 0.08),
+              color: accent.withOpacity(isDark ? 0.12 : 0.08),
               blurRadius: 18, offset: const Offset(0, 6))]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
@@ -551,7 +553,7 @@ class _MobileHero extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             gradient: LinearGradient(
-              colors: [accent.withValues(alpha: 0.9), accent.withValues(alpha: 0.30)],
+              colors: [accent.withOpacity(0.9), accent.withOpacity(0.30)],
             ),
           ),
         ),
@@ -561,18 +563,18 @@ class _MobileHero extends StatelessWidget {
               width: 50, height: 50,
               decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [accent.withValues(alpha: 0.20), accent.withValues(alpha: 0.08)],
+                    colors: [accent.withOpacity(0.20), accent.withOpacity(0.08)],
                   ),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: accent.withValues(alpha: 0.25), width: 1)),
+                  border: Border.all(color: accent.withOpacity(0.25), width: 1)),
               child: Icon(icon, color: accent, size: 24)),
           const SizedBox(width: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.08),
+                color: accent.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: accent.withValues(alpha: 0.18), width: 0.7)),
+                border: Border.all(color: accent.withOpacity(0.18), width: 0.7)),
             child: Text(tag, style: _t(10, FontWeight.w600, accent, ls: 0.3)),
           ),
         ]),
@@ -611,7 +613,7 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
   @override
   Widget build(BuildContext context) {
     final bg  = widget.isDark ? _dSurface : _lSurface;
-    final sep = widget.isDark ? _dSep : _lSep.withValues(alpha: 0.4);
+    final sep = widget.isDark ? _dSep : _lSep.withOpacity(0.4);
     final sub = widget.isDark ? _dLabel2 : _lLabel2;
 
     return Container(
@@ -626,9 +628,9 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-              color: Colors.black.withValues(alpha: widget.isDark ? 0.0 : 0.04), width: 0.5),
+              color: Colors.black.withOpacity(widget.isDark ? 0.0 : 0.04), width: 0.5),
           boxShadow: [BoxShadow(
-              color: Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.05),
+              color: Colors.black.withOpacity(widget.isDark ? 0.25 : 0.05),
               blurRadius: 10, offset: const Offset(0, 3))]),
       child: IntrinsicHeight(
         child: Row(children: [
@@ -695,10 +697,10 @@ class _WebHeroHeader extends StatelessWidget {
             ],
           ),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: accent.withValues(alpha: isDark ? 0.22 : 0.14), width: 1),
+          border: Border.all(color: accent.withOpacity(isDark ? 0.22 : 0.14), width: 1),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: isDark ? 0.10 : 0.06),
+              color: accent.withOpacity(isDark ? 0.10 : 0.06),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -720,7 +722,7 @@ class _WebHeroHeader extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
               gradient: LinearGradient(
-                colors: [accent.withValues(alpha: 0.92), accent.withValues(alpha: 0.30)],
+                colors: [accent.withOpacity(0.92), accent.withOpacity(0.30)],
               ),
             ),
           ),
@@ -731,10 +733,10 @@ class _WebHeroHeader extends StatelessWidget {
                 width: 60, height: 60,
                 decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [accent.withValues(alpha: 0.20), accent.withValues(alpha: 0.08)],
+                      colors: [accent.withOpacity(0.20), accent.withOpacity(0.08)],
                     ),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: accent.withValues(alpha: 0.24), width: 1)),
+                    border: Border.all(color: accent.withOpacity(0.24), width: 1)),
                 child: Icon(icon, color: accent, size: 28)),
             const SizedBox(width: 18),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -743,9 +745,9 @@ class _WebHeroHeader extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.08),
+                      color: accent.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: accent.withValues(alpha: 0.18), width: 0.7)),
+                      border: Border.all(color: accent.withOpacity(0.18), width: 0.7)),
                   child: Text(tag, style: _t(10, FontWeight.w600, accent, ls: 0.3)),
                 ),
                 const SizedBox(width: 8),
@@ -809,9 +811,9 @@ class _WebStatCard extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: color.withValues(alpha: isDark ? 0.22 : 0.14), width: 0.8),
+              color: color.withOpacity(isDark ? 0.22 : 0.14), width: 0.8),
           boxShadow: [BoxShadow(
-              color: color.withValues(alpha: isDark ? 0.12 : 0.07),
+              color: color.withOpacity(isDark ? 0.12 : 0.07),
               blurRadius: 12, offset: const Offset(0, 4))]),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -823,7 +825,7 @@ class _WebStatCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
                 gradient: LinearGradient(
-                  colors: [color.withValues(alpha: 0.92), color.withValues(alpha: 0.30)],
+                  colors: [color.withOpacity(0.92), color.withOpacity(0.30)],
                 ),
               ),
             ),
@@ -866,7 +868,7 @@ class _SectionBlock extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [accent, accent.withValues(alpha: 0.30)],
+                  colors: [accent, accent.withOpacity(0.30)],
                 ))),
         const SizedBox(width: 10),
         Expanded(child: Text(title,
@@ -917,19 +919,19 @@ class ObjInfoCard extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: a.withValues(alpha: isDark ? 0.22 : 0.14), width: 0.7),
+              color: a.withOpacity(isDark ? 0.22 : 0.14), width: 0.7),
           boxShadow: [BoxShadow(
-              color: a.withValues(alpha: isDark ? 0.10 : 0.07),
+              color: a.withOpacity(isDark ? 0.10 : 0.07),
               blurRadius: 12, offset: const Offset(0, 4))]),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
             width: 38, height: 38,
             decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [a.withValues(alpha: 0.20), a.withValues(alpha: 0.08)],
+                  colors: [a.withOpacity(0.20), a.withOpacity(0.08)],
                 ),
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: a.withValues(alpha: 0.24), width: 0.7)),
+                border: Border.all(color: a.withOpacity(0.24), width: 0.7)),
             child: Icon(icon, color: a, size: 17)),
         const SizedBox(width: 14),
         Expanded(child: Column(
@@ -974,12 +976,12 @@ class _ObjBarChartState extends State<ObjBarChart>
     final bg    = widget.isDark ? _dSurface : _lSurface;
     final sub   = widget.isDark ? _dLabel2  : _lLabel2;
     final track = widget.isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.05);
+        ? Colors.white.withOpacity(0.06)
+        : Colors.black.withOpacity(0.05);
 
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, __) => Container(
+      builder: (_, _) => Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -992,10 +994,10 @@ class _ObjBarChartState extends State<ObjBarChart>
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: Colors.black.withValues(alpha: widget.isDark ? 0.0 : 0.04),
+                color: Colors.black.withOpacity(widget.isDark ? 0.0 : 0.04),
                 width: 0.5),
             boxShadow: [BoxShadow(
-                color: Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.05),
+                color: Colors.black.withOpacity(widget.isDark ? 0.25 : 0.05),
                 blurRadius: 10, offset: const Offset(0, 3))]),
         child: Column(children: widget.data.map((row) {
           final pct   = (row.$2 * 100).round();
@@ -1018,7 +1020,7 @@ class _ObjBarChartState extends State<ObjBarChart>
                         height: 7,
                         decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.65)],
+                              colors: [color.withOpacity(0.9), color.withOpacity(0.65)],
                             ),
                             borderRadius: BorderRadius.circular(4))),
                   ),
@@ -1069,9 +1071,9 @@ class ObjQuoteBlock extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: a.withValues(alpha: isDark ? 0.20 : 0.12), width: 0.7),
+              color: a.withOpacity(isDark ? 0.20 : 0.12), width: 0.7),
           boxShadow: [BoxShadow(
-              color: a.withValues(alpha: isDark ? 0.10 : 0.06),
+              color: a.withOpacity(isDark ? 0.10 : 0.06),
               blurRadius: 12, offset: const Offset(0, 4))]),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(width: 3,
@@ -1079,7 +1081,7 @@ class ObjQuoteBlock extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [a, a.withValues(alpha: 0.30)],
+                  colors: [a, a.withOpacity(0.30)],
                 ),
                 borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 16),
@@ -1114,7 +1116,7 @@ class ObjTimelineItem extends StatelessWidget {
     final a   = _resolve(accent, isDark);
     final bg  = isDark ? _dSurface : _lSurface;
     final lbl = isDark ? _dLabel   : _lLabel;
-    final sep = isDark ? _dSep     : _lSep.withValues(alpha: 0.4);
+    final sep = isDark ? _dSep     : _lSep.withOpacity(0.4);
 
     return IntrinsicHeight(
       child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -1151,10 +1153,10 @@ class ObjTimelineItem extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                    color: a.withValues(alpha: isDark ? 0.18 : 0.12),
+                    color: a.withOpacity(isDark ? 0.18 : 0.12),
                     width: 0.7),
                 boxShadow: [BoxShadow(
-                    color: a.withValues(alpha: isDark ? 0.08 : 0.05),
+                    color: a.withOpacity(isDark ? 0.08 : 0.05),
                     blurRadius: 10, offset: const Offset(0, 3))]),
             child: Text(event,
                 style: _t(13, FontWeight.w400, lbl, ls: -0.1, h: 1.5)),
@@ -1164,4 +1166,3 @@ class ObjTimelineItem extends StatelessWidget {
     );
   }
 }
-
