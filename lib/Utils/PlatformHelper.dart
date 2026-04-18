@@ -1,4 +1,3 @@
-// lib/utils/PlatformHelper.dart
 import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
 
