@@ -1,23 +1,3 @@
-// lib/screens/objectives/objective_shared.dart
-//
-// ╔══════════════════════════════════════════════════════════════╗
-// ║  VANI — Objective Pages · Apple-Inspired Premium UI        ║
-// ║  Font: Plus Jakarta Sans (SF Pro equivalent)                     ║
-// ║                                                            ║
-// ║  This single file powers all 6 objective pages.           ║
-// ║  Individual pages only pass accent colour + content.      ║
-// ║                                                            ║
-// ║  < 700px  → iOS article / reading view                    ║
-// ║    - iOS nav bar with < Back                               ║
-// ║    - Full-width hero card                                  ║
-// ║    - Compact stats strip (grouped table)                   ║
-// ║    - Grouped card sections                                 ║
-// ║                                                            ║
-  // ║  ≥ 700px  → macOS / web article layout                    ║
-  // ║    - Full-bleed white header band + breadcrumb             ║
-  // ║    - 2×2 stats grid                                        ║
-  // ║    - Wider centred column on desktop                       ║
-// ╚══════════════════════════════════════════════════════════════╝
 
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -25,10 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../components/GlobalNavbar.dart';
 import '../../l10n/AppLocalizations.dart';
-
-// ─────────────────────────────────────────────────────────────
 //  APPLE DESIGN TOKENS
-// ─────────────────────────────────────────────────────────────
 const _red      = Color(0xFFFF3B30);
 const _red_D    = Color(0xFFFF453A);
 const _orange   = Color(0xFFFF9500);
@@ -63,10 +40,7 @@ TextStyle _t(double size, FontWeight w, Color c,
     TextStyle(fontFamily: 'Plus Jakarta Sans',
         fontSize: size, fontWeight: w, color: c,
         letterSpacing: ls, height: h);
-
-// ─────────────────────────────────────────────────────────────
 //  DARK-MODE ACCENT RESOLVER
-// ─────────────────────────────────────────────────────────────
 Color _dk(Color c) {
   const m = <int, Color>{
     0xFF007AFF: _blue_D,
@@ -87,10 +61,7 @@ Color _dk(Color c) {
 }
 
 Color _resolve(Color c, bool dark) => dark ? _dk(c) : c;
-
-// ─────────────────────────────────────────────────────────────
 //  DATA MODELS
-// ─────────────────────────────────────────────────────────────
 class ObjStatData {
   final String value, label, description;
   final Color color;
@@ -112,10 +83,7 @@ class ObjSection {
     required this.isDark,
   });
 }
-
-// ══════════════════════════════════════════════════════════════
 //  OBJECTIVE PAGE BASE  — router
-// ══════════════════════════════════════════════════════════════
 class ObjectivePageBase extends StatefulWidget {
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
@@ -173,10 +141,7 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
       ? _buildWeb(context, isDark, accent, w)
       : _buildMobile(context, isDark, accent);
   }
-
-  // ════════════════════════════════════════════
   //  MOBILE  (<700px)
-  // ════════════════════════════════════════════
   Widget _buildMobile(BuildContext ctx, bool isDark, Color accent) {
     final bg    = isDark ? _dBg      : _lBg;
     final navBg = isDark ? _dSurface : _lSurface;
@@ -301,8 +266,6 @@ class _ObjectivePageBaseState extends State<ObjectivePageBase>
       ),
     );
   }
-
-  // ════════════════════════════════════════════
   //  WEB / TABLET  (≥700px)
   Widget _buildWeb(BuildContext ctx, bool isDark, Color accent, double w) {
     final isDesktop = w > 1100;
@@ -507,10 +470,7 @@ class _ObjArcPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ObjArcPainter old) => false;
 }
-
-// ══════════════════════════════════════════════════════════════
 //  MOBILE COMPONENTS
-// ══════════════════════════════════════════════════════════════
 
 class _MobileHero extends StatelessWidget {
   final bool isDark;
@@ -658,10 +618,7 @@ class _MobileStatsStripState extends State<_MobileStatsStrip>
     );
   }
 }
-
-// ══════════════════════════════════════════════════════════════
 //  WEB COMPONENTS
-// ══════════════════════════════════════════════════════════════
 
 class _WebHeroHeader extends StatelessWidget {
   final bool isDark;
@@ -844,10 +801,7 @@ class _WebStatCard extends StatelessWidget {
     );
   }
 }
-
-// ══════════════════════════════════════════════════════════════
 //  SHARED SECTION BLOCK  (mobile + web)
-// ══════════════════════════════════════════════════════════════
 
 class _SectionBlock extends StatelessWidget {
   final String title;
@@ -879,10 +833,7 @@ class _SectionBlock extends StatelessWidget {
     ]);
   }
 }
-
-// ══════════════════════════════════════════════════════════════
 //  PUBLIC COMPONENTS  (called by individual page files)
-// ══════════════════════════════════════════════════════════════
 
 /// iOS grouped list cell — icon + title + body
 class ObjInfoCard extends StatelessWidget {
@@ -1096,7 +1047,6 @@ class ObjQuoteBlock extends StatelessWidget {
   }
 }
 
-/// iOS-style vertical timeline item
 class ObjTimelineItem extends StatelessWidget {
   final String year, event;
   final Color accent;
