@@ -1,7 +1,5 @@
-// lib/services/location_service_web.dart
 // Imported on Web only via conditional import in LocationService.dart.
 // Do NOT import this file directly.
-//
 // FIX: dart:html is deprecated in Flutter Web (Dart 3.x).
 // We use geolocator's built-in web support instead — it works on web
 // via its own JS interop under the hood, no dart:html needed.
