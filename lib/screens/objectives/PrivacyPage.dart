@@ -1,4 +1,3 @@
-// lib/screens/objectives/PrivacyPage.dart
 import 'package:flutter/material.dart';
 import '../../l10n/AppLocalizations.dart';
 import 'objective_shared.dart';
