@@ -1,0 +1,98 @@
+[
+  {
+    "name": "DESCRIPTION.en_us.html",
+    "path": "ofl/plusjakartasans/DESCRIPTION.en_us.html",
+    "sha": "70e226bfcf615e19c740af03d6eca0178a56d5db",
+    "size": 1545,
+    "url": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/DESCRIPTION.en_us.html?ref=main",
+    "html_url": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/DESCRIPTION.en_us.html",
+    "git_url": "https://api.github.com/repos/google/fonts/git/blobs/70e226bfcf615e19c740af03d6eca0178a56d5db",
+    "download_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/DESCRIPTION.en_us.html",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/DESCRIPTION.en_us.html?ref=main",
+      "git": "https://api.github.com/repos/google/fonts/git/blobs/70e226bfcf615e19c740af03d6eca0178a56d5db",
+      "html": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/DESCRIPTION.en_us.html"
+    }
+  },
+  {
+    "name": "METADATA.pb",
+    "path": "ofl/plusjakartasans/METADATA.pb",
+    "sha": "1d96c500b1f2933cf130dd95faf1d7fd30a2c968",
+    "size": 1396,
+    "url": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/METADATA.pb?ref=main",
+    "html_url": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/METADATA.pb",
+    "git_url": "https://api.github.com/repos/google/fonts/git/blobs/1d96c500b1f2933cf130dd95faf1d7fd30a2c968",
+    "download_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/METADATA.pb",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/METADATA.pb?ref=main",
+      "git": "https://api.github.com/repos/google/fonts/git/blobs/1d96c500b1f2933cf130dd95faf1d7fd30a2c968",
+      "html": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/METADATA.pb"
+    }
+  },
+  {
+    "name": "OFL.txt",
+    "path": "ofl/plusjakartasans/OFL.txt",
+    "sha": "ea69b0ca12a02556c436680ea0a159efb7a748fa",
+    "size": 4402,
+    "url": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/OFL.txt?ref=main",
+    "html_url": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/OFL.txt",
+    "git_url": "https://api.github.com/repos/google/fonts/git/blobs/ea69b0ca12a02556c436680ea0a159efb7a748fa",
+    "download_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/OFL.txt",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/OFL.txt?ref=main",
+      "git": "https://api.github.com/repos/google/fonts/git/blobs/ea69b0ca12a02556c436680ea0a159efb7a748fa",
+      "html": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/OFL.txt"
+    }
+  },
+  {
+    "name": "PlusJakartaSans-Italic[wght].ttf",
+    "path": "ofl/plusjakartasans/PlusJakartaSans-Italic[wght].ttf",
+    "sha": "82b042caaaf271beb9e3cbd95ba4741a3d5b8926",
+    "size": 183188,
+    "url": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/PlusJakartaSans-Italic[wght].ttf?ref=main",
+    "html_url": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/PlusJakartaSans-Italic[wght].ttf",
+    "git_url": "https://api.github.com/repos/google/fonts/git/blobs/82b042caaaf271beb9e3cbd95ba4741a3d5b8926",
+    "download_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/PlusJakartaSans-Italic%5Bwght%5D.ttf",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/PlusJakartaSans-Italic[wght].ttf?ref=main",
+      "git": "https://api.github.com/repos/google/fonts/git/blobs/82b042caaaf271beb9e3cbd95ba4741a3d5b8926",
+      "html": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/PlusJakartaSans-Italic[wght].ttf"
+    }
+  },
+  {
+    "name": "PlusJakartaSans[wght].ttf",
+    "path": "ofl/plusjakartasans/PlusJakartaSans[wght].ttf",
+    "sha": "0cb13a998ed525ba226d911b10d6c4c4f923a961",
+    "size": 176288,
+    "url": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/PlusJakartaSans[wght].ttf?ref=main",
+    "html_url": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/PlusJakartaSans[wght].ttf",
+    "git_url": "https://api.github.com/repos/google/fonts/git/blobs/0cb13a998ed525ba226d911b10d6c4c4f923a961",
+    "download_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/PlusJakartaSans%5Bwght%5D.ttf",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/PlusJakartaSans[wght].ttf?ref=main",
+      "git": "https://api.github.com/repos/google/fonts/git/blobs/0cb13a998ed525ba226d911b10d6c4c4f923a961",
+      "html": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/PlusJakartaSans[wght].ttf"
+    }
+  },
+  {
+    "name": "upstream_info.md",
+    "path": "ofl/plusjakartasans/upstream_info.md",
+    "sha": "a5740b8bd81fd8d94baa5b59498569fa296ca962",
+    "size": 1689,
+    "url": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/upstream_info.md?ref=main",
+    "html_url": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/upstream_info.md",
+    "git_url": "https://api.github.com/repos/google/fonts/git/blobs/a5740b8bd81fd8d94baa5b59498569fa296ca962",
+    "download_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/upstream_info.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/google/fonts/contents/ofl/plusjakartasans/upstream_info.md?ref=main",
+      "git": "https://api.github.com/repos/google/fonts/git/blobs/a5740b8bd81fd8d94baa5b59498569fa296ca962",
+      "html": "https://github.com/google/fonts/blob/main/ofl/plusjakartasans/upstream_info.md"
+    }
+  }
+]
