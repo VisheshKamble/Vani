@@ -8,8 +8,8 @@ import os
 import time
 import logging
 from collections import deque
-import urllib.request
-import urllib.parse
+from urllib.request import urlopen
+import gdown
 from ultralytics import YOLO
 
 # ─────────────────────────────────────────────
@@ -53,113 +53,45 @@ app.add_middleware(
 # ─────────────────────────────────────────────
 os.makedirs("model", exist_ok=True)
 MODEL_PATH = os.path.join("model", "isl_best.pt")
+# Direct ID from your link
 FILE_ID = "1TcCNyM1MtbixlN3wZgFttOlvuJutTPqB"
 MIN_MODEL_BYTES = 10_000_000
 
 
-def _download_model_urllib(file_id: str, destination: str) -> None:
-    """
-    Robust urllib fallback for large Google Drive files.
-    Handles the virus-scan confirmation page Drive shows for large files.
-    """
-    import http.cookiejar
-
-    cookie_jar = http.cookiejar.CookieJar()
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
-    opener.addheaders = [("User-Agent", "Mozilla/5.0")]
-
-    session_url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    log.info(f"📥 Fetching Drive page: {session_url}")
-
-    with opener.open(session_url) as response:
-        content_type = response.headers.get("Content-Type", "")
-        initial_data = response.read(1024 * 64)  # Read first 64 KB to inspect
-
-    # If Drive returned HTML, it's the virus-scan / confirm page
-    if "text/html" in content_type:
-        html = initial_data.decode("utf-8", errors="ignore")
-        log.info("🔍 Got HTML confirm page, extracting token...")
-
-        # Try to find confirm= token in the page source
-        confirm_token = None
-        for line in html.splitlines():
-            if "confirm=" in line:
-                start = line.find("confirm=") + len("confirm=")
-                end = line.find("&", start)
-                token = line[start:] if end == -1 else line[start:end]
-                token = token.strip().strip('"').strip("'").strip(">").strip("/")
-                if token and len(token) < 20:
-                    confirm_token = token
-                    break
-
-        if confirm_token:
-            download_url = (
-                f"https://drive.google.com/uc?export=download"
-                f"&id={file_id}&confirm={confirm_token}"
-            )
-            log.info(f"✅ Found confirm token: {confirm_token}")
-        else:
-            # Modern Drive endpoint — accepts confirm=t directly
-            download_url = (
-                f"https://drive.usercontent.google.com/download"
-                f"?id={file_id}&export=download&confirm=t"
-            )
-            log.info("⚠️ No token found, using usercontent endpoint with confirm=t")
-    else:
-        # Drive served the binary directly (no confirm page needed)
-        log.info("📦 Drive served file directly, writing to disk...")
-        with open(destination, "wb") as f:
-            f.write(initial_data)
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                f.write(chunk)
-        return
-
-    # Download the actual model file
-    log.info(f"📥 Downloading from: {download_url}")
-    with opener.open(download_url) as response, open(destination, "wb") as f:
-        downloaded = 0
+def _download_model(url: str, destination: str) -> None:
+    with urlopen(url) as response, open(destination, "wb") as target:
         while True:
             chunk = response.read(1024 * 1024)
             if not chunk:
                 break
-            f.write(chunk)
-            downloaded += len(chunk)
-            if downloaded % (10 * 1024 * 1024) < 1024 * 1024:
-                log.info(f"  ... {downloaded // (1024 * 1024)} MB downloaded")
-    log.info(f"✅ urllib download complete ({downloaded // (1024 * 1024)} MB)")
+            target.write(chunk)
 
 
 def _download_model_from_drive(file_id: str, destination: str) -> None:
-    """Try gdown first (no fuzzy= for compatibility), fall back to urllib."""
-    # Primary: gdown — omit fuzzy= so it works on all gdown versions
+    url = f"https://drive.google.com/uc?id={file_id}"
+
+    # Primary path: gdown handles Drive confirmation pages and redirects.
     try:
-        import gdown
-        url = f"https://drive.google.com/uc?id={file_id}"
-        log.info("📥 Trying gdown...")
-        gdown.download(url, destination, quiet=False)
+        gdown.download(url, destination, quiet=False, fuzzy=True)
         return
     except Exception as e:
-        log.warning(f"gdown failed, switching to urllib fallback: {e}")
+        log.warning(f"gdown download failed, trying urllib fallback: {e}")
 
-    # Fallback: robust urllib with confirm-token handling
-    _download_model_urllib(file_id, destination)
+    # Fallback path for environments where gdown has transient issues.
+    _download_model(url, destination)
 
 
 def _is_model_file_valid(path: str) -> bool:
     return os.path.exists(path) and os.path.getsize(path) >= MIN_MODEL_BYTES
 
-
 def initialize_model():
     """Downloads model if missing/corrupt and loads into memory."""
-    # 1. Clean up old/failed downloads (HTML error pages are usually < 1 MB)
+    # 1. Clean up old/failed downloads (HTML error pages are usually < 1MB)
     if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) < MIN_MODEL_BYTES:
         log.info("🗑️ Deleting corrupted model file (size too small)...")
         os.remove(MODEL_PATH)
 
-    # 2. Download from Google Drive if not present
+    # 2. Download from Google Drive
     if not os.path.exists(MODEL_PATH):
         try:
             log.info(f"📥 Downloading model ID: {FILE_ID}")
@@ -167,9 +99,9 @@ def initialize_model():
 
             if not _is_model_file_valid(MODEL_PATH):
                 raise RuntimeError(
-                    f"Downloaded file appears invalid "
-                    f"(size={os.path.getsize(MODEL_PATH)} bytes)."
+                    f"Downloaded file appears invalid (size={os.path.getsize(MODEL_PATH)} bytes)."
                 )
+
             log.info("✅ Download complete!")
         except Exception as e:
             log.error(f"❌ Download failed: {e}")
@@ -177,6 +109,7 @@ def initialize_model():
 
     # 3. Load YOLO model
     try:
+        # Note: 'ultralytics>=8.3.0' is required for YOLOv11 (C3k2 layer)
         loaded_model = YOLO(MODEL_PATH)
         loaded_model.to("cpu")
         loaded_model.fuse()
@@ -185,7 +118,6 @@ def initialize_model():
     except Exception as e:
         log.error(f"❌ Model failed to load: {e}")
         return None
-
 
 # Global model instance
 model = initialize_model()
@@ -196,7 +128,6 @@ model = initialize_model()
 CONF_THRESHOLD = 0.30
 MAX_DET = 1
 FRAME_SKIP_MS = 80  # Max ~12 FPS for CPU stability
-
 
 class PredictionSmoother:
     def __init__(self, window: int = 5):
@@ -212,7 +143,6 @@ class PredictionSmoother:
     def reset(self):
         self._buf.clear()
 
-
 # ─────────────────────────────────────────────
 # WEBSOCKET ENDPOINT
 # ─────────────────────────────────────────────
@@ -220,7 +150,7 @@ class PredictionSmoother:
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     log.info(f"🔌 WebSocket Connected: {websocket.client}")
-
+    
     if model is None:
         await websocket.send_json({"type": "error", "message": "Model not available on server"})
         await websocket.close()
@@ -239,7 +169,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({"type": "ping"})
                 continue
 
-            # Protocol commands
+            # Handling Protocol Commands
             if raw_data == "__PING__":
                 await websocket.send_json({"type": "pong"})
                 continue
@@ -247,13 +177,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 smoother.reset()
                 continue
 
-            # Frame throttling
+            # Frame Throttling
             current_time = time.monotonic() * 1000
             if (current_time - last_infer_time) < FRAME_SKIP_MS:
                 continue
 
             try:
-                # Decode Base64 → OpenCV image
+                # Decode Base64 to OpenCV Image
                 header, encoded = raw_data.split(",", 1) if "," in raw_data else (None, raw_data)
                 img_bytes = base64.b64decode(encoded)
                 np_img = np.frombuffer(img_bytes, dtype=np.uint8)
@@ -262,23 +192,20 @@ async def websocket_endpoint(websocket: WebSocket):
                 if frame is None:
                     continue
 
-                # Run inference in thread pool to keep event loop responsive
+                # Run Inference in thread pool to keep loop responsive
                 loop = asyncio.get_running_loop()
-                results = await loop.run_in_executor(
-                    None,
-                    lambda: model.predict(
-                        frame,
-                        device="cpu",
-                        verbose=False,
-                        conf=CONF_THRESHOLD,
-                        max_det=MAX_DET,
-                    )[0],
-                )
+                results = await loop.run_in_executor(None, lambda: model.predict(
+                    frame, 
+                    device="cpu", 
+                    verbose=False, 
+                    conf=CONF_THRESHOLD, 
+                    max_det=MAX_DET
+                )[0])
 
                 last_infer_time = time.monotonic() * 1000
                 frame_count += 1
 
-                # Process results
+                # Process Results
                 if len(results.boxes) > 0:
                     box = results.boxes[0]
                     cls_id = int(box.cls[0])
@@ -288,11 +215,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 else:
                     label, conf = smoother.push("No Sign", 0.0)
 
+                # Send Response
                 await websocket.send_json({
                     "type": "prediction",
                     "label": label,
                     "confidence": conf,
-                    "frame": frame_count,
+                    "frame": frame_count
                 })
 
             except Exception as e:
@@ -304,7 +232,6 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         smoother.reset()
 
-
 # ─────────────────────────────────────────────
 # SYSTEM ENDPOINTS
 # ─────────────────────────────────────────────
@@ -313,11 +240,11 @@ def health_check():
     return {
         "status": "online",
         "model_loaded": model is not None,
-        "engine": "YOLOv11-CPU",
+        "engine": "YOLOv11-CPU"
     }
-
 
 if __name__ == "__main__":
     import uvicorn
+    # Railway sets the PORT environment variable automatically
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app:app", host="0.0.0.0", port=port, log_level="info")

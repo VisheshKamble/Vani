@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class BackendConfig {
   static const String defaultWebsocketHost =
-      'isl-production-57d4.up.railway.app';
+      'vani-production.up.railway.app';
 
   static const String _apiBaseUrlOverride = String.fromEnvironment(
     'ISL_API_BASE_URL',

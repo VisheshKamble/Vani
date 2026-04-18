@@ -1,3 +1,21 @@
+﻿// lib/screens/TranslateScreen.dart
+//
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  VANI — Translate Screen  · UX4G Redesign                         ║
+// ║  Font: Plus Jakarta Sans (UX4G standard)                                ║
+// ║                                                                    ║
+// ║  ALL functional logic preserved exactly:                           ║
+// ║  • SentenceBuilder (25 model words, all patterns)                 ║
+// ║  • AutoAddEngine (stability + cooldown)                           ║
+// ║  • WebSocket connection + frame capture                           ║
+// ║  • TTS, translation, transcript                                   ║
+// ║  • Onboarding flow                                                ║
+// ║                                                                    ║
+// ║  UI REFRESH:                                                       ║
+// ║  • Loader: floating blobs + semicircles matching homepage          ║
+// ║  • Onboarding: glass-tinted cards with blob backgrounds            ║
+// ║  • Translate screen: ambient circles & patches on all panels      ║
+// ╚══════════════════════════════════════════════════════════════════════╝
 
 import 'dart:convert';
 import 'dart:async';
@@ -12,6 +30,10 @@ import '../l10n/AppLocalizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_tts/flutter_tts.dart';
 import '../services/backend_config.dart';
+
+// ─────────────────────────────────────────────────────────────────────
+//  UX4G DESIGN TOKENS
+// ─────────────────────────────────────────────────────────────────────
 const _fontFamily = 'Plus Jakarta Sans';
 
 const _primary = Color(0xFF1A56DB);
@@ -106,11 +128,17 @@ TextStyle _txtLabel(double size, Color c, {FontWeight w = FontWeight.w500}) =>
       height: 1.4,
       letterSpacing: 0.1,
     );
+
+// ─────────────────────────────────────────────────────────────────────
 //  WEBSOCKET CONFIG
+// ─────────────────────────────────────────────────────────────────────
 const int _kFrameIntervalMs = 100;
 const int _kWsConnectAttempts = 3;
 const Duration _kWsConnectTimeout = Duration(seconds: 4);
+
+// ─────────────────────────────────────────────────────────────────────
 //  25 MODEL WORDS
+// ─────────────────────────────────────────────────────────────────────
 const Set<String> _kModelWords = {
   'hello',
   'how are you',
@@ -138,7 +166,10 @@ const Set<String> _kModelWords = {
   'sleeping',
   'water',
 };
+
+// ─────────────────────────────────────────────────────────────────────
 //  SENTENCE BUILDER (all patterns preserved exactly)
+// ─────────────────────────────────────────────────────────────────────
 class SentenceBuilder {
   static const Map<String, String> _solo = {
     'hello': 'Hello!',
@@ -319,7 +350,10 @@ class SentenceBuilder {
   static String _cap(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
+
+// ─────────────────────────────────────────────────────────────────────
 //  AUTO-ADD ENGINE (unchanged logic)
+// ─────────────────────────────────────────────────────────────────────
 class _AutoAddEngine {
   static const int _stabilityMs = 800;
   static const int _sameWordCooldown = 3000;
@@ -372,7 +406,10 @@ class _AutoAddEngine {
     return (held / _stabilityMs).clamp(0.0, 1.0);
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────
 //  MODELS
+// ─────────────────────────────────────────────────────────────────────
 enum _SessionState { idle, connecting, running, stopping, error }
 
 class _GestureToken {
@@ -380,7 +417,10 @@ class _GestureToken {
   final double confidence;
   _GestureToken({required this.label, required this.confidence});
 }
+
+// ═════════════════════════════════════════════════════════════════════
 //  AMBIENT BLOB PAINTER — matches VANI homepage circles/semicircles
+// ═════════════════════════════════════════════════════════════════════
 class _AmbientBlobPainter extends CustomPainter {
   final bool dark;
   final double animValue; // 0.0–1.0 for subtle float
@@ -502,7 +542,10 @@ class _BlobDef {
     required this.color,
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────
 //  ATMOSPHERIC BACKGROUND PAINTER
+// ─────────────────────────────────────────────────────────────────────
 class _AtmosphericBg extends StatelessWidget {
   final bool d;
   const _AtmosphericBg({required this.d});
@@ -635,7 +678,10 @@ class _AtmosphericPainter extends CustomPainter {
   @override
   bool shouldRepaint(_AtmosphericPainter o) => o.dark != dark;
 }
+
+// ─────────────────────────────────────────────────────────────────────
 //  ONBOARDING FLOW — premium fullscreen layout
+// ─────────────────────────────────────────────────────────────────────
 class _OnboardingFlow extends StatefulWidget {
   final bool d;
   final VoidCallback onComplete;
@@ -1686,9 +1732,12 @@ class _BackButton extends StatelessWidget {
     );
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════
 //  MOBILE STEP DECORATIVE PAINTER
 //  Paints large ambient circles/arcs/patches per step.
 //  Each step gets a unique composition so it feels like a new scene.
+// ══════════════════════════════════════════════════════════════════════
 class _MobileStepBlobPainter extends CustomPainter {
   final Color accent;
   final bool dark;
@@ -1874,6 +1923,7 @@ class _MobileStepBlobPainter extends CustomPainter {
       o.dark != dark;
 }
 
+// ── Step icon with concentric pulse rings ──────────────────────────
 class _MobileStepIcon extends StatefulWidget {
   final IconData icon;
   final Color accent;
@@ -1916,6 +1966,7 @@ class _MobileStepIconState extends State<_MobileStepIcon>
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // ── Outermost pulse ring
           AnimatedBuilder(
             animation: _pulse,
             builder: (_, _) => Container(
@@ -1933,6 +1984,7 @@ class _MobileStepIconState extends State<_MobileStepIcon>
             ),
           ),
 
+          // ── Mid ring
           AnimatedBuilder(
             animation: _pulse,
             builder: (_, _) {
@@ -1953,6 +2005,7 @@ class _MobileStepIconState extends State<_MobileStepIcon>
             },
           ),
 
+          // ── Inner filled circle
           Container(
             width: 88,
             height: 88,
@@ -1979,6 +2032,7 @@ class _MobileStepIconState extends State<_MobileStepIcon>
   }
 }
 
+// ── Loader step row widget (web) ────────────────────────────────────
 class _LoaderStepRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -2043,6 +2097,7 @@ class _LoaderStepRow extends StatelessWidget {
   }
 }
 
+// ── Loader step row — MOBILE (full-width, larger, card-like) ─────────
 class _LoaderStepRowMobile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -2131,6 +2186,7 @@ class _LoaderStepRowMobile extends StatelessWidget {
   }
 }
 
+// ── Scan dots row ──────────────────────────────────────────────────
 class _LoaderScanDots extends StatefulWidget {
   final bool d;
   final Animation<double> anim;
@@ -2185,6 +2241,7 @@ class _LoaderScanDotsState extends State<_LoaderScanDots>
   }
 }
 
+// ── Ring painter ────────────────────────────────────────────────────
 class _RingPainter extends CustomPainter {
   final double progress;
   final Color color;
@@ -2236,7 +2293,10 @@ class _RingPainter extends CustomPainter {
   @override
   bool shouldRepaint(_RingPainter o) => o.progress != progress;
 }
+
+// ══════════════════════════════════════════════════════════════════════
 //  TRANSLATE SCREEN
+// ══════════════════════════════════════════════════════════════════════
 class TranslateScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
   final Function(Locale) setLocale;
@@ -2785,7 +2845,10 @@ class _TranslateScreenState extends State<TranslateScreen>
     if (mob) return _buildMobile(context, d);
     return _buildWeb(context, d, w > 900);
   }
+
+  // ════════════════════════════════════════════════════════════════════
   //  MOBILE — fullscreen camera + structured bottom panel
+  // ════════════════════════════════════════════════════════════════════
   Widget _buildMobile(BuildContext context, bool d) {
     final l = AppLocalizations.of(context);
     final running = _state == _SessionState.running;
@@ -2897,7 +2960,10 @@ class _TranslateScreenState extends State<TranslateScreen>
       ),
     );
   }
+
+  // ════════════════════════════════════════════════════════════════════
   //  WEB — card layout with GlobalNavbar
+  // ════════════════════════════════════════════════════════════════════
   Widget _buildWeb(BuildContext context, bool d, bool wide) {
     final compactWeb = MediaQuery.of(context).size.width < 700;
     final horizontalPad = compactWeb ? _sp12 : _sp24;
@@ -2977,6 +3043,7 @@ class _TranslateScreenState extends State<TranslateScreen>
     ],
   );
 
+  // ── Web: Camera card ─────────────────────────────────────────────────
   Widget _webCamera(bool d) {
     final l = AppLocalizations.of(context);
     final running = _state == _SessionState.running;
@@ -3096,6 +3163,7 @@ class _TranslateScreenState extends State<TranslateScreen>
     );
   }
 
+  // ── Web: Detection card ───────────────────────────────────────────────
   Widget _webDetection(bool d) {
     final l = AppLocalizations.of(context);
     final active = _state == _SessionState.running;
@@ -3227,6 +3295,7 @@ class _TranslateScreenState extends State<TranslateScreen>
     );
   }
 
+  // ── Web: Sentence builder card ────────────────────────────────────────
   Widget _webBuilder(bool d) {
     final l = AppLocalizations.of(context);
     final accent = d ? _purpleDark : _purple;
@@ -3519,6 +3588,7 @@ class _TranslateScreenState extends State<TranslateScreen>
     );
   }
 
+  // ── Web: Transcript card ──────────────────────────────────────────────
   Widget _webTranscript(bool d) {
     final l = AppLocalizations.of(context);
     final accent = d ? _primaryDark : _primary;
@@ -3601,7 +3671,10 @@ class _TranslateScreenState extends State<TranslateScreen>
     );
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════
 //  MOBILE COMPONENTS
+// ══════════════════════════════════════════════════════════════════════
 
 class _MobileTopBar extends StatelessWidget {
   final bool d;
@@ -3735,6 +3808,7 @@ class _StatusPillOverlay extends StatelessWidget {
   }
 }
 
+// ── Mobile bottom panel ───────────────────────────────────────────────
 class _MobileBottomPanel extends StatefulWidget {
   final bool d;
   final _SessionState state;
@@ -4514,7 +4588,10 @@ class _MobileTranscriptTab extends StatelessWidget {
     ],
   );
 }
+
+// ══════════════════════════════════════════════════════════════════════
 //  SHARED COMPONENTS
+// ══════════════════════════════════════════════════════════════════════
 
 class _CamPlaceholder extends StatelessWidget {
   final bool d;
@@ -4870,7 +4947,10 @@ class _TokenChip extends StatelessWidget {
     );
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════
 //  SHARED WEB WIDGETS
+// ══════════════════════════════════════════════════════════════════════
 class _UX4GCard extends StatelessWidget {
   final Widget child;
   final bool d;
