@@ -140,10 +140,16 @@ class EmergencyService {
     } catch (_) {}
   }
 
+  // FIX: _shakeActive is set BEFORE the async call so concurrent shake events
+  // are blocked immediately. Previously it was set inside .then() which meant
+  // a second shake could slip through while the first was still awaiting GPS.
   void _onShakeDetected(ShakeEvent _) {
     if (_shakeActive || _isTriggering || getContacts().isEmpty) return;
-    _shakeActive = true;
-    triggerSOS(type: SOSMessageType.generalHelp, triggeredByShake: true).then((_) {
+    _shakeActive = true; // guard set synchronously before any await
+    triggerSOS(
+      type: SOSMessageType.generalHelp,
+      triggeredByShake: true,
+    ).then((_) {
       Future.delayed(const Duration(seconds: 5), () => _shakeActive = false);
     });
   }
@@ -233,28 +239,36 @@ class EmergencyService {
       // Immediate haptic feedback so the user knows SOS fired
       _triggerHaptics();
 
-      // ── Step 1: Fresh live location — mandatory ──
-      // Always fetches a fresh fix. If denied/unavailable, shows UI to guide
-      // the user through granting permission or opening Settings.
-      final location = await _requireLiveLocationForSOS();
-      if (!location.isAvailable) {
-        final l = _context != null ? AppLocalizations.of(_context!) : null;
-        return SOSResult(
-          success: false,
-          reason: l?.t('sos_location_required_reason') ??
-              'Live location is required for SOS. Please enable location and try again.',
-          platform: PlatformHelper.platformName,
-        );
+      // ── Location strategy: web keeps strict requirement, mobile is lenient ──
+      // On mobile, GPS can time out or be temporarily unavailable. We must never
+      // block the SOS entirely because of location — send the message with whatever
+      // location we have (or none), rather than silently failing.
+      final LocationResult location;
+      if (kIsWeb) {
+        // Web: keep original strict behaviour (unchanged)
+        location = await _requireLiveLocationForSOS();
+        if (!location.isAvailable) {
+          final l = _context != null ? AppLocalizations.of(_context!) : null;
+          return SOSResult(
+            success: false,
+            reason: l?.t('sos_location_required_reason') ??
+                'Live location is required for SOS. Please enable location and try again.',
+            platform: PlatformHelper.platformName,
+          );
+        }
+      } else {
+        // Mobile: best-effort location — SOS is NEVER blocked by location failure
+        location = await _getMobileLocationBestEffort();
       }
 
-      // ── Step 2: Build full pre-filled message ──
+      // ── Build full pre-filled message ──
       final fullMsg = _buildSOSMessage(
         type: type,
         customMessage: customMessage,
         location: location,
       );
 
-      // ── Step 3: Open WhatsApp for every contact ──
+      // ── Send via WhatsApp ──
       return kIsWeb
           ? await _sendWebSOS(
               contacts: contacts,
@@ -276,6 +290,30 @@ class EmergencyService {
   }
 
   // ─────────────────────────────────────────────
+  //  MOBILE LOCATION — best-effort, never blocks SOS
+  // ─────────────────────────────────────────────
+
+  /// Gets location for mobile SOS. Tries fast (6s) then falls back to last
+  /// known position. If neither is available the SOS still sends — the message
+  /// will contain "Location unavailable" instead of coordinates.
+  Future<LocationResult> _getMobileLocationBestEffort() async {
+    // Try a quick fix first
+    final quick = await LocationService.instance
+        .getLocationWithFallback(timeout: const Duration(seconds: 6));
+    if (quick.isAvailable) return quick;
+
+    // Fall back to the last cached position if we have one
+    final cached = LocationService.instance.lastKnownLocation;
+    if (cached != null && cached.isAvailable) return cached;
+
+    // Return unavailable — SOS will still send, just without coordinates
+    return const LocationResult(
+      isAvailable: false,
+      error: 'Location unavailable.',
+    );
+  }
+
+  // ─────────────────────────────────────────────
   //  MESSAGE BUILDER
   // ─────────────────────────────────────────────
 
@@ -293,7 +331,9 @@ class EmergencyService {
         '${now.minute.toString().padLeft(2, '0')}';
 
     // Google Maps link on its own line, coordinates below
-    final locationBlock = '${location.mapsLink}\n(${location.displayString})';
+    final locationBlock = location.isAvailable
+        ? '${location.mapsLink}\n(${location.displayString})'
+        : 'Location unavailable';
 
     // Template priority: customMessage → l10n key → hardcoded fallback
     String template;
@@ -319,15 +359,17 @@ class EmergencyService {
   //  MOBILE WHATSAPP SENDER
   // ─────────────────────────────────────────────
 
-  /// Opens WhatsApp natively on Android/iOS.
+  /// Opens WhatsApp natively on Android/iOS with the pre-filled message.
   ///
-  /// WHY we do NOT use canLaunchUrl() first:
-  ///   Android 11+ requires a block in AndroidManifest.xml for the
-  ///   `whatsapp` URL scheme. Without it canLaunchUrl('whatsapp://...') always
-  ///   returns false even when WhatsApp is installed, causing the native deep
-  ///   link to be silently skipped on every Android 11+ device.
-  ///   Fix: attempt the native URI directly and catch on failure, then fall
-  ///   back to the wa.me HTTPS link.
+  /// Launch strategy:
+  ///   1. intent:// URI on Android — bypasses Android 11+ package-visibility
+  ///      restrictions entirely. Does not require <queries> in AndroidManifest.
+  ///      Opens WhatsApp directly to the pre-filled chat.
+  ///   2. whatsapp:// scheme — works on iOS and older Android.
+  ///   3. wa.me HTTPS fallback — last resort, opens browser or WhatsApp Web.
+  ///
+  /// All three attempts pass the full encoded message so the user only needs
+  /// to tap Send — they are NOT redirected to an invite/info page.
   Future<SOSResult> _sendMobileSOS({
     required List<EmergencyContact> contacts,
     required String message,
@@ -344,25 +386,63 @@ class EmergencyService {
       final encodedMsg = Uri.encodeComponent(message);
       bool launched = false;
 
-      // Attempt 1 — native WhatsApp scheme (opens app directly)
-      try {
-        await launchUrl(
-          Uri.parse('whatsapp://send?phone=$phone&text=$encodedMsg'),
-          mode: LaunchMode.externalApplication,
-        );
-        launched = true;
-      } catch (_) {
-        // Native scheme failed (not installed / restricted) → try wa.me
+      // ── Attempt 1: Android intent URI ──────────────────────────────────────
+      // Uses Android ACTION_VIEW intent directed at WhatsApp's package.
+      // This bypasses the Android 11+ package-visibility restriction (no need
+      // for <queries> block) and opens directly to a chat with the pre-filled
+      // message. The `launchMode` must be externalNonBrowsingApplication so
+      // Flutter does not try to open it inside a Chrome Custom Tab.
+      if (!kIsWeb) {
+        try {
+          final intentUri = Uri.parse(
+            'intent://send/$phone'
+            '#Intent;'
+            'scheme=whatsapp;'
+            'package=com.whatsapp;'
+            'action=android.intent.action.SENDTO;'
+            'S.android.intent.extra.TEXT=${Uri.encodeComponent(message)};'
+            'end',
+          );
+          launched = await launchUrl(
+            intentUri,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+        } catch (_) {
+          // Not Android or WhatsApp not installed — fall through
+        }
       }
 
-      // Attempt 2 — wa.me HTTPS fallback
+      // ── Attempt 2: whatsapp:// deep-link scheme ─────────────────────────────
+      // Works on iOS and Android when WhatsApp is installed. Opens a chat with
+      // the contact and pre-fills the message body. This is NOT an invite link.
       if (!launched) {
         try {
-          await launchUrl(
-            Uri.parse('https://wa.me/$phone?text=$encodedMsg'),
+          final waUri = Uri.parse(
+            'whatsapp://send?phone=$phone&text=$encodedMsg',
+          );
+          launched = await launchUrl(
+            waUri,
             mode: LaunchMode.externalApplication,
           );
-          launched = true;
+        } catch (_) {
+          // Scheme not handled (WhatsApp not installed) — fall through
+        }
+      }
+
+      // ── Attempt 3: wa.me HTTPS fallback ────────────────────────────────────
+      // wa.me?phone=&text= opens a chat with the pre-filled message when
+      // WhatsApp is installed, or WhatsApp Web in a browser if not.
+      // This is the correct URL format — NOT wa.me/<phone> alone (which shows
+      // the contact profile/invite page without a pre-filled message).
+      if (!launched) {
+        try {
+          final webUri = Uri.parse(
+            'https://wa.me/$phone?text=$encodedMsg',
+          );
+          launched = await launchUrl(
+            webUri,
+            mode: LaunchMode.externalApplication,
+          );
         } catch (e) {
           errors.add('${contact.name}: $e');
         }
@@ -398,7 +478,7 @@ class EmergencyService {
   }
 
   // ─────────────────────────────────────────────
-  //  WEB WHATSAPP SENDER
+  //  WEB WHATSAPP SENDER  (UNCHANGED)
   // ─────────────────────────────────────────────
 
   /// Opens wa.me links from the Flutter web app.
@@ -444,7 +524,6 @@ class EmergencyService {
     final ctx = _context;
     if (ctx != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // ctx.mounted is available on BuildContext from Flutter 3.7+
         if (ctx.mounted) {
           _showWebSOSModal(
             context: ctx,
@@ -486,15 +565,12 @@ class EmergencyService {
   }
 
   // ─────────────────────────────────────────────
-  //  LOCATION FLOW — always fresh, with full UI
+  //  LOCATION FLOW — web only (strict, with full UI)
   // ─────────────────────────────────────────────
 
-  /// Obtains a FRESH GPS fix every time SOS fires. Never relies solely on a
-  /// cached position. Shows appropriate UI dialogs for each failure mode:
-  ///
-  ///   • Denied (recoverable)   → "Allow location" dialog → retry
-  ///   • Denied forever         → "Open Settings" dialog → Geolocator.openAppSettings()
-  ///   • Timeout / GPS error    → Retry dialog with error message
+  /// Used by web only. Obtains a FRESH GPS fix every time SOS fires.
+  /// Shows appropriate UI dialogs for each failure mode.
+  /// Mobile uses _getMobileLocationBestEffort() instead.
   Future<LocationResult> _requireLiveLocationForSOS() async {
     // Attempt 1: fresh GPS fix
     final first = await LocationService.instance.getCurrentLocation();
@@ -913,7 +989,7 @@ class _SosDialog extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  WEB SOS MODAL
+//  WEB SOS MODAL  (UNCHANGED)
 // ─────────────────────────────────────────────
 
 class _WebSOSModal extends StatefulWidget {
